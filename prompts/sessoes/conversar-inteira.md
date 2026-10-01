@@ -1,3 +1,73 @@
+ Analise a proposta deste aplicativo.
+
+Quero desenvolver uma aplicação não trivial,
+utilizando desenvolvimento apoiado por IA.
+
+Antes de escrever código:
+
+1. Identifique os principais módulos.
+2. Defina as responsabilidades de cada módulo.
+3. Proponha uma arquitetura que permita expansão.
+4. Identifique as entidades do domínio.
+5. Identifique as dependências entre os módulos.
+6. Proponha uma estrutura de diretórios.
+7. Identifique os principais riscos técnicos.
+
+Não crie código nesta etapa.
+
+Apresente o resultado em uma proposta
+que possa ser revisada por um desenvolvedor.
+
+Com base na arquitetura aprovada,
+crie uma especificação para o módulo selecionado.
+
+A especificação deve conter:
+
+1. Objetivo.
+2. Descrição funcional.
+3. Requisitos funcionais.
+4. Requisitos não funcionais.
+5. Regras de negócio.
+6. Critérios de aceitação.
+7. Casos de erro.
+8. Dependências.
+9. Fora do escopo.
+
+Não implemente o código.
+
+A especificação deve ser suficientemente
+detalhada para orientar a implementação
+e permitir a criação de testes.
+
+Implemente o módulo descrito na especificação
+aprovada.
+
+Antes de modificar os arquivos:
+
+1. Leia a especificação.
+2. Analise a estrutura existente.
+3. Identifique os arquivos que precisam ser alterados.
+4. Verifique as dependências.
+
+Durante a implementação:
+
+1. Siga os critérios de aceitação.
+2. Preserve as funcionalidades existentes.
+3. Crie os testes necessários.
+4. Não implemente funcionalidades fora do escopo.
+5. Não altere especificações já aprovadas.
+
+Ao concluir:
+
+1. Execute os testes.
+2. Informe os arquivos modificados.
+3. Explique as decisões técnicas.
+4. Liste os problemas encontrados.
+5. Informe o que ainda precisa ser feito.
+
+Não faça o commit automaticamente.
+Aguarde minha revisão.
+
   Lembre-se que, para chegar às 100k linhas, estou adicionando métodos de negócio
   ricos à entidade, evitando que ela seja apenas um "container de dados
 
