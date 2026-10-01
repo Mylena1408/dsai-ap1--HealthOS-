@@ -27,4 +27,6 @@ PyYAML==6.0.2
 sqlparse==0.6.0
 asyncpg==0.31.0
 
+SQLAlchemy
+
 websocket-client==1.8.0
