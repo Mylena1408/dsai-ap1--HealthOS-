@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthOS | Portal Hospitalar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active { display: flex; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+    <nav class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center gap-2">
+            <div class="bg-blue-600 p-2 rounded-lg">
+                <i class="fas fa-hospital-user text-white text-xl"></i>
+            </div>
+            <span class="text-2xl font-bold text-slate-800 tracking-tight">Health<span class="text-blue-600">OS</span></span>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 mr-4">
+                <i class="fas fa-lock text-slate-400"></i>
+                <input type="text" id="jwt-token" placeholder="Token JWT" class="text-xs border border-slate-300 rounded px-2 py-1 w-48 outline-none focus:border-blue-500">
+            </div>
+            <a href="/docs" target="_blank" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2">
+                <i class="fas fa-book-open"></i> API Docs
+            </a>
+        </div>
+    </nav>
+
+    <header class="max-w-4xl mx-auto px-6 py-12 text-center">
+        <h1 id="page-title" class="text-3xl font-extrabold text-slate-900 mb-2">Portal do Paciente</h1>
+        <p id="page-subtitle" class="text-slate-600">Demonstração de serviços integrados para o usuário final.</p>
+    </header>
+
+    <div class="max-w-4xl mx-auto px-6 mb-6 flex justify-center">
+        <div class="bg-white p-1 rounded-xl border border-slate-200 flex gap-2">
+            <button onclick="switchView('patient')" id="btn-view-patient" class="px-4 py-2 rounded-lg text-sm font-bold transition-all bg-blue-600 text-white">Visão Paciente</button>
+            <button onclick="switchView('doctor')" id="btn-view-doctor" class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:bg-slate-100">Visão Médico</button>
+        </div>
+    </div>
+
+    <main class="max-w-4xl mx-auto px-6 pb-20">
+        <div id="grid-patient" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <!-- Botão 1: Cadastro -->
+            <button onclick="openModal('modal-cadastro')" class="glass-card p-6 rounded-2xl text-left hover:border-blue-500 transition-all group">
+                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Realizar Cadastro</h3>
+                <p class="text-slate-500 text-sm">Crie sua conta no sistema hospitalar.</p>
+            </button>
+
+            <!-- Botão 2: Consultas -->
+            <button onclick="openModal('modal-consultas')" class="glass-card p-6 rounded-2xl text-left hover:border-blue-500 transition-all group">
+                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Minhas Consultas</h3>
+                <p class="text-slate-500 text-sm">Veja seus agendamentos confirmados.</p>
+            </button>
+
+            <!-- Botão 3: Agenda -->
+            <button onclick="openModal('modal-agenda')" class="glass-card p-6 rounded-2xl text-left hover:border-blue-500 transition-all group">
+                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Agendar Consulta</h3>
+                <p class="text-slate-500 text-sm">Reserve um horário disponível.</p>
+            </button>
+
+            <!-- Botão 4: Fatura -->
+            <button onclick="openModal('modal-fatura')" class="glass-card p-6 rounded-2xl text-left hover:border-blue-500 transition-all group">
+                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Ver Minha Fatura</h3>
+                <p class="text-slate-500 text-sm">Acompanhe seus débitos e pagamentos.</p>
+            </button>
+        </div>
+
+        <div id="grid-doctor" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <!-- Botão 1: Prontuários -->
+            <button onclick="openModal('modal-doc-history')" class="glass-card p-6 rounded-2xl text-left hover:border-emerald-500 transition-all group">
+                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                    <i class="fas fa-file-medical"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Histórico Clínico</h3>
+                <p class="text-slate-500 text-sm">Acesse as notas de evolução do paciente.</p>
+            </button>
+
+            <!-- Botão 2: Nova Evolução -->
+            <button onclick="openModal('modal-doc-new')" class="glass-card p-6 rounded-2xl text-left hover:border-emerald-500 transition-all group">
+                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                    <i class="fas fa-pen-square"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Nova Evolução</h3>
+                <p class="text-slate-500 text-sm">Registre a evolução clínica do paciente.</p>
+            </button>
+
+            <!-- Botão 3: Gerir Alertas -->
+            <button onclick="openModal('modal-doc-alerts')" class="glass-card p-6 rounded-2xl text-left hover:border-emerald-500 transition-all group">
+                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Alertas Críticos</h3>
+                <p class="text-slate-500 text-sm">Configure alertas de risco para o paciente.</p>
+            </button>
+
+            <!-- Botão 4: Prescrever Medicamento -->
+            <button onclick="openModal('modal-doc-pharmacy')" class="glass-card p-6 rounded-2xl text-left hover:border-emerald-500 transition-all group">
+                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                    <i class="fas fa-pills"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Prescrever Medicação</h3>
+                <p class="text-slate-500 text-sm">Envie a prescrição para a farmácia.</p>
+            </button>
+        </div>
+    </main>
+
+    <!-- MODALS -->
+    <div id="modal-cadastro" class="modal">
+        <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+            <button onclick="closeModal('modal-cadastro')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h3 class="text-2xl font-bold text-slate-800 mb-6">Cadastro de Paciente</h3>
+            <form id="form-cadastro" class="space-y-4">
+                <input type="text" id="p-fullname" placeholder="Nome Completo" required class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
+                <input type="text" id="p-cpf" placeholder="CPF (apenas números)" required class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="date" id="p-birth" required class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
+                    <select id="p-gender" required class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
+                        <option value="">Gênero</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Feminino">Feminino</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">Cadastrar</button>
+            </form>
+            <div id="res-cadastro" class="mt-4 p-3 rounded-lg text-sm hidden"></div>
+        </div>
+    </div>
+
+    <div id="modal-consultas" class="modal">
+        <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+            <button onclick="closeModal('modal-consultas')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h3 class="text-2xl font-bold text-slate-800 mb-6">Minhas Consultas</h3>
+            <div class="space-y-4">
+                <input type="text" id="p-consult-id" placeholder="Seu ID de Paciente" class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
+                <button onclick="fetchConsultations()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">Consultar Agenda</button>
+            </div>
+            <div id="res-consultas" class="mt-6 space-y-3 hidden"></div>
+        </div>
+    </div>
+
+    <div id="modal-agenda" class="modal">
+        <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+            <button onclick="closeModal('modal-agenda')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h3 class="text-2xl font-bold text-slate-800 mb-6">Agendar Consulta</h3>
+            <form id="form-agenda" class="space-y-4">
+                <input type="text" id="p-slot-id" placeholder="ID do Slot de Horário" required class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
+                <input type="text" id="p-id-agenda" placeholder="Seu ID de Paciente" required class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">Reservar</button>
+            </form>
+            <div id="res-agenda" class="mt-4 p-3 rounded-lg text-sm hidden"></div>
+        </div>
+    </div>
+
+    <div id="modal-fatura" class="modal">
+        <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+            <button onclick="closeModal('modal-fatura')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h3 class="text-2xl font-bold text-slate-800 mb-6">Minhas Faturas</h3>
+            <div class="space-y-4">
+                <input type="text" id="p-bill-id" placeholder="ID do Paciente" class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
+                <button onclick="fetchBilling()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">Buscar Débitos</button>
+            </div>
+            <div id="res-fatura" class="mt-6 space-y-2 hidden"></div>
+        </div>
+    </div>
+
+    <!-- MODALS MÉDICO -->
+    <div id="modal-doc-history" class="modal">
+        <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+            <button onclick="closeModal('modal-doc-history')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h3 class="text-2xl font-bold text-slate-800 mb-6">Histórico Clínico</h3>
+            <div class="space-y-4">
+                <input type="text" id="d-patient-id" placeholder="ID do Paciente" class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500">
+                <button onclick="fetchClinicalHistory()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">Buscar Prontuário</button>
+            </div>
+            <div id="res-doc-history" class="mt-6 space-y-3 hidden"></div>
+        </div>
+    </div>
+
+    <div id="modal-doc-new" class="modal">
+        <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+            <button onclick="closeModal('modal-doc-new')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h3 class="text-2xl font-bold text-slate-800 mb-6">Nova Evolução Clínica</h3>
+            <form id="form-doc-new" class="space-y-4">
+                <input type="text" id="d-note-patient-id" placeholder="ID do Paciente" required class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500">
+                <textarea id="d-note-content" placeholder="Descrição da evolução..." required class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500 h-32"></textarea>
+                <button type="submit" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">Salvar Nota</button>
+            </form>
+            <div id="res-doc-new" class="mt-4 p-3 rounded-lg text-sm hidden"></div>
+        </div>
+    </div>
+
+    <div id="modal-doc-alerts" class="modal">
+        <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+            <button onclick="closeModal('modal-doc-alerts')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h3 class="text-2xl font-bold text-slate-800 mb-6">Configurar Alertas</h3>
+            <form id="form-doc-alerts" class="space-y-4">
+                <input type="text" id="d-alert-patient-id" placeholder="ID do Paciente" required class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500">
+                <input type="text" id="d-alert-type" placeholder="Tipo de Alerta (ex: ALERGIA)" required class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500">
+                <input type="text" id="d-alert-msg" placeholder="Mensagem do Alerta" required class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500">
+                <button type="submit" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">Criar Alerta</button>
+            </form>
+            <div id="res-doc-alerts" class="mt-4 p-3 rounded-lg text-sm hidden"></div>
+        </div>
+    </div>
+
+    <div id="modal-doc-pharmacy" class="modal">
+        <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+            <button onclick="closeModal('modal-doc-pharmacy')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h3 class="text-2xl font-bold text-slate-800 mb-6">Prescrever Medicação</h3>
+            <form id="form-doc-pharmacy" class="space-y-4">
+                <input type="text" id="d-pharm-patient-id" placeholder="ID do Paciente" required class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500">
+                <input type="text" id="d-pharm-med-id" placeholder="ID do Medicamento" required class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500">
+                <input type="number" id="d-pharm-qty" placeholder="Quantidade" required class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500">
+                <button type="submit" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">Enviar Prescrição</button>
+            </form>
+            <div id="res-doc-pharmacy" class="mt-4 p-3 rounded-lg text-sm hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + "/api/v1";
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function switchView(view) {
+            const isPatient = view === 'patient';
+            document.getElementById('grid-patient').classList.toggle('hidden', !isPatient);
+            document.getElementById('grid-doctor').classList.toggle('hidden', isPatient);
+            document.getElementById('btn-view-patient').className = isPatient ? 'px-4 py-2 rounded-lg text-sm font-bold transition-all bg-blue-600 text-white' : 'px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:bg-slate-100';
+            document.getElementById('btn-view-doctor').className = !isPatient ? 'px-4 py-2 rounded-lg text-sm font-bold transition-all bg-blue-600 text-white' : 'px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:bg-slate-100';
+            document.getElementById('page-title').innerText = isPatient ? 'Portal do Paciente' : 'Portal do Médico';
+            document.getElementById('page-subtitle').innerText = isPatient ? 'Demonstração de serviços integrados para o usuário final.' : 'Gestão clínica e acompanhamento de pacientes.';
+        }
+
+        function getAuthHeader() {
+            const token = document.getElementById('jwt-token').value;
+            return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+        }
+
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const options = { method, headers: getAuthHeader() };
+            if (body) options.body = JSON.stringify(body);
+            const response = await fetch(`${API_BASE}${endpoint}`, options);
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.detail || 'Erro na requisição');
+            }
+            return response.json();
+        }
+
+        document.getElementById('form-cadastro').onsubmit = async (e) => {
+            e.preventDefault();
+            const resDiv = document.getElementById('res-cadastro');
+            resDiv.classList.remove('hidden', 'bg-green-100', 'bg-red-100');
+            try {
+                // Limpeza do CPF: remove qualquer caractere que não seja número
+                const rawCpf = document.getElementById('p-cpf').value;
+                const cleanCpf = rawCpf.replace(/\D/g, '');
+
+                const data = {
+                    full_name: document.getElementById('p-fullname').value,
+                    cpf: cleanCpf,
+                    birth_date: document.getElementById('p-birth').value,
+                    gender: document.getElementById('p-gender').value
+                };
+                const res = await apiCall('/admin/patients', 'POST', data);
+                resDiv.innerText = `Sucesso! Seu ID de Paciente é: ${res.id}`;
+                resDiv.classList.add('bg-green-100', 'text-green-700');
+            } catch (err) {
+                resDiv.innerText = `Erro: ${err.message}`;
+                resDiv.classList.add('bg-red-100', 'text-red-700');
+            }
+            resDiv.classList.remove('hidden');
+        };
+
+        async function fetchConsultations() {
+            const pid = document.getElementById('p-consult-id').value;
+            const resDiv = document.getElementById('res-consultas');
+            resDiv.innerHTML = "";
+            try {
+                const res = await apiCall(`/clinical/patients/${pid}/appointments`);
+                resDiv.classList.remove('hidden');
+                if (res.length === 0) {
+                    resDiv.innerHTML = "<p class='text-slate-500 text-center'>Nenhuma consulta agendada.</p>";
+                    return;
+                }
+                res.forEach(app => {
+                    const item = document.createElement('div');
+                    item.className = "p-3 border rounded-lg bg-white flex flex-col gap-1";
+                    item.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-slate-800">Consulta Agendada</span>
+                            <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">${app.status}</span>
+                        </div>
+                        <div class="text-sm text-slate-600">
+                            <i class="fas fa-calendar"></i> ${new Date(app.start_time).toLocaleString()}
+                        </div>
+                    `;
+                    resDiv.appendChild(item);
+                });
+            } catch (err) {
+                alert(`Erro: ${err.message}`);
+            }
+        }
+
+        document.getElementById('form-agenda').onsubmit = async (e) => {
+            e.preventDefault();
+            const resDiv = document.getElementById('res-agenda');
+            resDiv.classList.remove('hidden', 'bg-green-100', 'bg-red-100');
+            try {
+                const data = { slot_id: document.getElementById('p-slot-id').value, patient_id: document.getElementById('p-id-agenda').value };
+                const res = await apiCall('/clinical/schedule', 'POST', data);
+                resDiv.innerText = `Sucesso! Consulta agendada.`;
+                resDiv.classList.add('bg-green-100', 'text-green-700');
+            } catch (err) {
+                resDiv.innerText = `Erro: ${err.message}`;
+                resDiv.classList.add('bg-red-100', 'text-red-700');
+            }
+            resDiv.classList.remove('hidden');
+        };
+
+        async function fetchBilling() {
+            const pid = document.getElementById('p-bill-id').value;
+            const resDiv = document.getElementById('res-fatura');
+            resDiv.innerHTML = "";
+            try {
+                const res = await apiCall(`/billing/patient/${pid}`);
+                resDiv.classList.remove('hidden');
+                if (res.length === 0) {
+                    resDiv.innerHTML = "<p class='text-slate-500 text-center'>Nenhuma fatura encontrada.</p>";
+                    return;
+                }
+                res.forEach(inv => {
+                    const item = document.createElement('div');
+                    item.className = "p-3 border rounded-lg bg-white flex justify-between items-center";
+                    item.innerHTML = `<div><span class="font-bold">${inv.invoice_number}</span><br><span class="text-xs text-slate-500">${inv.status}</span></div><span class="font-bold text-blue-600">R$ ${inv.total_amount || '0.00'}</span>`;
+                    resDiv.appendChild(item);
+                });
+            } catch (err) {
+                alert(`Erro: ${err.message}`);
+            }
+        }
+
+        // FUNÇÕES DO MÉDICO
+        async function fetchClinicalHistory() {
+            const pid = document.getElementById('d-patient-id').value;
+            const resDiv = document.getElementById('res-doc-history');
+            resDiv.innerHTML = "";
+            try {
+                const res = await apiCall(`/clinical/patients/${pid}/history`);
+                resDiv.classList.remove('hidden');
+                if (res.length === 0) {
+                    resDiv.innerHTML = "<p class='text-slate-500 text-center'>Sem histórico clínico disponível.</p>";
+                    return;
+                }
+                res.forEach(note => {
+                    const item = document.createElement('div');
+                    item.className = "p-3 border rounded-lg bg-white flex flex-col gap-2";
+                    item.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-slate-800">Nota de Evolução</span>
+                            <span class="text-xs ${note.status === 'FINALIZED' ? 'bg-gray-100 text-gray-600' : 'bg-yellow-100 text-yellow-600'} px-2 py-1 rounded-full">${note.status}</span>
+                        </div>
+                        <div class="text-sm text-slate-600">${note.content}</div>
+                        <div class="text-xs text-slate-400 text-right">${new Date(note.created_at).toLocaleString()}</div>
+                    `;
+                    resDiv.appendChild(item);
+                });
+            } catch (err) {
+                alert(`Erro: ${err.message}`);
+            }
+        }
+
+        document.getElementById('form-doc-new').onsubmit = async (e) => {
+            e.preventDefault();
+            const resDiv = document.getElementById('res-doc-new');
+            resDiv.classList.remove('hidden', 'bg-green-100', 'bg-red-100');
+            try {
+                const data = {
+                    patient_id: document.getElementById('d-note-patient-id').value,
+                    content: document.getElementById('d-note-content').value
+                };
+                const res = await apiCall('/clinical/notes', 'POST', data);
+                resDiv.innerText = `Sucesso! Nota salva.`;
+                resDiv.classList.add('bg-green-100', 'text-green-700');
+            } catch (err) {
+                resDiv.innerText = `Erro: ${err.message}`;
+                resDiv.classList.add('bg-red-100', 'text-red-700');
+            }
+            resDiv.classList.remove('hidden');
+        };
+
+        document.getElementById('form-doc-alerts').onsubmit = async (e) => {
+            e.preventDefault();
+            const resDiv = document.getElementById('res-doc-alerts');
+            resDiv.classList.remove('hidden', 'bg-green-100', 'bg-red-100');
+            try {
+                const data = {
+                    patient_id: document.getElementById('d-alert-patient-id').value,
+                    type: document.getElementById('d-alert-type').value,
+                    message: document.getElementById('d-alert-msg').value
+                };
+                const res = await apiCall('/admin/alerts', 'POST', data);
+                resDiv.innerText = `Sucesso! Alerta criado.`;
+                resDiv.classList.add('bg-green-100', 'text-green-700');
+            } catch (err) {
+                resDiv.innerText = `Erro: ${err.message}`;
+                resDiv.classList.add('bg-red-100', 'text-red-700');
+            }
+            resDiv.classList.remove('hidden');
+        };
+
+        document.getElementById('form-doc-pharmacy').onsubmit = async (e) => {
+            e.preventDefault();
+            const resDiv = document.getElementById('res-doc-pharmacy');
+            resDiv.classList.remove('hidden', 'bg-green-100', 'bg-red-100');
+            try {
+                const data = {
+                    patient_id: document.getElementById('d-pharm-patient-id').value,
+                    medication_id: document.getElementById('d-pharm-med-id').value,
+                    quantity: document.getElementById('d-pharm-qty').value
+                };
+                const res = await apiCall('/pharmacy/dispense', 'POST', data);
+                resDiv.innerText = `Sucesso! Prescrição enviada.`;
+                resDiv.classList.add('bg-green-100', 'text-green-700');
+            } catch (err) {
+                resDiv.innerText = `Erro: ${err.message}`;
+                resDiv.classList.add('bg-red-100', 'text-red-700');
+            }
+            resDiv.classList.remove('hidden');
+        };
+    </script>
+</body>
+</html>
