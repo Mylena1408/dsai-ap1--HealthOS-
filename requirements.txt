@@ -4,6 +4,17 @@ uvicorn==0.54.0
 
 email-validator
 PyJWT
+pydantic-settings
+
+anyio==4.9.0
+starlette
+pydantic
+SQLAlchemy[asyncio]
+fastapi
+uvicorn==0.54.0
+
+email-validator
+PyJWT
 
 anyio==4.9.0
 starlette
