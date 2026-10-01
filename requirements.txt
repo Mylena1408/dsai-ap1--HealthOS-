@@ -1,3 +1,4 @@
+SQLAlchemy
 fastapi
 uvicorn==0.54.0
 
