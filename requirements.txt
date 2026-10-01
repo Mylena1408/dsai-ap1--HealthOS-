@@ -1,4 +1,4 @@
-SQLAlchemy
+SQLAlchemy[asyncio]
 fastapi
 uvicorn==0.54.0
 
