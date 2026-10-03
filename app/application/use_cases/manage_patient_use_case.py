@@ -21,17 +21,20 @@ class ManagePatientUseCase:
             raise DomainException(f"Paciente com CPF {request.cpf} já cadastrado.")
 
         # 2. Criação da Entidade de Domínio
-        patient = Patient(
-            full_name=request.full_name,
-            birth_date=request.birth_date,
-            cpf=request.cpf,
-            gender=request.gender,
-            insurance_provider=request.insurance_provider,
-            insurance_number=request.insurance_number,
-            phone=request.phone,
-            email=request.email,
-            address=request.address
-        )
+        try:
+            patient = Patient(
+                full_name=request.full_name,
+                birth_date=request.birth_date,
+                cpf=request.cpf,
+                gender=request.gender,
+                insurance_provider=request.insurance_provider,
+                insurance_number=request.insurance_number,
+                phone=request.phone,
+                email=request.email,
+                address=request.address
+            )
+        except ValueError as exc:
+            raise DomainException(str(exc)) from exc
 
         # 3. Persistência
         created_patient = await self.patient_repository.save(patient)
@@ -96,7 +99,7 @@ class ManagePatientUseCase:
         if request.email: patient.email = request.email
         if request.address: patient.address = request.address
         if request.insurance_provider: patient.insurance_provider = request.insurance_provider
-        if request.insurance_number: request.insurance_number = request.insurance_number
+        if request.insurance_number is not None: patient.insurance_number = request.insurance_number
 
         updated_patient = await self.patient_repository.update(patient)
 

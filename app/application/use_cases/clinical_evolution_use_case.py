@@ -77,8 +77,6 @@ class ClinicalEvolutionUseCase:
 
     async def update_draft(self, note_id: uuid.UUID, request: ClinicalNoteUpdateDTO) -> ClinicalNoteResponseDTO:
         # 1. Busca a nota
-        note = await self.clinical_// la la lala
-        # Note: I will fix the typo and complete the logic
         note = await self.clinical_repository.get_by_id(note_id)
         if not note:
             raise NoteNotFoundError()

@@ -63,6 +63,6 @@ async def finalize_invoice(invoice_id: uuid.UUID, use_case: BillingUseCase = Dep
     except DomainException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
 
-@router.get("/patients/{patient_id}/summary", dependencies=[Depends(PermissionChecker(["billing:read"]))])
+@router.get("/patients/{patient_id}/summary")
 async def get_financial_summary(patient_id: uuid.UUID, use_case: BillingUseCase = Depends(get_billing_use_case)):
     return await use_case.get_patient_financial_summary(patient_id)

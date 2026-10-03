@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, ForeignKey, DateTime, Enum as SQLEnum
+from sqlalchemy import String, ForeignKey, DateTime, Enum as SQLEnum, func
 from datetime import datetime
 import uuid
 from app.infrastructure.persistence.models.user_model import Base

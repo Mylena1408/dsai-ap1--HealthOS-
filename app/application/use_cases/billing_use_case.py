@@ -101,11 +101,20 @@ class BillingUseCase:
         summary = []
 
         for inv in invoices:
+            if inv.status not in {
+                BillingStatus.PENDING,
+                BillingStatus.PARTIALLY_PAID,
+                BillingStatus.OVERDUE,
+            }:
+                continue
+            gross_total = inv.calculate_gross_total()
+            patient_share = inv.calculate_patient_share()
             summary.append({
                 "invoice_id": inv.id,
                 "number": inv.invoice_number,
-                "gross_total": inv.calculate_gross_total(),
-                "patient_share": inv.calculate_patient_share(),
+                "gross_total": gross_total,
+                "patient_share": patient_share,
+                "insurance_share": gross_total - patient_share,
                 "status": inv.status.value,
                 "due_date": inv.due_date
             })

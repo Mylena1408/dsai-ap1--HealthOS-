@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional, List
 import uuid
 import re
@@ -31,7 +31,8 @@ class Patient:
         if not self._is_valid_cpf(self.cpf):
             raise ValueError(f"CPF inválido: {self.cpf}")
 
-        if self.birth_date > datetime.now():
+        birth_day = self.birth_date.date() if isinstance(self.birth_date, datetime) else self.birth_date
+        if birth_day > date.today():
             raise ValueError("A data de nascimento não pode ser no futuro.")
 
     def _is_valid_cpf(self, cpf: str) -> bool:

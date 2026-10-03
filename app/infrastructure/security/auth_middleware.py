@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from app.infrastructure.security.jwt_handler import JWTHandler
 from app.infrastructure.persistence.repositories.sqlalchemy_user_repository import SQLAlchemyUserRepository
+from app.infrastructure.persistence.database import get_db
 from app.domain.entities.user import User
 from app.domain.exceptions.base import DomainException
 
@@ -13,8 +14,7 @@ security = HTTPBearer()
 
 async def get_current_user(
     auth: HTTPAuthorizationCredentials = Depends(security),
-    # Nota: A injeção de session virá do dependencies.py global posteriormente
-    session: AsyncSession = Depends(lambda: None)
+    session: AsyncSession = Depends(get_db)
 ) -> User:
     """
     Dependência do FastAPI que valida o token JWT e retorna o usuário autenticado.
