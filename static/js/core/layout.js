@@ -2,6 +2,8 @@
 // acrescenta uma entrada em NAV_ITEMS.
 const NAV_ITEMS = [
     { id: 'portal', label: 'Portal', href: '/', icon: 'fa-house-medical' },
+    { id: 'consultas', label: 'Consultas', href: '/app/consultas', icon: 'fa-calendar-days' },
+    { id: 'profissionais', label: 'Profissionais', href: '/app/profissionais', icon: 'fa-user-doctor' },
     { id: 'status', label: 'Status', href: '/app/status', icon: 'fa-heart-pulse' },
 ];
 

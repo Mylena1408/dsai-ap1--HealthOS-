@@ -22,6 +22,7 @@ from app.infrastructure.persistence.repositories.sqlalchemy_medication_repositor
 )
 from app.infrastructure.persistence.repositories.sqlalchemy_patient_repository import SQLAlchemyPatientRepository
 from app.infrastructure.seed.fake_data import MEDICATIONS, STOCK_LOCATIONS, fake_patient
+from app.infrastructure.seed.scheduling_seed import seed_appointments, seed_catalog_and_professionals
 
 DEFAULT_SEED = 2026
 
@@ -70,10 +71,13 @@ async def seed_medications(session: AsyncSession, rng: random.Random, report: Se
             report.add("inventory_items", created=True)
 
 
-async def seed_demo_data(session: AsyncSession, patients: int = 50, seed: int = DEFAULT_SEED) -> SeedReport:
+async def seed_demo_data(session: AsyncSession, patients: int = 50, appointments: int = 100,
+                         seed: int = DEFAULT_SEED, now: datetime | None = None) -> SeedReport:
     rng = random.Random(seed)
     report = SeedReport()
     await seed_patients(session, patients, rng, report)
     await seed_medications(session, rng, report)
+    await seed_catalog_and_professionals(session, rng, report)
+    await seed_appointments(session, appointments, rng, report, now or datetime.now().replace(second=0, microsecond=0))
     await session.commit()
     return report

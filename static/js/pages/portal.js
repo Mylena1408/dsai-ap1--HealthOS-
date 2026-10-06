@@ -1,7 +1,7 @@
 // Portal do Paciente / Médico (página inicial).
 import { apiCall } from '../core/api.js';
 import {
-    escapeHtml, isValidUuid, formatMoney, openModal, closeModal, showResult, renderEmpty,
+    escapeHtml, isValidUuid, formatMoney, openModal, enableModalDismiss, showResult, renderEmpty,
 } from '../core/dom.js';
 import { renderNav, renderDemoBanner } from '../core/layout.js';
 
@@ -226,22 +226,14 @@ const ACTIONS = {
 };
 
 document.addEventListener('click', event => {
-    const target = event.target.closest('[data-open-modal], [data-close-modal], [data-view], [data-action]');
+    const target = event.target.closest('[data-open-modal], [data-view], [data-action]');
     if (!target) return;
     if (target.dataset.openModal) openModal(target.dataset.openModal);
-    if (target.dataset.closeModal) closeModal(target.dataset.closeModal);
     if (target.dataset.view) switchView(target.dataset.view);
     if (target.dataset.action) ACTIONS[target.dataset.action]?.();
 });
 
-// Clicar fora do conteúdo ou pressionar Esc fecha o modal aberto.
-document.addEventListener('click', event => {
-    if (event.target.classList.contains('modal')) event.target.classList.remove('active');
-});
-document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
-});
-
+enableModalDismiss();
 renderNav('portal');
 renderDemoBanner();
 restorePatientId();

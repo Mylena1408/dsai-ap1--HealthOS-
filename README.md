@@ -38,12 +38,12 @@ copy .env.example .env           # ajuste DATABASE_URL, ex.: sqlite:///./app.db
 uvicorn main:app --reload
 ```
 
-Acesse `http://127.0.0.1:8000/` (portal), `/app/status` (status do sistema) e `/docs` (Swagger).
+Acesse `http://127.0.0.1:8000/` (portal), `/app/consultas`, `/app/profissionais`, `/app/status` e `/docs` (Swagger).
 
 ### Dados de demonstração
 
 ```bash
-python -m scripts.seed_demo                  # 50 pacientes + catálogo e estoque fictícios
+python -m scripts.seed_demo                  # 50 pacientes, 20 profissionais, 100 consultas, farmácia
 python -m scripts.seed_demo --patients 120   # mais pacientes
 ```
 
@@ -77,10 +77,11 @@ app/infrastructure  persistência, observabilidade, dados de demonstração
 app/presentation    routers da API
 static/             frontend modular (core/ e pages/)
 tests/              unit/, integration/ e api/
+docs/MODULOS.md     módulos, estados, regras e endpoints
 docs/DECISOES.md    decisões arquiteturais (ADRs)
 ```
 
-Mais detalhes em [ARCHITECTURE.md](ARCHITECTURE.md) e [docs/DECISOES.md](docs/DECISOES.md).
+Mais detalhes em [ARCHITECTURE.md](ARCHITECTURE.md), [docs/MODULOS.md](docs/MODULOS.md) (regras de negócio e endpoints) e [docs/DECISOES.md](docs/DECISOES.md).
 
 ## 🎓 Projeto acadêmico
 

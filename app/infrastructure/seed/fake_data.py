@@ -39,6 +39,50 @@ MEDICATIONS = [
 ]
 STOCK_LOCATIONS = ["FARMACIA_CENTRAL", "ALA_A", "PRONTO_ATENDIMENTO"]
 
+DEPARTMENTS = [
+    ("Clínica Médica", "Atendimento ambulatorial geral."),
+    ("Cardiologia", "Acompanhamento cardiovascular."),
+    ("Pediatria", "Atendimento a crianças e adolescentes."),
+    ("Enfermagem", "Procedimentos e acompanhamento de enfermagem."),
+    ("Farmácia", "Dispensação e controle de medicamentos."),
+    ("Reabilitação", "Fisioterapia e terapias de apoio."),
+    ("Saúde Mental", "Psicologia e acolhimento."),
+    ("Nutrição", "Orientação alimentar."),
+]
+
+# (especialidade, duração padrão em minutos, departamento)
+SPECIALTIES = [
+    ("Clínica Geral", 30, "Clínica Médica"),
+    ("Cardiologia", 40, "Cardiologia"),
+    ("Pediatria", 30, "Pediatria"),
+    ("Endocrinologia", 40, "Clínica Médica"),
+    ("Enfermagem Clínica", 20, "Enfermagem"),
+    ("Farmácia Clínica", 20, "Farmácia"),
+    ("Fisioterapia", 50, "Reabilitação"),
+    ("Psicologia Clínica", 50, "Saúde Mental"),
+    ("Nutrição Clínica", 40, "Nutrição"),
+]
+
+# (tipo de profissional, especialidade, quantidade)
+PROFESSIONAL_MIX = [
+    ("MEDICO", "Clínica Geral", 4), ("MEDICO", "Cardiologia", 2), ("MEDICO", "Pediatria", 2),
+    ("MEDICO", "Endocrinologia", 1), ("ENFERMEIRO", "Enfermagem Clínica", 3),
+    ("FARMACEUTICO", "Farmácia Clínica", 2), ("FISIOTERAPEUTA", "Fisioterapia", 2),
+    ("PSICOLOGO", "Psicologia Clínica", 2), ("NUTRICIONISTA", "Nutrição Clínica", 2),
+]
+
+# Turnos de atendimento possíveis (início, fim) em horas.
+SHIFTS = [(8, 12), (13, 17), (8, 17)]
+
+APPOINTMENT_REASONS = [
+    "Consulta de rotina", "Retorno com exames", "Acompanhamento de tratamento",
+    "Avaliação inicial", "Renovação de receita", "Orientações gerais",
+]
+
+
+def fake_professional_name(rng: random.Random, title: str) -> str:
+    return f"{title} {rng.choice(FIRST_NAMES)} {rng.choice(LAST_NAMES)}"
+
 
 def _cpf_digit(digits: list[int]) -> int:
     weight = len(digits) + 1

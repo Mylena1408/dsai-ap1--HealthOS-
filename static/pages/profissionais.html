@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthOS | Profissionais</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav id="app-nav" class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50 h-[73px]"></nav>
+
+    <header class="max-w-6xl mx-auto px-4 sm:px-6 py-10 flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Profissionais de Saúde</h1>
+            <p class="text-slate-600">Equipe fictícia, especialidades, departamentos e grade de atendimento.</p>
+        </div>
+        <button data-open-modal="modal-new" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700">
+            <i class="fas fa-plus"></i> Novo profissional
+        </button>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 pb-20">
+        <form id="filters" class="glass-card rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+            <label class="lg:col-span-2">
+                <span class="sr-only">Buscar</span>
+                <input id="f-q" type="search" placeholder="Buscar por nome ou registro" class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
+            </label>
+            <label><span class="sr-only">Tipo</span><select id="f-type" class="w-full p-2 border rounded-lg"></select></label>
+            <label><span class="sr-only">Especialidade</span><select id="f-specialty" class="w-full p-2 border rounded-lg"></select></label>
+            <label><span class="sr-only">Situação</span><select id="f-status" class="w-full p-2 border rounded-lg"></select></label>
+        </form>
+
+        <section id="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" aria-live="polite"></section>
+        <div id="pagination"></div>
+    </main>
+
+    <!-- Detalhes do profissional -->
+    <div id="modal-detail" class="modal" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-lg shadow-2xl relative">
+            <button data-close-modal="modal-detail" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <div id="detail-body"></div>
+        </div>
+    </div>
+
+    <!-- Cadastro -->
+    <div id="modal-new" class="modal" role="dialog" aria-modal="true" aria-labelledby="new-title">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-lg shadow-2xl relative">
+            <button data-close-modal="modal-new" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h3 id="new-title" class="text-2xl font-bold text-slate-800 mb-6">Novo profissional</h3>
+            <form id="form-new" class="space-y-4">
+                <input id="n-name" required minlength="3" placeholder="Nome completo (fictício)" class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
+                <div class="grid grid-cols-2 gap-3">
+                    <select id="n-type" required class="w-full p-2 border rounded-lg"></select>
+                    <input id="n-registry" required minlength="3" placeholder="Registro (ex.: CRM-PA 12345)" class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <select id="n-department" class="w-full p-2 border rounded-lg"></select>
+                    <select id="n-specialty" class="w-full p-2 border rounded-lg"></select>
+                </div>
+                <input id="n-email" type="email" placeholder="E-mail (opcional, use @example.com)" class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
+                <fieldset class="border rounded-lg p-3">
+                    <legend class="text-sm font-medium text-slate-700 px-1">Atendimento</legend>
+                    <div id="n-weekdays" class="flex flex-wrap gap-2 mb-3"></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="text-sm text-slate-600">Início <input id="n-start" type="time" value="08:00" class="w-full p-2 border rounded-lg"></label>
+                        <label class="text-sm text-slate-600">Fim <input id="n-end" type="time" value="12:00" class="w-full p-2 border rounded-lg"></label>
+                    </div>
+                </fieldset>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">Cadastrar</button>
+            </form>
+            <div id="res-new" class="mt-4 p-3 rounded-lg text-sm hidden" role="status"></div>
+        </div>
+    </div>
+
+    <script type="module" src="/static/js/pages/professionals.js"></script>
+</body>
+</html>

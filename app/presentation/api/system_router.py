@@ -8,13 +8,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.observability.metrics import metrics
 from app.infrastructure.persistence.database import engine, get_db
+from app.infrastructure.persistence.models.appointment_model import AppointmentModel
 from app.infrastructure.persistence.models.billing_model import InvoiceModel
 from app.infrastructure.persistence.models.medication_model import MedicationModel
 from app.infrastructure.persistence.models.patient_model import PatientModel
+from app.infrastructure.persistence.models.professional_model import ProfessionalModel
 from app.infrastructure.persistence.models.schedule_model import ScheduleModel
 from app.infrastructure.persistence.models.user_model import UserModel
 
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.2.0"
 
 router = APIRouter(tags=["Sistema"])
 
@@ -22,6 +24,8 @@ router = APIRouter(tags=["Sistema"])
 _COUNTED_MODELS = {
     "patients": PatientModel,
     "users": UserModel,
+    "professionals": ProfessionalModel,
+    "appointments": AppointmentModel,
     "schedules": ScheduleModel,
     "medications": MedicationModel,
     "invoices": InvoiceModel,

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthOS | Consultas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav id="app-nav" class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50 h-[73px]"></nav>
+
+    <header class="max-w-6xl mx-auto px-4 sm:px-6 py-10 flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Consultas</h1>
+            <p class="text-slate-600">Agenda dos profissionais, agendamento e acompanhamento do ciclo de cada consulta.</p>
+        </div>
+        <button id="btn-new" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700">
+            <i class="fas fa-plus"></i> Nova consulta
+        </button>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 pb-20">
+        <div class="flex justify-center mb-6">
+            <div class="bg-white p-1 rounded-xl border border-slate-200 flex gap-2" role="tablist">
+                <button data-tab="list" role="tab" class="tab px-4 py-2 rounded-lg text-sm font-bold">Lista</button>
+                <button data-tab="calendar" role="tab" class="tab px-4 py-2 rounded-lg text-sm font-bold">Calendário semanal</button>
+            </div>
+        </div>
+
+        <form id="filters" class="glass-card rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+            <label class="text-sm text-slate-600">Profissional
+                <select id="f-professional" class="w-full p-2 border rounded-lg mt-1"></select></label>
+            <label class="text-sm text-slate-600 list-only">Situação
+                <select id="f-status" class="w-full p-2 border rounded-lg mt-1"></select></label>
+            <label class="text-sm text-slate-600 list-only">De
+                <input id="f-from" type="date" class="w-full p-2 border rounded-lg mt-1"></label>
+            <label class="text-sm text-slate-600 list-only">Até
+                <input id="f-to" type="date" class="w-full p-2 border rounded-lg mt-1"></label>
+        </form>
+
+        <section id="view-list">
+            <div id="list" class="space-y-3" aria-live="polite"></div>
+            <div id="pagination"></div>
+        </section>
+
+        <section id="view-calendar" class="hidden">
+            <div class="flex items-center justify-between mb-4 gap-2">
+                <button id="week-prev" class="px-3 py-2 rounded-lg border bg-white text-sm"><i class="fas fa-chevron-left"></i> Semana anterior</button>
+                <strong id="week-label" class="text-slate-700 text-center"></strong>
+                <button id="week-next" class="px-3 py-2 rounded-lg border bg-white text-sm">Próxima semana <i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div id="calendar" class="grid grid-cols-1 md:grid-cols-7 gap-3" aria-live="polite"></div>
+        </section>
+    </main>
+
+    <!-- Nova consulta -->
+    <div id="modal-new" class="modal" role="dialog" aria-modal="true" aria-labelledby="new-title">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-lg shadow-2xl relative">
+            <button data-close-modal="modal-new" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h3 id="new-title" class="text-2xl font-bold text-slate-800 mb-6">Nova consulta</h3>
+            <form id="form-new" class="space-y-4">
+                <label class="block text-sm text-slate-600">Paciente
+                    <select id="n-patient" required class="w-full p-2 border rounded-lg mt-1"></select></label>
+                <label class="block text-sm text-slate-600">Profissional
+                    <select id="n-professional" required class="w-full p-2 border rounded-lg mt-1"></select></label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="text-sm text-slate-600">Data
+                        <input id="n-date" type="date" required class="w-full p-2 border rounded-lg mt-1"></label>
+                    <label class="text-sm text-slate-600">Tipo
+                        <select id="n-type" class="w-full p-2 border rounded-lg mt-1"></select></label>
+                </div>
+                <div>
+                    <span class="text-sm text-slate-600">Horários livres</span>
+                    <div id="n-slots" class="flex flex-wrap gap-2 mt-2 min-h-[2.5rem]"></div>
+                </div>
+                <input id="n-reason" maxlength="500" placeholder="Motivo (opcional)" class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">Agendar</button>
+            </form>
+            <div id="res-new" class="mt-4 p-3 rounded-lg text-sm hidden" role="status"></div>
+        </div>
+    </div>
+
+    <!-- Ação que exige texto (cancelar / finalizar) -->
+    <div id="modal-text" class="modal" role="dialog" aria-modal="true" aria-labelledby="text-title">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+            <button data-close-modal="modal-text" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h3 id="text-title" class="text-xl font-bold text-slate-800 mb-4"></h3>
+            <form id="form-text" class="space-y-4">
+                <textarea id="t-value" class="w-full p-2 border rounded-lg h-28 outline-none focus:border-blue-500"></textarea>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">Confirmar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Remarcar -->
+    <div id="modal-reschedule" class="modal" role="dialog" aria-modal="true" aria-labelledby="reschedule-title">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+            <button data-close-modal="modal-reschedule" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h3 id="reschedule-title" class="text-xl font-bold text-slate-800 mb-4">Remarcar consulta</h3>
+            <label class="text-sm text-slate-600">Nova data
+                <input id="r-date" type="date" class="w-full p-2 border rounded-lg mt-1"></label>
+            <div id="r-slots" class="flex flex-wrap gap-2 mt-4 min-h-[2.5rem]"></div>
+        </div>
+    </div>
+
+    <!-- Histórico -->
+    <div id="modal-history" class="modal" role="dialog" aria-modal="true" aria-labelledby="history-title">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+            <button data-close-modal="modal-history" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h3 id="history-title" class="text-xl font-bold text-slate-800 mb-4">Histórico da consulta</h3>
+            <ol id="history-body" class="relative border-l border-slate-200 ml-2 space-y-4"></ol>
+        </div>
+    </div>
+
+    <script type="module" src="/static/js/pages/appointments.js"></script>
+</body>
+</html>

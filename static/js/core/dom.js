@@ -21,6 +21,18 @@ export const formatDate = value => value ? new Date(value).toLocaleDateString('p
 export function openModal(id) { document.getElementById(id)?.classList.add('active'); }
 export function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
 
+/** Fecha modais por botão [data-close-modal], clique no fundo escurecido ou tecla Esc. */
+export function enableModalDismiss() {
+    document.addEventListener('click', event => {
+        const closer = event.target.closest('[data-close-modal]');
+        if (closer) closeModal(closer.dataset.closeModal);
+        else if (event.target.classList.contains('modal')) event.target.classList.remove('active');
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+    });
+}
+
 /** Mostra uma mensagem de resultado (sucesso/erro) em um elemento de feedback. */
 export function showResult(element, message, ok = true) {
     element.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');

@@ -15,6 +15,9 @@ from app.presentation.api.v1.pharmacy.pharmacy_router import router as pharmacy_
 from app.presentation.api.v1.billing.billing_router import router as billing_router
 from app.presentation.api.v1.notifications.notification_router import router as notification_router
 from app.presentation.api.v1.clinical.router import router as clinical_router
+from app.presentation.api.v1.professionals.router import router as professionals_router
+from app.presentation.api.v1.appointments.router import router as appointments_router
+from app.presentation.api.error_handlers import register_error_handlers
 from app.infrastructure.persistence.database import engine, AsyncSessionLocal
 from app.infrastructure.persistence.models.user_model import Base
 from app.infrastructure.persistence.models.user_model import UserModel
@@ -31,12 +34,14 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 # Registra todos os modelos no metadata antes de criar tabelas.
 from app.infrastructure.persistence.models import (
     alert_model,
+    appointment_model,
     audit_model,
     billing_model,
     clinical_model,
     medication_model,
     notification_model,
     patient_model,
+    professional_model,
     role_models,
     schedule_model,
     triage_model,
@@ -134,6 +139,11 @@ app.include_router(pharmacy_router, prefix="/api/v1", tags=["Farmácia"])
 app.include_router(billing_router, prefix="/api/v1", tags=["Faturamento"])
 app.include_router(notification_router, prefix="/api/v1", tags=["Notificações"])
 app.include_router(clinical_router, prefix="/api/v1", tags=["Serviços Clínicos"])
+
+# Módulos da expansão didática
+register_error_handlers(app)
+app.include_router(professionals_router, prefix="/api/v1")
+app.include_router(appointments_router, prefix="/api/v1")
 
 BASE_DIR = os.path.dirname(__file__)
 

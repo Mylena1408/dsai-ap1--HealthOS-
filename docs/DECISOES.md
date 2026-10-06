@@ -82,3 +82,42 @@ UUID, e são zeradas a cada reinício.
 
 **Consequências.** Sem dependências novas; suficiente para fins didáticos. Em um
 sistema real, o caminho natural seria Prometheus/OpenTelemetry.
+
+---
+
+## ADR-006 — Consultas em tabelas próprias, sem alterar a agenda legada
+
+**Contexto.** A tabela `schedules` guarda horários livres que o portal reserva
+(`AVAILABLE → BOOKED`). Ela referencia `users.id` como médico e não comporta
+especialidade, tipo de consulta, confirmação, atendimento nem histórico.
+
+**Decisão.** O módulo de consultas usa tabelas novas (`appointments` e
+`appointment_status_history`) e o cadastro novo de profissionais
+(`professionals`, `professional_working_hours`, `departments`, `specialties`).
+A disponibilidade é calculada a partir do expediente, sem pré-criar horários.
+A agenda legada continua funcionando exatamente como antes, para o portal.
+
+**Consequências.** Existem dois fluxos de agendamento durante a transição; a
+documentação deixa claro qual é o legado. As regras de estado ficam na
+entidade `Appointment` e são testadas sem banco; o relógio é injetado no caso
+de uso para testar regras dependentes de horário.
+
+---
+
+## ADR-007 — Exceções de domínio tipadas para os módulos novos
+
+**Decisão.** `EntityNotFoundError` (404), `BusinessRuleViolation` (400),
+`ConflictError` e `InvalidTransitionError` (409), traduzidas por handlers
+globais registrados em `app/presentation/api/error_handlers.py`. Os routers
+novos não precisam de `try/except`. Os routers legados não foram alterados.
+
+---
+
+## ADR-008 — Timestamps gerados no Python nas tabelas novas
+
+**Contexto.** Colunas com `server_default`/`onupdate=func.now()` ficam
+*expiradas* após o flush; ler o valor depois exige I/O implícito, o que gera
+`MissingGreenlet` em sessões assíncronas.
+
+**Decisão.** Nas tabelas novas, `created_at`/`updated_at` usam
+`default=datetime.now` / `onupdate=datetime.now` (valor conhecido pelo Python).
