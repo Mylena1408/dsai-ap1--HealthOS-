@@ -140,7 +140,7 @@ function openDispense(prescriptionId) {
     $('d-result').classList.add('hidden');
     $('d-items').innerHTML = p.items.filter(i => i.status === 'EM_USO' && i.remaining_quantity > 0).map(i => `
         <label class="text-sm text-slate-600 flex items-center justify-between gap-3 border rounded-lg p-2">
-            <span>${escapeHtml(i.medication_name || '')} <span class="text-slate-400">(saldo ${fmt(i.remaining_quantity)})</span></span>
+            <span>${escapeHtml(i.medication_name || '')} <span class="text-slate-500">(saldo ${fmt(i.remaining_quantity)})</span></span>
             <input data-item="${escapeHtml(i.id)}" type="number" min="0" max="${i.remaining_quantity}" step="any" value="${i.remaining_quantity}" class="w-24 p-2 border rounded-lg text-right"></label>`).join('');
     openModal('modal-dispense');
 }

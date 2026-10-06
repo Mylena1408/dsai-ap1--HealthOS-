@@ -197,6 +197,11 @@ app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), na
 async def read_index():
     return FileResponse(os.path.join(BASE_DIR, "index.html"))
 
+# Navegadores pedem /favicon.ico por conta própria (inclusive no /docs); as páginas usam o SVG.
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse(os.path.join(BASE_DIR, "static", "favicon.svg"), media_type="image/svg+xml")
+
 # Páginas do frontend modular: /app/status -> static/pages/status.html
 PAGES_DIR = os.path.join(BASE_DIR, "static", "pages")
 

@@ -3,7 +3,8 @@
 // hairline, faixa de referência recessiva, rótulo direto só no último ponto, legenda
 // apenas com 2+ séries, cruz de leitura + tooltip (mouse e teclado).
 const NS = 'http://www.w3.org/2000/svg';
-const MARGIN = { top: 16, right: 56, bottom: 28, left: 44 };
+const MARGIN = { top: 16, right: 56, bottom: 28, left: 44 };  // right é o mínimo; cresce com o rótulo final
+const CHAR_WIDTH = 6.6;
 
 function el(name, attrs = {}, parent = null) {
     const node = document.createElementNS(NS, name);
@@ -29,10 +30,11 @@ const formatDay = date => date.toLocaleDateString('pt-BR', { day: '2-digit', mon
 
 /**
  * series: [{ name, color, points: [{ t: Date, v: number, note?: string }] }]
- * options: { unit, height, reference: { min?, max? }, ariaLabel }
+ * options: { unit, format(value) -> texto, height, reference: { min?, max? }, ariaLabel }
  */
 export function renderLineChart(container, series, options = {}) {
     const { unit = '', height = 180, reference = null, ariaLabel = 'Gráfico de evolução' } = options;
+    const formatValue = options.format || (value => `${formatNumber(value)}${unit ? ` ${unit}` : ''}`);
     container.classList.add('viz-root', 'relative');
     const draw = () => {
         container.replaceChildren();
@@ -47,12 +49,14 @@ export function renderLineChart(container, series, options = {}) {
         const ticks = niceTicks(Math.min(...values), Math.max(...values));
         const [vMin, vMax] = [ticks[0], ticks[ticks.length - 1]];
 
-        const plotW = width - MARGIN.left - MARGIN.right;
+        const endLabels = series.filter(s => s.points.length).map(s => formatValue(s.points[s.points.length - 1].v));
+        const right = Math.max(MARGIN.right, Math.max(0, ...endLabels.map(t => t.length)) * CHAR_WIDTH + 14);
+        const plotW = width - MARGIN.left - right;
         const plotH = height - MARGIN.top - MARGIN.bottom;
         const x = t => MARGIN.left + ((t - tMin) / (tMax - tMin)) * plotW;
         const y = v => MARGIN.top + (1 - (v - vMin) / (vMax - vMin || 1)) * plotH;
 
-        const svg = el('svg', { viewBox: `0 0 ${width} ${height}`, width, height, role: 'img', 'aria-label': ariaLabel });
+        const svg = el('svg', { viewBox: `0 0 ${width} ${height}`, width, height, role: 'group', 'aria-label': ariaLabel });
         svg.style.display = 'block';
 
         // Faixa de referência (recessiva) atrás de tudo.
@@ -89,13 +93,13 @@ export function renderLineChart(container, series, options = {}) {
             points.forEach(p => el('circle', { cx: x(p.t.getTime()), cy: y(p.v), r: 4, style: `fill: ${s.color}`, class: 'viz-dot' }, svg));
             const last = points[points.length - 1];
             const label = el('text', { x: x(last.t.getTime()) + 8, y: y(last.v) + 4, class: 'viz-end-label' }, svg);
-            label.textContent = `${formatNumber(last.v)}${unit ? ` ${unit}` : ''}`;
+            label.textContent = formatValue(last.v);
         });
 
         // Cruz de leitura + tooltip (mouse e teclado).
         const moments = [...new Set(times)].sort((a, b) => a - b);
         const crosshair = el('line', { y1: MARGIN.top, y2: MARGIN.top + plotH, class: 'viz-crosshair', visibility: 'hidden' }, svg);
-        const overlay = el('rect', { x: MARGIN.left, y: MARGIN.top, width: plotW, height: plotH, fill: 'transparent', tabindex: 0 }, svg);
+        const overlay = el('rect', { x: MARGIN.left, y: MARGIN.top, width: plotW, height: plotH, fill: 'transparent', tabindex: 0, role: 'img' }, svg);
         overlay.setAttribute('aria-label', `${ariaLabel}: use as setas para percorrer as medições`);
         const tooltip = document.createElement('div');
         tooltip.className = 'viz-tooltip';
@@ -122,7 +126,7 @@ export function renderLineChart(container, series, options = {}) {
                 key.className = 'viz-line-key';
                 key.style.background = s.color;
                 const value = document.createElement('strong');
-                value.textContent = `${formatNumber(point.v)}${unit ? ` ${unit}` : ''}`;
+                value.textContent = formatValue(point.v);
                 const name = document.createElement('span');
                 name.className = 'viz-tooltip-name';
                 name.textContent = point.note ? `${s.name} · ${point.note}` : s.name;

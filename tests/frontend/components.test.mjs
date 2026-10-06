@@ -93,3 +93,22 @@ test("destaque da busca não injeta HTML e não quebra entidades", async () => {
     assert.equal(highlightTerm("custo (R$)", "(R$"), 'custo <mark class="bg-amber-100 rounded px-0.5">(R$</mark>)');
     assert.equal(highlightTerm("texto", "  "), "texto");
 });
+
+test("gráficos: formatador de valor e marcas com papel e nome acessível", () => {
+    const money = v => `R$ ${v.toFixed(2).replace(".", ",")}`;
+    const bars = container();
+    renderBarChart(bars, [{ label: "Pix", value: 1313.8 }], { format: money, ariaLabel: "Recebido" });
+    assert.equal(bars.querySelector(".viz-end-label").textContent, "R$ 1313,80");
+    assert.equal(bars.querySelector("svg").getAttribute("role"), "group");
+    const bar = bars.querySelector("path[tabindex]");
+    assert.equal(bar.getAttribute("role"), "img");
+    assert.equal(bar.getAttribute("aria-label"), "Pix: R$ 1313,80");
+    bar.dispatchEvent(new env.window.FocusEvent("focus"));  // tooltip usa o mesmo formatador
+    assert.match(bars.querySelector(".viz-tooltip").textContent, /R\$ 1313,80/);
+
+    const line = container();
+    renderLineChart(line, [{ name: "Faturado", color: "var(--series-1)",
+                             points: [0, 1].map(i => ({ t: day(i), v: 100 + i })) }], { format: money });
+    assert.equal(line.querySelector(".viz-end-label").textContent, "R$ 101,00");
+    assert.equal(line.querySelector("rect[tabindex]").getAttribute("role"), "img");
+});

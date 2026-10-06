@@ -15,7 +15,7 @@ function formatUptime(seconds) {
 }
 
 function tile(label, value, tone = 'slate') {
-    const tones = { slate: 'text-slate-800', ok: 'text-emerald-600', bad: 'text-red-600' };
+    const tones = { slate: 'text-slate-800', ok: 'text-emerald-700', bad: 'text-red-600' };
     return `<div class="glass-card rounded-2xl p-5">
         <div class="text-xs uppercase tracking-wide text-slate-500 mb-1">${escapeHtml(label)}</div>
         <div class="text-2xl font-bold ${tones[tone]}">${escapeHtml(value)}</div>

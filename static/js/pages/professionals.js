@@ -14,7 +14,7 @@ const state = { offset: 0, specialties: [], departments: [], byId: {} };
 const hhmm = value => String(value).slice(0, 5);
 
 function card(p) {
-    const statusColor = p.status === 'ATIVO' ? 'text-emerald-600' : 'text-amber-600';
+    const statusColor = p.status === 'ATIVO' ? 'text-emerald-700' : 'text-amber-700';
     return `
         <button type="button" data-id="${escapeHtml(p.id)}" class="glass-card rounded-2xl p-5 text-left hover:border-blue-500 transition-all">
             <div class="flex items-start justify-between gap-2 mb-2">
@@ -23,7 +23,7 @@ function card(p) {
             </div>
             <p class="text-sm text-slate-600">${escapeHtml(PROFESSIONAL_TYPES[p.professional_type] || p.professional_type)}
                 ${p.specialty_name ? `· ${escapeHtml(p.specialty_name)}` : ''}</p>
-            <p class="text-xs text-slate-400 mt-1">${escapeHtml(p.registry_number)}${p.department_name ? ` · ${escapeHtml(p.department_name)}` : ''}</p>
+            <p class="text-xs text-slate-500 mt-1">${escapeHtml(p.registry_number)}${p.department_name ? ` · ${escapeHtml(p.department_name)}` : ''}</p>
             <p class="text-xs text-slate-500 mt-3"><i class="far fa-clock"></i>
                 ${p.working_hours.length ? `${new Set(p.working_hours.map(h => h.weekday)).size} dia(s) de atendimento` : 'Sem grade cadastrada'}</p>
         </button>`;
@@ -52,7 +52,7 @@ function showDetail(p) {
     const byDay = WEEKDAYS.map((day, index) => {
         const windows = p.working_hours.filter(h => h.weekday === index);
         return `<tr class="border-b last:border-0"><td class="py-1 pr-4 text-slate-600">${day}</td>
-            <td class="py-1">${windows.length ? windows.map(h => `${hhmm(h.start_time)}–${hhmm(h.end_time)}`).join(', ') : '<span class="text-slate-400">—</span>'}</td></tr>`;
+            <td class="py-1">${windows.length ? windows.map(h => `${hhmm(h.start_time)}–${hhmm(h.end_time)}`).join(', ') : '<span class="text-slate-500">—</span>'}</td></tr>`;
     }).join('');
     $('detail-body').innerHTML = `
         <h3 id="detail-title" class="text-2xl font-bold text-slate-800">${escapeHtml(p.full_name)}</h3>

@@ -113,7 +113,7 @@ async function loadCalendar() {
                             <button data-act="history" data-id="${escapeHtml(a.id)}" class="w-full text-left rounded-lg p-2 text-xs ${APPOINTMENT_STATUS[a.status]?.color || ''}">
                                 <div class="font-bold">${timeOf(a.start_time)}</div>
                                 <div class="truncate">${escapeHtml(a.patient_name || '')}</div>
-                            </button>`).join('') || '<p class="text-xs text-slate-400">Sem consultas</p>'}
+                            </button>`).join('') || '<p class="text-xs text-slate-500">Sem consultas</p>'}
                     </div>
                 </div>`;
         }).join('');
@@ -187,7 +187,7 @@ function showHistory(a) {
         <li class="ml-4 relative">
             <span class="absolute -left-[1.4rem] top-1 w-3 h-3 rounded-full bg-blue-500" aria-hidden="true"></span>
             <div class="text-xs text-slate-500">${formatDateTime(h.changed_at)}</div>
-            <div class="text-sm">${h.from_status ? `${statusBadge(h.from_status)} <i class="fas fa-arrow-right text-slate-400 mx-1"></i>` : ''}${statusBadge(h.to_status)}</div>
+            <div class="text-sm">${h.from_status ? `${statusBadge(h.from_status)} <i class="fas fa-arrow-right text-slate-500 mx-1"></i>` : ''}${statusBadge(h.to_status)}</div>
             ${h.note ? `<div class="text-sm text-slate-600 mt-1">${escapeHtml(h.note)}</div>` : ''}
         </li>`).join('') +
         `<li class="ml-4 text-sm text-slate-600 pt-2 border-t">${escapeHtml(a.patient_name || '')} com ${escapeHtml(a.professional_name || '')}

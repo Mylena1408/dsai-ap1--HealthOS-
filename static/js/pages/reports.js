@@ -94,7 +94,7 @@ async function init() {
         $('catalog').innerHTML = state.catalog.map(r => `
             <li><button data-report="${escapeHtml(r.key)}" class="w-full text-left glass-card rounded-xl p-3 border hover:bg-slate-50">
                 <div class="font-semibold text-slate-800 text-sm">${escapeHtml(r.title)}</div>
-                <div class="text-xs text-slate-500">${r.uses_period ? 'Por período' : 'Posição atual'}</div>
+                <div class="text-xs text-slate-600">${r.uses_period ? 'Por período' : 'Posição atual'}</div>
             </button></li>`).join('');
         const requested = new URLSearchParams(window.location.search).get('report');
         selectReport(state.catalog.some(r => r.key === requested) ? requested : state.catalog[0].key);

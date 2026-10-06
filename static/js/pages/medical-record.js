@@ -151,11 +151,11 @@ const TABS = {
                     : empty('Nenhuma consulta finalizada.'))}
                 ${card('Problemas ativos', r.active_conditions.length
                     ? `<ul class="space-y-2">${r.active_conditions.map(c => `<li class="flex justify-between gap-2 text-sm">
-                        <span>${escapeHtml(c.name)}${c.code ? ` <span class="text-slate-400">(${escapeHtml(c.code)})</span>` : ''}</span>${badge(CONDITION_STATUS, c.status)}</li>`).join('')}</ul>`
+                        <span>${escapeHtml(c.name)}${c.code ? ` <span class="text-slate-500">(${escapeHtml(c.code)})</span>` : ''}</span>${badge(CONDITION_STATUS, c.status)}</li>`).join('')}</ul>`
                     : empty('Nenhuma condição ativa.'))}
                 ${card('Diagnósticos recentes', r.recent_diagnoses.length
                     ? `<ul class="space-y-2">${r.recent_diagnoses.map(d => `<li class="flex justify-between gap-2 text-sm">
-                        <span>${escapeHtml(d.description)} <span class="text-slate-400">${formatDate(d.diagnosed_at)}</span></span>${badge(DIAGNOSIS_CERTAINTY, d.certainty)}</li>`).join('')}</ul>`
+                        <span>${escapeHtml(d.description)} <span class="text-slate-500">${formatDate(d.diagnosed_at)}</span></span>${badge(DIAGNOSIS_CERTAINTY, d.certainty)}</li>`).join('')}</ul>`
                     : empty('Nenhum diagnóstico registrado.'))}
             </div>`;
     },

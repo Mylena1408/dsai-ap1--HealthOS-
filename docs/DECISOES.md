@@ -344,3 +344,27 @@ mascarado. O link leva à página que já tem as regras de exibição completas.
 encontra "Álvaro"); no PostgreSQL a comparação é completa. Os relatórios, que estão em memória,
 são comparados sem acentos.
 
+---
+
+## ADR-025 — Navegação agrupada e revisão em navegador real
+
+**Contexto.** Com 16 páginas, a barra de links soltos não cabia: em telas largas metade dos itens
+ficava escondida em uma rolagem horizontal pouco perceptível, e no celular os links desapareciam.
+Os testes em DOM simulado não mediam layout, então nada disso aparecia nos testes.
+
+**Decisão.**
+- Navegação em três entradas: Painel e os grupos "Atendimento" e "Gestão" (padrão *disclosure* da
+  WAI-ARIA: botão com `aria-expanded`, fecha com Esc, clique fora ou foco saindo). No celular, um
+  botão de menu abre um painel com a busca e todas as páginas. O logo leva ao portal; notificações
+  ficam no sino.
+- `npm run a11y` (em `tests/frontend`) abre cada página no Edge/Chrome instalado (puppeteer-core,
+  sem baixar navegador), em 1440, 1024, 768 e 375 px, e falha com rolagem horizontal, erro no
+  console ou na tela, ou violação WCAG 2.1 AA apontada pelo axe-core. Também testa por teclado os
+  menus, o seletor de paciente e o modal aberto.
+
+**Correções que a revisão trouxe.** Seletor de paciente utilizável só com teclado (setas, Enter, Esc,
+`aria-activedescendant`); gráficos com papéis ARIA válidos; textos e botões de fechar com contraste
+mínimo de 4,5:1; rótulos de valor dos gráficos com espaço calculado pelo conteúdo; favicon.
+
+**Limite.** A ferramenta automática encontra cerca de metade dos problemas de acessibilidade; leitura
+com leitor de tela real (NVDA) continua recomendada.

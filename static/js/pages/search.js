@@ -19,7 +19,7 @@ async function search(term) {
         results.innerHTML = data.groups.map(group => `
             <section class="glass-card rounded-2xl p-5" aria-labelledby="group-${escapeHtml(group.key)}">
                 <h2 id="group-${escapeHtml(group.key)}" class="font-bold text-slate-800 mb-2">
-                    <i class="fas ${ICONS[group.key] || 'fa-circle'} text-slate-400 mr-1" aria-hidden="true"></i>${escapeHtml(group.label)}
+                    <i class="fas ${ICONS[group.key] || 'fa-circle'} text-slate-500 mr-1" aria-hidden="true"></i>${escapeHtml(group.label)}
                     <span class="text-sm font-normal text-slate-500">(${group.total > group.items.length ? `${group.items.length} de ${group.total}` : group.total})</span>
                 </h2>
                 <ul class="divide-y">${group.items.map(item => `

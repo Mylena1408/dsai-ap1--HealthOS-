@@ -89,6 +89,7 @@ Testes do frontend (Node 18+), em `tests/frontend`:
 cd tests/frontend && npm install
 npm test                                  # componentes de gráfico, sem servidor
 HEALTHOS_URL=http://127.0.0.1:8000 npm run smoke   # todas as páginas contra a API em execução
+HEALTHOS_URL=http://127.0.0.1:8000 npm run a11y    # navegador real: acessibilidade, 4 larguras, teclado
 ```
 
 ## 🩺 Observabilidade

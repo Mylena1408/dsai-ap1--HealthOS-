@@ -51,7 +51,7 @@ function openPicker() {
         dialog.setAttribute('aria-modal', 'true');
         dialog.innerHTML = `
             <div class="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl relative">
-                <button data-close-profile aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+                <button data-close-profile aria-label="Fechar" class="absolute top-4 right-4 text-slate-500 hover:text-slate-600"><i class="fas fa-times"></i></button>
                 <h3 class="text-xl font-bold text-slate-800 mb-1">Perfil de demonstração</h3>
                 <p class="text-xs text-slate-500 mb-4">Sem senha: escolha de quem é a caixa de notificações exibida.</p>
                 <div class="space-y-4">
@@ -104,15 +104,20 @@ export function mountProfileControls(container) {
     wrapper.className = 'flex items-center gap-1 shrink-0';
     wrapper.innerHTML = `
         <button data-profile class="px-2 py-2 rounded-md text-xs sm:text-sm text-slate-600 hover:bg-slate-100 flex items-center gap-1 max-w-[10rem]">
-            <i class="fas fa-user-circle" aria-hidden="true"></i><span class="truncate" data-profile-label></span></button>
+            <i class="fas fa-user-circle" aria-hidden="true"></i><span class="hidden sm:inline md:hidden lg:inline truncate" data-profile-label></span></button>
         <a href="/app/notificacoes" data-bell class="relative px-2 py-2 rounded-md text-slate-600 hover:bg-slate-100">
             <i class="fas fa-bell" aria-hidden="true"></i>
             <span data-unread class="hidden absolute -top-0.5 -right-0.5 bg-red-600 text-white text-[10px] font-bold rounded-full px-1.5 leading-4"></span></a>`;
     container.prepend(wrapper);
     const label = wrapper.querySelector('[data-profile-label]');
     const bell = wrapper.querySelector('[data-bell]');
-    const update = () => { label.textContent = getProfile().label; refreshBell(bell); };
-    wrapper.querySelector('[data-profile]').addEventListener('click', openPicker);
+    const button = wrapper.querySelector('[data-profile]');
+    const update = () => {
+        label.textContent = getProfile().label;
+        button.setAttribute('aria-label', `Perfil de demonstração: ${getProfile().label} (trocar)`);
+        refreshBell(bell);
+    };
+    button.addEventListener('click', openPicker);
     window.addEventListener('healthos:profile', update);
     window.addEventListener('healthos:inbox-changed', () => refreshBell(bell));
     update();

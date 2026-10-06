@@ -40,7 +40,7 @@ function examCard(e) {
         <article class="glass-card rounded-2xl p-4">
             <div class="flex flex-wrap justify-between items-start gap-2">
                 <div>
-                    <div class="font-bold text-slate-800">${escapeHtml(e.exam_name)} <span class="text-slate-400 font-normal">· ${escapeHtml(e.patient_name || '')}</span></div>
+                    <div class="font-bold text-slate-800">${escapeHtml(e.exam_name)} <span class="text-slate-500 font-normal">· ${escapeHtml(e.patient_name || '')}</span></div>
                     <div class="text-xs text-slate-500">Solicitado ${formatDateTime(e.requested_at)}
                         ${e.scheduled_for && e.status === 'AGENDADO' ? ` · coleta prevista ${formatDateTime(e.scheduled_for)}` : ''}
                         ${e.sample_code ? ` · amostra ${escapeHtml(e.sample_code)}` : ''}
@@ -61,7 +61,7 @@ async function loadStages() {
     $('stages').innerHTML = counts.map(([status, total]) => `
         <button data-stage="${status}" aria-pressed="${status === state.stage}"
             class="px-3 py-2 rounded-xl text-sm font-semibold border ${status === state.stage ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-700 hover:bg-slate-50'}">
-            ${escapeHtml(EXAM_STATUS[status].label)} <span class="ml-1 tabular-nums opacity-80">${total}</span></button>`).join('');
+            ${escapeHtml(EXAM_STATUS[status].label)} <span class="ml-1 tabular-nums">${total}</span></button>`).join('');
 }
 
 async function loadList() {
@@ -127,7 +127,7 @@ function handle(key, id) {
     case 'results': {
         const type = state.examTypes[exam.exam_type_id];
         return ask(`Resultados — ${exam.exam_name}`, type.analytes.map(a => `
-            <label class="text-sm text-slate-600 block">${escapeHtml(a.name)} <span class="text-slate-400">(${escapeHtml(a.unit)} · ref. ${escapeHtml(a.reference)})</span>
+            <label class="text-sm text-slate-600 block">${escapeHtml(a.name)} <span class="text-slate-500">(${escapeHtml(a.unit)} · ref. ${escapeHtml(a.reference)})</span>
                 <input data-analyte="${escapeHtml(a.code)}" type="number" step="any" required class="w-full p-2 border rounded-lg mt-1"></label>`).join('') +
             '<label class="text-sm text-slate-600 block">Observações<input id="a-notes" maxlength="2000" class="w-full p-2 border rounded-lg mt-1"></label>' +
             '<p class="text-xs text-amber-700">Valores fictícios para demonstração.</p>',

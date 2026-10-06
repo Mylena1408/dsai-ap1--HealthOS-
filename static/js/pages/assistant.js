@@ -97,7 +97,7 @@ function bubble(message) {
         ${message.urgent ? urgentNotice() : ''}
         ${answerText(message.content)}
         ${factsUsed(message.facts_used)}
-        <div class="text-[11px] text-slate-400">${escapeHtml(message.provider || '')} · ${formatDateTime(message.created_at)}</div>
+        <div class="text-[11px] text-slate-500">${escapeHtml(message.provider || '')} · ${formatDateTime(message.created_at)}</div>
     </div></div>`;
 }
 

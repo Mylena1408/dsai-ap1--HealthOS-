@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HealthOS | Consultas</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/app.css">
@@ -58,7 +59,7 @@
     <!-- Nova consulta -->
     <div id="modal-new" class="modal" role="dialog" aria-modal="true" aria-labelledby="new-title">
         <div class="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-lg shadow-2xl relative">
-            <button data-close-modal="modal-new" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <button data-close-modal="modal-new" aria-label="Fechar" class="absolute top-4 right-4 text-slate-500 hover:text-slate-600"><i class="fas fa-times"></i></button>
             <h3 id="new-title" class="text-2xl font-bold text-slate-800 mb-6">Nova consulta</h3>
             <form id="form-new" class="space-y-4">
                 <label class="block text-sm text-slate-600">Paciente
@@ -86,7 +87,7 @@
     <!-- Ação que exige texto (cancelar / finalizar) -->
     <div id="modal-text" class="modal" role="dialog" aria-modal="true" aria-labelledby="text-title">
         <div class="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
-            <button data-close-modal="modal-text" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <button data-close-modal="modal-text" aria-label="Fechar" class="absolute top-4 right-4 text-slate-500 hover:text-slate-600"><i class="fas fa-times"></i></button>
             <h3 id="text-title" class="text-xl font-bold text-slate-800 mb-4"></h3>
             <form id="form-text" class="space-y-4">
                 <textarea id="t-value" class="w-full p-2 border rounded-lg h-28 outline-none focus:border-blue-500"></textarea>
@@ -98,7 +99,7 @@
     <!-- Remarcar -->
     <div id="modal-reschedule" class="modal" role="dialog" aria-modal="true" aria-labelledby="reschedule-title">
         <div class="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
-            <button data-close-modal="modal-reschedule" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <button data-close-modal="modal-reschedule" aria-label="Fechar" class="absolute top-4 right-4 text-slate-500 hover:text-slate-600"><i class="fas fa-times"></i></button>
             <h3 id="reschedule-title" class="text-xl font-bold text-slate-800 mb-4">Remarcar consulta</h3>
             <label class="text-sm text-slate-600">Nova data
                 <input id="r-date" type="date" class="w-full p-2 border rounded-lg mt-1"></label>
@@ -109,7 +110,7 @@
     <!-- Histórico -->
     <div id="modal-history" class="modal" role="dialog" aria-modal="true" aria-labelledby="history-title">
         <div class="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
-            <button data-close-modal="modal-history" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <button data-close-modal="modal-history" aria-label="Fechar" class="absolute top-4 right-4 text-slate-500 hover:text-slate-600"><i class="fas fa-times"></i></button>
             <h3 id="history-title" class="text-xl font-bold text-slate-800 mb-4">Histórico da consulta</h3>
             <ol id="history-body" class="relative border-l border-slate-200 ml-2 space-y-4"></ol>
         </div>

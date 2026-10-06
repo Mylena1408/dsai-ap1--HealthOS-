@@ -35,7 +35,7 @@ function healthScoreCard(hs) {
     const band = BANDS[hs.band || 'SEM_DADOS'];
     return card('Health Score <span class="text-sm font-normal text-slate-500">(indicador demonstrativo)</span>', `
         <div class="flex flex-wrap items-center gap-6 mb-4">
-            <div class="text-5xl font-semibold text-slate-900">${hs.score ?? '—'}<span class="text-lg text-slate-400">/100</span></div>
+            <div class="text-5xl font-semibold text-slate-900">${hs.score ?? '—'}<span class="text-lg text-slate-500">/100</span></div>
             <div class="flex-1 min-w-[12rem]">
                 ${meter(hs.score)}
                 <div class="text-sm text-slate-700 mt-2"><i class="fas ${band.icon}" aria-hidden="true"></i> ${band.label}</div>

@@ -42,7 +42,7 @@ async function loadSummary() {
         renderLineChart($('chart-monthly'), [
             { name: 'Faturado', color: 'var(--series-1)', points: s.monthly.map(m => point(m, 'invoiced')) },
             { name: 'Recebido', color: 'var(--series-2)', points: s.monthly.map(m => point(m, 'received')) },
-        ], { unit: 'R$', ariaLabel: 'Faturado e recebido nos últimos seis meses' });
+        ], { format: formatMoney, ariaLabel: 'Faturado e recebido nos últimos seis meses' });
         $('table-monthly').innerHTML = `<table class="w-full text-sm"><thead><tr class="text-left text-slate-500 border-b">
                 <th class="py-1 pr-3 font-medium">Mês</th><th class="py-1 pr-3 font-medium text-right">Faturado</th>
                 <th class="py-1 font-medium text-right">Recebido</th></tr></thead>
@@ -50,9 +50,9 @@ async function loadSummary() {
                 <td class="py-1 pr-3 text-right tabular-nums">${formatMoney(m.invoiced)}</td>
                 <td class="py-1 text-right tabular-nums">${formatMoney(m.received)}</td></tr>`).join('')}</tbody></table>`;
         renderBarChart($('chart-methods'), s.received_by_method.map(i => ({ label: PAYMENT_METHODS[i.label] || i.label, value: Number(i.value) })),
-                       { unit: 'R$', ariaLabel: 'Recebido por forma de pagamento' });
+                       { format: formatMoney, ariaLabel: 'Recebido por forma de pagamento' });
         renderBarChart($('chart-payers'), s.invoiced_by_payer.map(i => ({ label: i.label, value: Number(i.value) })),
-                       { color: 'var(--series-2)', unit: 'R$', ariaLabel: 'Faturado por pagador' });
+                       { color: 'var(--series-2)', format: formatMoney, ariaLabel: 'Faturado por pagador' });
     } catch (err) {
         renderEmpty($('kpis'), `Erro: ${err.message}`);
     }

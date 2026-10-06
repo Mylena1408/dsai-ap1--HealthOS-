@@ -182,7 +182,7 @@ async function fetchClinicalHistory() {
                     <span class="text-xs ${badge} px-2 py-1 rounded-full">${escapeHtml(note.status)}</span>
                 </div>
                 <div class="text-sm text-slate-600 whitespace-pre-line">${escapeHtml(note.content)}</div>
-                <div class="text-xs text-slate-400 text-right">${new Date(note.timestamp).toLocaleString('pt-BR')}</div>`;
+                <div class="text-xs text-slate-500 text-right">${new Date(note.timestamp).toLocaleString('pt-BR')}</div>`;
             resDiv.appendChild(item);
         });
     } catch (err) {

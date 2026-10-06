@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HealthOS | Laboratório</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/app.css">
@@ -30,7 +31,7 @@
     <!-- Formulário genérico de ação (datas, motivos, validador, resultados) -->
     <div id="modal-action" class="modal" role="dialog" aria-modal="true" aria-labelledby="action-title">
         <div class="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-lg shadow-2xl relative">
-            <button data-close-modal="modal-action" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <button data-close-modal="modal-action" aria-label="Fechar" class="absolute top-4 right-4 text-slate-500 hover:text-slate-600"><i class="fas fa-times"></i></button>
             <h3 id="action-title" class="text-xl font-bold text-slate-800 mb-4"></h3>
             <form id="form-action" class="space-y-4">
                 <div id="action-fields" class="space-y-3"></div>
@@ -41,7 +42,7 @@
 
     <div id="modal-history" class="modal" role="dialog" aria-modal="true" aria-labelledby="history-title">
         <div class="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
-            <button data-close-modal="modal-history" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <button data-close-modal="modal-history" aria-label="Fechar" class="absolute top-4 right-4 text-slate-500 hover:text-slate-600"><i class="fas fa-times"></i></button>
             <h3 id="history-title" class="text-xl font-bold text-slate-800 mb-4">Histórico do exame</h3>
             <ol id="history-body" class="space-y-3"></ol>
         </div>

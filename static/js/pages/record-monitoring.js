@@ -44,7 +44,7 @@ export async function renderVitalsTab(container, { patientId, onChange }) {
             <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-600">
                 ${m.flag ? flagBadge(m.flag) : ''}${m.trend ? `<span>${TREND[m.trend]}</span>` : ''}
             </div>
-            ${m.reference ? `<div class="text-xs text-slate-400 mt-1">Referência: ${escapeHtml(m.reference)}</div>` : ''}
+            ${m.reference ? `<div class="text-xs text-slate-500 mt-1">Referência: ${escapeHtml(m.reference)}</div>` : ''}
         </div>`).join('');
     const charts = CHARTS.filter(c => c.metrics.some(m => metrics[m]));
 

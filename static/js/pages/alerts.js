@@ -56,7 +56,7 @@ async function loadList() {
                             <span class="text-xs text-slate-500">${escapeHtml(CATEGORIES[a.category] || a.category)} · ${escapeHtml(a.rule_code)}</span></div>
                         <h2 class="font-bold text-slate-800 mt-1">${escapeHtml(a.title)}</h2>
                         <p class="text-sm text-slate-600">${escapeHtml(a.message)}</p>
-                        <p class="text-xs text-slate-400 mt-1">Detectado em ${formatDateTime(a.first_detected_at)} · última verificação ${formatDateTime(a.last_detected_at)}
+                        <p class="text-xs text-slate-500 mt-1">Detectado em ${formatDateTime(a.first_detected_at)} · última verificação ${formatDateTime(a.last_detected_at)}
                             ${a.acknowledged_by ? ` · reconhecido por ${escapeHtml(a.acknowledged_by)}` : ''}</p>
                         ${a.resolution_note ? `<p class="text-xs text-emerald-700 mt-1">${escapeHtml(a.resolution_note)}</p>` : ''}
                     </div>
