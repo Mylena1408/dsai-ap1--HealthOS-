@@ -3,119 +3,145 @@
 > **Todos os dados abaixo são fictícios**, gerados automaticamente pelo seed de demonstração. Nenhum
 > nome, CPF ou registro profissional pertence a pessoas reais, e nada aqui é orientação médica.
 
-Esta página mostra o que existe no sistema depois que os dados de demonstração são carregados e
-onde cada informação aparece nas telas. Os nomes são sempre os mesmos, porque o gerador é
-determinístico. As datas são relativas ao dia em que o seed rodou, então mudam de um ambiente para outro.
+Esta página lista o que o seed cria e onde cada informação aparece nas telas. Os **nomes** de
+profissionais, pacientes e medicamentos são sempre os mesmos (o gerador é determinístico). Já as
+**quantidades, datas, estoques e quais pacientes têm alergias ou condições** dependem do dia em que
+o seed rodou e dos registros que já existiam no banco, por isso não aparecem aqui: consulte-os na tela.
 
 ## Como carregar estes dados
 
-- **No Render:** em *Environment*, defina `SEED_DEMO_DATA=True` e salve (o serviço reinicia).
+- **No Render:** em *Environment*, defina `SEED_DEMO_DATA=True` e salve (o serviço reinicia em ~1 min).
 - **No computador:** no `.env`, `SEED_DEMO_DATA=True`; ou rode `python -m scripts.seed_demo`.
 
-O seed é idempotente: rodar de novo não duplica nem apaga registros.
+O seed **só acrescenta** dados fictícios: não apaga nem altera os registros que já existem, e rodar de
+novo não duplica nada. Para conferir, abra `/status` e veja o total de pacientes e profissionais.
 
-## Visão geral
+## O que o seed cria
 
 | Item | Quantidade |
 |---|---:|
-| Pacientes | 50 |
+| Pacientes (somados aos já cadastrados) | 50 |
 | Profissionais de saúde | 20 |
-| Consultas | 100 |
-| Medicamentos | 12 |
-| Faturas | 64 |
-| Health Score médio dos pacientes | 61,7 |
+| Consultas (passadas e futuras) | 100 |
+| Solicitações de exame | 200 |
+| Prescrições | 150 |
+| Medicamentos (com lotes e estoque) | 12 |
+| Faturas (geradas das consultas e exames) | cerca de 60 |
+| Alertas por regra | cerca de 80 |
 
 ## Médicos
 
-| Nome | Especialidade | Registro (fictício) | Histórico registrado |
+No histórico de atividades: consultas, prescrições emitidas, exames solicitados e exames validados.
+
+| Nome | Especialidade | Departamento | Registro (fictício) |
 |---|---|---|---|
-| Dr(a). Caio Moreira | Clínica Geral | CRM-PA 10001 | 27 exames solicitados, 12 prescrições, 9 exames validados, 5 consultas |
-| Dr(a). Enzo Cardoso | Pediatria | CRM-PA 10008 | 18 prescrições, 17 exames solicitados, 10 exames validados, 5 consultas |
-| Dr(a). Fernanda Pereira | Clínica Geral | CRM-PA 10003 | 21 exames solicitados, 15 prescrições, 13 exames validados, 2 consultas |
-| Dr(a). Igor Martins | Pediatria | CRM-PA 10007 | 17 exames solicitados, 15 prescrições, 13 exames validados, 5 consultas |
-| Dr(a). Lucas Pereira | Clínica Geral | CRM-PA 10002 | 21 exames solicitados, 19 prescrições, 16 exames validados, 5 consultas |
-| Dr(a). Paula Cardoso | Cardiologia | CRM-PA 10005 | 19 exames solicitados, 17 exames validados, 15 prescrições, 2 consultas |
-| Dr(a). Vitória Santos | Cardiologia | CRM-PA 10006 | 27 exames solicitados, 21 prescrições, 11 exames validados, 2 consultas |
-| Dr(a). William Dias | Endocrinologia | CRM-PA 10009 | 28 exames solicitados, 17 prescrições, 5 exames validados |
-| Dr(a). William Rocha | Clínica Geral | CRM-PA 10004 | 23 exames solicitados, 18 prescrições, 7 exames validados, 3 consultas |
+| Dr(a). Caio Moreira | Clínica Geral | Clínica Médica | CRM-PA 10001 |
+| Dr(a). Enzo Cardoso | Pediatria | Pediatria | CRM-PA 10008 |
+| Dr(a). Fernanda Pereira | Clínica Geral | Clínica Médica | CRM-PA 10003 |
+| Dr(a). Igor Martins | Pediatria | Pediatria | CRM-PA 10007 |
+| Dr(a). Lucas Pereira | Clínica Geral | Clínica Médica | CRM-PA 10002 |
+| Dr(a). Paula Cardoso | Cardiologia | Cardiologia | CRM-PA 10005 |
+| Dr(a). Vitória Santos | Cardiologia | Cardiologia | CRM-PA 10006 |
+| Dr(a). William Dias | Endocrinologia | Clínica Médica | CRM-PA 10009 |
+| Dr(a). William Rocha | Clínica Geral | Clínica Médica | CRM-PA 10004 |
 
 ## Enfermeiros
 
-| Nome | Especialidade | Registro (fictício) | Histórico registrado |
+No histórico de atividades: registros de sinais vitais (cerca de 90 por enfermeiro, com o paciente de cada medição) e consultas de enfermagem.
+
+| Nome | Especialidade | Departamento | Registro (fictício) |
 |---|---|---|---|
-| Enf. Débora Almeida | Enfermagem Clínica | COREN-PA 10012 | 93 registros de sinais vitais, 6 consultas |
-| Enf. Eduarda Cardoso | Enfermagem Clínica | COREN-PA 10011 | 93 registros de sinais vitais, 6 consultas |
-| Enf. Fernanda Martins | Enfermagem Clínica | COREN-PA 10010 | 92 registros de sinais vitais, 2 consultas |
+| Enf. Débora Almeida | Enfermagem Clínica | Enfermagem | COREN-PA 10012 |
+| Enf. Eduarda Cardoso | Enfermagem Clínica | Enfermagem | COREN-PA 10011 |
+| Enf. Fernanda Martins | Enfermagem Clínica | Enfermagem | COREN-PA 10010 |
 
 ## Farmacêuticos
 
-| Nome | Especialidade | Registro (fictício) | Histórico registrado |
+No histórico de atividades: dispensações de medicamentos (cerca de 45 por farmacêutico) e consultas.
+
+| Nome | Especialidade | Departamento | Registro (fictício) |
 |---|---|---|---|
-| Farm. Bruno Cardoso | Farmácia Clínica | CRF-PA 10013 | 45 dispensações, 1 consulta |
-| Farm. Paula Martins | Farmácia Clínica | CRF-PA 10014 | 46 dispensações, 2 consultas |
+| Farm. Bruno Cardoso | Farmácia Clínica | Farmácia | CRF-PA 10013 |
+| Farm. Paula Martins | Farmácia Clínica | Farmácia | CRF-PA 10014 |
 
 ## Fisioterapeutas
 
-| Nome | Especialidade | Registro (fictício) | Histórico registrado |
+No histórico de atividades: consultas.
+
+| Nome | Especialidade | Departamento | Registro (fictício) |
 |---|---|---|---|
-| Fisio. Débora Dias | Fisioterapia | CREFITO-PA 10016 | 2 consultas |
-| Fisio. Gustavo Cardoso | Fisioterapia | CREFITO-PA 10015 | 3 consultas |
+| Fisio. Débora Dias | Fisioterapia | Reabilitação | CREFITO-PA 10016 |
+| Fisio. Gustavo Cardoso | Fisioterapia | Reabilitação | CREFITO-PA 10015 |
 
 ## Psicólogos
 
-| Nome | Especialidade | Registro (fictício) | Histórico registrado |
+No histórico de atividades: consultas.
+
+| Nome | Especialidade | Departamento | Registro (fictício) |
 |---|---|---|---|
-| Psic. Igor Rodrigues | Psicologia Clínica | CRP-PA 10018 | 2 consultas |
-| Psic. Sofia Rodrigues | Psicologia Clínica | CRP-PA 10017 | 3 consultas |
+| Psic. Igor Rodrigues | Psicologia Clínica | Saúde Mental | CRP-PA 10018 |
+| Psic. Sofia Rodrigues | Psicologia Clínica | Saúde Mental | CRP-PA 10017 |
 
 ## Nutricionistas
 
-| Nome | Especialidade | Registro (fictício) | Histórico registrado |
+No histórico de atividades: consultas.
+
+| Nome | Especialidade | Departamento | Registro (fictício) |
 |---|---|---|---|
-| Nutri. Henrique Costa | Nutrição Clínica | CRN-PA 10019 | 5 consultas |
-| Nutri. Otávio Rocha | Nutrição Clínica | CRN-PA 10020 | 4 consultas |
+| Nutri. Henrique Costa | Nutrição Clínica | Nutrição | CRN-PA 10019 |
+| Nutri. Otávio Rocha | Nutrição Clínica | Nutrição | CRN-PA 10020 |
 
 ## Medicamentos
 
-| Medicamento | Princípio ativo | Dose | Categoria | Estoque (un.) | Validade mais próxima |
-|---|---|---|---|---:|---|
-| Amoxicilina Demo | Amoxicilina | 500mg | Antibióticos | 905 | 01/10/2026 |
-| Dexametasona Demo | Dexametasona | 4mg/ml | Corticoides | 129 | 18/10/2026 |
-| Dipirona Demo | Dipirona sódica | 500mg | Analgésicos e antitérmicos | 795 | 18/10/2026 |
-| Ibuprofeno Demo | Ibuprofeno | 400mg | Anti-inflamatórios | 966 | 01/10/2026 |
-| Insulina NPH Demo | Insulina humana NPH | 100UI/ml | Antidiabéticos | 618 | 01/10/2026 |
-| Losartana Demo | Losartana potássica | 50mg | Anti-hipertensivos | 998 | 01/10/2026 |
-| Metformina Demo | Metformina | 850mg | Antidiabéticos | 923 | 01/10/2026 |
-| Omeprazol Demo | Omeprazol | 20mg | Gastroprotetores | 813 | 31/10/2026 |
-| Paracetamol Demo | Paracetamol | 500mg | Analgésicos e antitérmicos | 797 | 01/10/2026 |
-| Salbutamol Demo | Salbutamol | 100mcg | Broncodilatadores | 719 | 01/10/2026 |
-| Sinvastatina Demo | Sinvastatina | 20mg | Hipolipemiantes | 865 | 01/10/2026 |
-| Soro Fisiológico Demo | Cloreto de sódio 0,9% | 500ml | Soluções e hidratação | 240 | 18/10/2026 |
+| Medicamento | Princípio ativo | Dose | Categoria |
+|---|---|---|---|
+| Amoxicilina Demo | Amoxicilina | 500mg | Antibióticos |
+| Dexametasona Demo | Dexametasona | 4mg/ml | Corticoides |
+| Dipirona Demo | Dipirona sódica | 500mg | Analgésicos e antitérmicos |
+| Ibuprofeno Demo | Ibuprofeno | 400mg | Anti-inflamatórios |
+| Insulina NPH Demo | Insulina humana NPH | 100UI/ml | Antidiabéticos |
+| Losartana Demo | Losartana potássica | 50mg | Anti-hipertensivos |
+| Metformina Demo | Metformina | 850mg | Antidiabéticos |
+| Omeprazol Demo | Omeprazol | 20mg | Gastroprotetores |
+| Paracetamol Demo | Paracetamol | 500mg | Analgésicos e antitérmicos |
+| Salbutamol Demo | Salbutamol | 100mcg | Broncodilatadores |
+| Sinvastatina Demo | Sinvastatina | 20mg | Hipolipemiantes |
+| Soro Fisiológico Demo | Cloreto de sódio 0,9% | 500ml | Soluções e hidratação |
 
-Alguns lotes estão de propósito vencidos ou perto do vencimento, e alguns itens abaixo do estoque
-mínimo, para que os alertas da farmácia tenham o que mostrar.
+Estoque, lotes e validades estão em **Atendimento → Farmácia**. Alguns lotes são criados de propósito
+vencidos ou perto do vencimento, e alguns itens abaixo do estoque mínimo, para os alertas da farmácia.
 
-## Pacientes para a demonstração
+## Pacientes
 
-Os cinco pacientes com o histórico mais completo:
+O seed cria 50 pacientes. Todos têm sinais vitais e linha do tempo; muitos também
+têm consultas, exames, prescrições e faturas. Nomes (em ordem alfabética):
 
-| Paciente | Idade | Alergias | Condições ativas | Eventos na linha do tempo | Health Score |
-|---|---:|---|---|---:|---|
-| Igor Lima Barbosa | 67 | Ácaros, Dipirona | Dislipidemia, Hipertensão arterial | 35 | 68 (Atenção) |
-| Ana Rodrigues Nascimento | 21 | Penicilina, Lactose | Asma, Rinite alérgica | 32 | 71 (Atenção) |
-| Fernanda Nascimento Araújo | 26 | Lactose | Lombalgia crônica, Rinite alérgica | 34 | 79 (Atenção) |
-| Caio Lima Dias | 63 | Camarão, Ácaros | Hipotireoidismo | 33 | 71 (Atenção) |
-| Beatriz Araújo Carvalho | 27 | — | Rinite alérgica | 36 | 89 (Bom) |
+- Ana Ribeiro Costa · Ana Rodrigues Nascimento · Beatriz Araújo Carvalho · Beatriz Carvalho Rocha · Beatriz Costa Rocha
+- Beatriz Dias Ribeiro · Bruno Rodrigues Barbosa · Caio Dias Barbosa · Caio Lima Dias · Carla Araújo Silva
+- Carla Pereira Dias · Carla Souza Moreira · Daniel Barbosa Gomes · Daniel Rocha Carvalho · Débora Oliveira Nascimento
+- Débora Santos Dias · Eduarda Moreira Ribeiro · Eduarda Nascimento Moreira · Enzo Carvalho Martins · Enzo Nascimento Santos
+- Enzo Silva Pereira · Felipe Almeida Dias · Felipe Martins Ribeiro · Fernanda Nascimento Araújo · Gustavo Almeida Souza
+- Gustavo Nascimento Lima · Helena Gomes Gomes · Helena Oliveira Gomes · Igor Barbosa Cardoso · Igor Lima Barbosa
+- João Moreira Costa · João Ribeiro Moreira · João Ribeiro Santos · Júlia Lima Almeida · Júlia Nascimento Rocha
+- Júlia Silva Araújo · Larissa Cardoso Ribeiro · Larissa Carvalho Gomes · Larissa Costa Cardoso · Larissa Pereira Silva
+- Larissa Rocha Araújo · Lucas Araújo Pereira · Lucas Rocha Barbosa · Marcos Almeida Dias · Marcos Martins Ribeiro
+- Paula Costa Gomes · Sofia Gomes Barbosa · William Barbosa Souza · William Rodrigues Costa · William Silva Nascimento
 
-Para encontrar um deles, digite parte do nome na busca (tecla `/`) ou em **Atendimento → Prontuário**.
+**Para achar bons exemplos na tela:**
+
+- **Paciente com exame alterado:** *Gestão → Alertas* → categoria *Laboratorial* → o alerta aponta o paciente.
+- **Paciente com alergias e condições:** *Atendimento → Prontuário* → abra pacientes da lista; as alergias
+  aparecem em destaque no cabeçalho do prontuário.
+- **Paciente com fatura em atraso:** *Gestão → Financeiro* → filtre *Em atraso* → abra a fatura.
+- **Qualquer nome acima:** digite parte dele na busca (tecla `/`).
 
 ## Onde ver cada histórico
 
 | Quero ver… | Caminho na tela |
 |---|---|
-| **Histórico de um médico** | **Gestão → Profissionais** → filtre *Médico* → clique no nome → *Histórico de atividades* (consultas, prescrições, exames). A agenda fica em *Ver agenda*. |
-| **Histórico de um enfermeiro** | **Gestão → Profissionais** → filtre *Enfermeiro* → clique no nome → *Histórico de atividades* (sinais vitais registrados, com o paciente de cada medição). |
-| **Histórico de um farmacêutico** | **Gestão → Profissionais** → filtre *Farmacêutico* → clique no nome → dispensações realizadas. |
+| **Histórico de um médico** | **Gestão → Profissionais** → filtre *Médico(a)* → clique no nome → *Histórico de atividades* (consultas, prescrições, exames). A agenda fica em *Ver agenda*. |
+| **Histórico de um enfermeiro** | **Gestão → Profissionais** → filtre *Enfermeiro(a)* → clique no nome → *Histórico de atividades* (sinais vitais registrados, com o paciente de cada medição). |
+| **Histórico de um farmacêutico** | **Gestão → Profissionais** → filtre *Farmacêutico(a)* → clique no nome → *Histórico de atividades* (dispensações). |
 | **Histórico de um paciente** | **Atendimento → Prontuário** → escolha o paciente → aba *Linha do tempo* (consultas, exames, prescrições, sinais vitais, diagnósticos). As abas *Sinais vitais* e *Exames* têm gráficos de evolução. |
 | **Histórico de um remédio** | **Atendimento → Farmácia** → aba *Movimentações* (entradas, dispensações e descartes por lote) e aba *Validade* (lotes vencidos ou vencendo). |
 | **Painel geral** | **Painel**: troque o perfil no topo (*Administração*, *Farmácia*, um profissional ou um paciente) para ver cada visão. |
