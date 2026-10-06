@@ -18,6 +18,8 @@ from app.presentation.api.v1.clinical.router import router as clinical_router
 from app.presentation.api.v1.professionals.router import router as professionals_router
 from app.presentation.api.v1.appointments.router import router as appointments_router
 from app.presentation.api.v1.medical_records.router import router as medical_records_router
+from app.presentation.api.v1.clinical_monitoring.router import router as clinical_monitoring_router
+from app.infrastructure.seed.lab_catalog import ensure_lab_catalog
 from app.presentation.api.error_handlers import register_error_handlers
 from app.infrastructure.persistence.database import engine, AsyncSessionLocal
 from app.infrastructure.persistence.models.user_model import Base
@@ -39,6 +41,7 @@ from app.infrastructure.persistence.models import (
     audit_model,
     billing_model,
     clinical_model,
+    clinical_monitoring_model,
     medical_record_model,
     medication_model,
     notification_model,
@@ -113,6 +116,11 @@ async def initialize_database():
 
         await session.commit()
 
+    # Catálogo de exames e laboratórios: dado de referência necessário ao módulo de laboratório.
+    async with AsyncSessionLocal() as session:
+        await ensure_lab_catalog(session)
+        await session.commit()
+
     if settings.SEED_DEMO_DATA:
         async with AsyncSessionLocal() as session:
             report = await seed_demo_data(session)
@@ -147,6 +155,7 @@ register_error_handlers(app)
 app.include_router(professionals_router, prefix="/api/v1")
 app.include_router(appointments_router, prefix="/api/v1")
 app.include_router(medical_records_router, prefix="/api/v1")
+app.include_router(clinical_monitoring_router, prefix="/api/v1")
 
 BASE_DIR = os.path.dirname(__file__)
 

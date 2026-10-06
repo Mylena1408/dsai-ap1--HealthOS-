@@ -14,6 +14,7 @@ from app.application.interfaces.medical_record_repository import (
     MedicalRecordRepository, PatientDirectoryRepository, PatientSearch, TimelineQuery, TimelineRepository,
 )
 from app.application.interfaces.professional_repository import ProfessionalRepository
+from app.application.services.clinical_links import resolve_professional
 from app.application.use_cases.appointment_use_case import AppointmentUseCase
 from app.domain.entities.appointment import ACTIVE_STATUSES, AppointmentStatus
 from app.domain.entities.medical_record import (
@@ -207,17 +208,8 @@ class MedicalRecordUseCase:
         return await self.records.get_profile(patient_id) or PatientProfile(patient_id=patient_id)
 
     async def _resolve_professional(self, patient_id, professional_id, appointment_id):
-        """Valida o vínculo com a consulta; sem profissional informado, usa o da consulta."""
-        if appointment_id:
-            appointment = await self.appointment_repo.get_by_id(appointment_id)
-            if not appointment or appointment.patient_id != patient_id:
-                raise BusinessRuleViolation("A consulta informada não pertence a este paciente.")
-            if appointment.status in (AppointmentStatus.CANCELLED, AppointmentStatus.NO_SHOW):
-                raise BusinessRuleViolation("Não é possível vincular registros a uma consulta que não ocorreu.")
-            professional_id = professional_id or appointment.professional_id
-        if professional_id and not await self.professional_repo.get_by_id(professional_id):
-            raise EntityNotFoundError("Profissional", professional_id)
-        return professional_id
+        return await resolve_professional(self.appointment_repo, self.professional_repo,
+                                          patient_id, professional_id, appointment_id)
 
     async def _update_diagnosis(self, patient_id, diagnosis_id, action) -> DiagnosisDTO:
         diagnosis = await self.records.get_diagnosis(diagnosis_id)

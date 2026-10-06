@@ -15,6 +15,8 @@ class TimelineEventType(Enum):
     CONDITION = "CONDICAO"
     DIAGNOSIS = "DIAGNOSTICO"
     PROCEDURE = "PROCEDIMENTO"
+    VITAL_SIGNS = "SINAIS_VITAIS"
+    EXAM = "EXAME"
 
 
 @dataclass(frozen=True)

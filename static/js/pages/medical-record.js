@@ -2,6 +2,7 @@
 import { apiCall } from '../core/api.js';
 import { escapeHtml, formatDate, formatDateTime, renderEmpty, renderLoading, toast } from '../core/dom.js';
 import { renderNav, renderDemoBanner } from '../core/layout.js';
+import { renderExamsTab, renderVitalsTab } from './record-monitoring.js';
 import {
     ALLERGY_CATEGORIES, ALLERGY_SEVERITY, APPOINTMENT_TYPES, BLOOD_TYPES, CONDITION_STATUS, DIAGNOSIS_CERTAINTY,
     TIMELINE_TYPES, badge, fillSelect, statusBadge,
@@ -12,7 +13,8 @@ const $ = id => document.getElementById(id);
 const state = { offset: 0, patientId: null, record: null, tab: 'resumo', timelineTypes: new Set() };
 
 const TAB_LABELS = {
-    resumo: 'Resumo', timeline: 'Linha do tempo', alergias: 'Alergias', condicoes: 'Condições',
+    resumo: 'Resumo', timeline: 'Linha do tempo', sinais: 'Sinais vitais', exames: 'Exames',
+    alergias: 'Alergias', condicoes: 'Condições',
     diagnosticos: 'Diagnósticos', procedimentos: 'Procedimentos', perfil: 'Perfil e contatos',
 };
 
@@ -172,6 +174,10 @@ const TABS = {
             <div class="flex flex-wrap gap-2 mb-4">${filters}</div>
             ${items ? `<ol class="border-l-2 border-slate-100 ml-3 pl-0">${items}</ol>` : empty('Nenhum evento para os filtros escolhidos.')}`);
     },
+
+    sinais: container => renderVitalsTab(container, { patientId: state.patientId, onChange: refresh }),
+
+    exames: container => renderExamsTab(container, { patientId: state.patientId, onChange: refresh }),
 
     async alergias(container) {
         const allergies = await apiCall(api('/allergies'));

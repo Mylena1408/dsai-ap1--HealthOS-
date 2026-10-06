@@ -145,3 +145,34 @@ tabela de eventos alimentada pela auditoria (prevista em ciclo posterior).
 **Decisão.** A busca paginada fica em `GET /api/v1/patients`, em vez de alterar
 `GET /api/v1/admin/patients/` (que retorna uma lista simples, sem filtro). O
 contrato legado permanece idêntico; as telas novas usam a rota nova.
+
+---
+
+## ADR-011 — Faixa de referência como conceito único de domínio
+
+**Decisão.** `ReferenceRange` (limites plausíveis, normais e críticos + `classify()`) é usado
+tanto por sinais vitais quanto por analitos de exames. A classificação (`ResultFlag`) é a
+mesma em todo o sistema, o que permite que alertas e indicadores futuros tratem os dois
+módulos de forma uniforme.
+
+---
+
+## ADR-012 — Catálogo de exames como dado de referência; resultados com cópia da referência
+
+**Decisão.** O catálogo é garantido no startup (idempotente, por código), independentemente
+dos dados de demonstração. Ao registrar um resultado, unidade e texto da referência são
+copiados para `exam_results`, de modo que laudos antigos não mudem se o catálogo mudar.
+
+---
+
+## ADR-013 — Gráficos em SVG próprio, sem biblioteca
+
+**Contexto.** O frontend não tem etapa de build (ADR-004) e os gráficos são séries temporais
+simples (uma métrica por gráfico).
+
+**Decisão.** Componente `static/js/components/line-chart.js` em SVG puro: um eixo por gráfico
+(nunca eixo duplo), linha de 2px, pontos com anel, faixa de referência recessiva, rótulo
+direto só no último ponto, legenda apenas com 2+ séries, tooltip com cruz de leitura também
+via teclado. Paleta validada (azul `#2a78d6` / laranja `#eb6834`: CVD ΔE 24,7, contraste ≥ 3:1).
+Classificações sempre com **ícone + texto**, nunca só cor. A tabela de histórico é a visão
+tabular equivalente aos gráficos.

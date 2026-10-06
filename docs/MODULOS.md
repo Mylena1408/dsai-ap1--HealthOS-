@@ -129,6 +129,72 @@ ordem crescente ou decrescente; paginação.
 
 ---
 
+## Sinais vitais
+
+Tabela `vital_signs`. Cada registro tem ao menos uma medida; valores fora de limites
+fisiológicos plausíveis são rejeitados (ex.: temperatura fora de 30–45 °C); pressão exige
+sistólica **e** diastólica, com sistólica maior; a data não pode ser futura nem anterior ao
+nascimento.
+
+| Métrica | Unidade | Faixa normal (ilustrativa) | Crítico |
+|---|---|---|---|
+| Pressão sistólica / diastólica | mmHg | 90–129 / 60–84 | < 70 ou > 180 / < 40 ou > 120 |
+| Frequência cardíaca | bpm | 60–100 | < 40 ou > 130 |
+| Frequência respiratória | irpm | 12–20 | < 8 ou > 30 |
+| Temperatura | °C | 35,5–37,7 | < 34 ou > 40 |
+| Saturação de O₂ | % | ≥ 95 | < 90 |
+| Glicemia capilar | mg/dL | 70–99 | < 54 ou > 300 |
+| IMC (derivado) | kg/m² | 18,5–24,9 | — |
+
+- **IMC** usa o peso do registro e a altura do próprio registro **ou a última altura conhecida**.
+- Classificação de cada medida: `NORMAL`, `BAIXO`, `ALTO`, `CRITICO_BAIXO`, `CRITICO_ALTO`.
+- O resumo traz a última medida, a anterior e a **tendência** (`SUBINDO`/`DESCENDO`/`ESTAVEL`,
+  com tolerância de 2%) e a série temporal das últimas 30 medições, para os gráficos.
+
+| Método | Endpoint |
+|---|---|
+| POST / GET | `/patients/{id}/vital-signs` (lista paginada, filtro por período) |
+| GET | `/patients/{id}/vital-signs/summary` |
+
+## Laboratório
+
+Tabelas `laboratories`, `exam_types`, `exam_analytes`, `exam_requests`, `exam_results`,
+`exam_request_status_history`. O **catálogo** (11 exames: hemograma, glicemia, HbA1c, perfil
+lipídico, triglicerídeos, creatinina, ureia, potássio, TSH, T4 livre, vitamina D) é dado de
+referência e é criado no startup de forma idempotente.
+
+```
+SOLICITADO ─► AGENDADO ─► COLETADO ─► EM_PROCESSAMENTO ─► RESULTADO_REGISTRADO ─► VALIDADO ─► LIBERADO
+   │  │          │ ▲ │                      ▲                       │
+   │  └──────────┼─┘ │ (reagendar)          └── devolvido p/ correção ┘
+   └─────────────┴───┴─► CANCELADO   (apenas antes da coleta)
+```
+
+- Coleta pode ocorrer direto da solicitação (coleta imediata) e gera o **código da amostra**.
+- Resultados exigem **todos** os analitos do exame, nenhum a mais, dentro de limites plausíveis;
+  cada valor é classificado contra a faixa de referência.
+- Unidade e referência são **copiadas para o resultado** no registro: alterar o catálogo depois
+  não muda laudos antigos.
+- Validação exige profissional **ativo**; o validador pode **devolver** o laudo (resultados descartados).
+- Só resultados **liberados** aparecem para o paciente (aba Exames, linha do tempo e evolução do analito).
+- Prazo previsto = coleta + prazo do tipo de exame.
+
+| Método | Endpoint |
+|---|---|
+| GET | `/exam-types`, `/laboratories` |
+| GET / POST | `/exam-requests` (filtros: paciente, status (repetível), tipo, prioridade, período, `only_abnormal`) |
+| GET | `/exam-requests/{id}` |
+| POST | `/exam-requests/{id}/schedule` · `/collect` · `/start-processing` · `/results` · `/validate` · `/return` · `/release` · `/cancel` |
+| GET | `/patients/{id}/exams/analytes/{codigo}/history` |
+
+A linha do tempo do prontuário passa a incluir `SINAIS_VITAIS` (com indicação de valores
+alterados) e `EXAME` (solicitação e liberação, listando os analitos fora da referência).
+
+> Todas as faixas são **ilustrativas** (adulto genérico, sem distinção por sexo/idade/método)
+> e não servem para interpretação clínica real.
+
+---
+
 ## Observabilidade
 
 `/health`, `/status` e `/metrics` — ver README.

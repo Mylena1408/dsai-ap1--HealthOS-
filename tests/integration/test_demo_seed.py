@@ -3,6 +3,11 @@ from datetime import datetime
 from sqlalchemy import func, select
 
 from app.application.interfaces.appointment_repository import AppointmentFilters
+from app.application.interfaces.clinical_monitoring_repository import ExamRequestFilters
+from app.domain.entities.laboratory import ExamStatus
+from app.infrastructure.persistence.repositories.sqlalchemy_clinical_monitoring_repository import (
+    SQLAlchemyLaboratoryRepository,
+)
 from app.domain.entities.appointment import AppointmentStatus as S
 from app.infrastructure.persistence.models.appointment_model import AppointmentModel
 from app.infrastructure.persistence.models.medical_record_model import (
@@ -97,3 +102,27 @@ async def test_seed_medical_records_are_coherent_and_idempotent(db_session):
     again = await seed_demo_data(db_session, patients=25, appointments=60, now=now)
     assert "medical_records" not in again.created
     assert again.skipped["medical_records"] == 25
+
+
+async def test_seed_vitals_and_exams_are_coherent(db_session):
+    now = datetime(2026, 10, 6, 12, 0)
+    report = await seed_demo_data(db_session, patients=15, appointments=20, exams=120, now=now)
+    assert report.created["exam_requests"] == 120 and report.created["vital_signs"] >= 15 * 3
+
+    repo = SQLAlchemyLaboratoryRepository(db_session)
+    exams, total = await repo.search_requests(ExamRequestFilters(limit=500))
+    assert total == 120
+    assert len({e.status for e in exams}) >= 6  # a fila do laboratório tem exames em várias etapas
+    for exam in exams:
+        moments = [h.changed_at for h in exam.history]
+        assert moments == sorted(moments) and moments[-1] <= now, exam.status
+        assert exam.history[-1].to_status == exam.status
+        if exam.status in (ExamStatus.RELEASED, ExamStatus.VALIDATED, ExamStatus.RESULTED):
+            assert exam.results
+        if exam.status == ExamStatus.RELEASED:
+            assert exam.validated_by and exam.released_at >= exam.validated_at >= exam.collected_at
+        if exam.status == ExamStatus.SCHEDULED:
+            assert exam.scheduled_for > exam.history[-1].changed_at
+
+    again = await seed_demo_data(db_session, patients=15, appointments=20, exams=120, now=now)
+    assert "exam_requests" not in again.created and "vital_signs" not in again.created

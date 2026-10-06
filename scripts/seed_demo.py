@@ -1,7 +1,7 @@
 """Popula o banco configurado em DATABASE_URL com dados fictícios.
 
 Uso:
-    python -m scripts.seed_demo              # 50 pacientes, 20 profissionais, 100 consultas, farmácia
+    python -m scripts.seed_demo              # 50 pacientes, 20 profissionais, 100 consultas, 200 exames
     python -m scripts.seed_demo --patients 120 --appointments 300 --seed 7
 """
 import argparse
@@ -13,11 +13,11 @@ from app.infrastructure.persistence.models.user_model import Base
 from app.infrastructure.seed.demo_seed import DEFAULT_SEED, seed_demo_data
 
 
-async def run(patients: int, appointments: int, seed: int) -> None:
+async def run(patients: int, appointments: int, exams: int, seed: int) -> None:
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
     async with AsyncSessionLocal() as session:
-        report = await seed_demo_data(session, patients=patients, appointments=appointments, seed=seed)
+        report = await seed_demo_data(session, patients=patients, appointments=appointments, exams=exams, seed=seed)
     print("Criados:", report.created or "nada")
     print("Já existentes:", report.skipped or "nada")
 
@@ -27,6 +27,8 @@ if __name__ == "__main__":
     parser.add_argument("--patients", type=int, default=50, help="quantidade de pacientes fictícios")
     parser.add_argument("--appointments", type=int, default=100,
                         help="consultas fictícias (geradas apenas se ainda não houver nenhuma)")
+    parser.add_argument("--exams", type=int, default=200,
+                        help="solicitações de exame fictícias (geradas apenas se ainda não houver nenhuma)")
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED, help="semente do gerador (mesma semente = mesmos dados)")
     args = parser.parse_args()
-    asyncio.run(run(args.patients, args.appointments, args.seed))
+    asyncio.run(run(args.patients, args.appointments, args.exams, args.seed))

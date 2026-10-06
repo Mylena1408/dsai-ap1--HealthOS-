@@ -22,3 +22,42 @@ body { font-family: 'Inter', sans-serif; }
 }
 .modal.active { display: flex; }
 .modal > div { max-height: calc(100vh - 2rem); overflow-y: auto; }
+
+/* ---------------------------------------------------------------- gráficos
+   Tokens por papel (paleta de referência validada: série 1/2 passam CVD e contraste
+   sobre a superfície branca). O portal é apenas claro, então só há o tema claro. */
+.viz-root {
+    --surface-1: #ffffff;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --grid: #e1e0d9;
+    --band: #f0efec;
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.viz-grid { stroke: var(--grid); stroke-width: 1; }
+.viz-band { fill: var(--band); }
+.viz-axis-label { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.viz-end-label { fill: var(--text-secondary); font-size: 11px; font-weight: 600; }
+.viz-dot { stroke: var(--surface-1); stroke-width: 2; }
+.viz-crosshair { stroke: var(--text-muted); stroke-width: 1; }
+.viz-tooltip {
+    position: absolute; z-index: 10; pointer-events: none; min-width: 9rem;
+    background: var(--surface-1); color: var(--text-primary); border: 1px solid rgba(11, 11, 11, 0.10);
+    border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); padding: 6px 8px; font-size: 12px;
+}
+.viz-tooltip-title { color: var(--text-muted); margin-bottom: 2px; }
+.viz-tooltip-row { display: flex; align-items: center; gap: 6px; }
+.viz-tooltip-name { color: var(--text-secondary); }
+.viz-line-key { display: inline-block; width: 12px; height: 2px; border-radius: 1px; }
+.viz-legend { display: flex; gap: 12px; font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.viz-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Classificação de resultados: cor de status SEMPRE acompanhada de ícone + rótulo. */
+.flag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600;
+        padding: 2px 8px; border-radius: 9999px; white-space: nowrap; }
+.flag-normal { background: #e7f6e7; color: #006300; }
+.flag-attention { background: #fff4dc; color: #7a4f00; }
+.flag-critical { background: #fbe4e4; color: #a32424; }

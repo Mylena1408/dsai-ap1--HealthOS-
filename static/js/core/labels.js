@@ -76,6 +76,8 @@ export const TIMELINE_TYPES = {
     CONDICAO: { label: 'Condição', icon: 'fa-notes-medical', color: 'bg-purple-500' },
     DIAGNOSTICO: { label: 'Diagnóstico', icon: 'fa-magnifying-glass', color: 'bg-indigo-500' },
     PROCEDIMENTO: { label: 'Procedimento', icon: 'fa-syringe', color: 'bg-teal-500' },
+    SINAIS_VITAIS: { label: 'Sinais vitais', icon: 'fa-heart-pulse', color: 'bg-rose-500' },
+    EXAME: { label: 'Exame', icon: 'fa-vial', color: 'bg-cyan-600' },
 };
 
 /** Etiqueta colorida para qualquer dicionário {valor: {label, color}}. */
@@ -83,3 +85,37 @@ export function badge(dictionary, value) {
     const info = dictionary[value] || { label: value, color: 'bg-slate-100 text-slate-600' };
     return `<span class="text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap ${info.color}">${escapeHtml(info.label)}</span>`;
 }
+
+// ------------------------------------------------- sinais vitais e laboratório
+
+export const RESULT_FLAGS = {
+    NORMAL: { label: 'Normal', icon: 'fa-circle-check', css: 'flag-normal' },
+    BAIXO: { label: 'Baixo', icon: 'fa-arrow-down', css: 'flag-attention' },
+    ALTO: { label: 'Alto', icon: 'fa-arrow-up', css: 'flag-attention' },
+    CRITICO_BAIXO: { label: 'Crítico (baixo)', icon: 'fa-triangle-exclamation', css: 'flag-critical' },
+    CRITICO_ALTO: { label: 'Crítico (alto)', icon: 'fa-triangle-exclamation', css: 'flag-critical' },
+};
+
+/** Etiqueta de classificação: cor + ícone + texto (nunca só cor). */
+export function flagBadge(flag) {
+    const info = RESULT_FLAGS[flag];
+    if (!info) return '';
+    return `<span class="flag ${info.css}"><i class="fas ${info.icon}" aria-hidden="true"></i>${escapeHtml(info.label)}</span>`;
+}
+
+export const BMI_CATEGORIES = {
+    BAIXO_PESO: 'Baixo peso', PESO_ADEQUADO: 'Peso adequado', SOBREPESO: 'Sobrepeso', OBESIDADE: 'Obesidade',
+};
+
+export const EXAM_STATUS = {
+    SOLICITADO: { label: 'Solicitado', color: 'bg-slate-100 text-slate-700' },
+    AGENDADO: { label: 'Agendado', color: 'bg-blue-100 text-blue-700' },
+    COLETADO: { label: 'Coletado', color: 'bg-indigo-100 text-indigo-700' },
+    EM_PROCESSAMENTO: { label: 'Em processamento', color: 'bg-amber-100 text-amber-800' },
+    RESULTADO_REGISTRADO: { label: 'Resultado registrado', color: 'bg-purple-100 text-purple-700' },
+    VALIDADO: { label: 'Validado', color: 'bg-teal-100 text-teal-700' },
+    LIBERADO: { label: 'Liberado', color: 'bg-emerald-100 text-emerald-700' },
+    CANCELADO: { label: 'Cancelado', color: 'bg-slate-200 text-slate-500' },
+};
+
+export const EXAM_PRIORITY = { ROTINA: 'Rotina', URGENTE: 'Urgente' };

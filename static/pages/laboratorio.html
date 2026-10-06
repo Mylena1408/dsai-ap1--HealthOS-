@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthOS | Laboratório</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav id="app-nav" class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50 h-[73px]"></nav>
+
+    <header class="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+        <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Laboratório</h1>
+        <p class="text-slate-600">Fila de exames: solicitação → coleta → processamento → resultado → validação → liberação.</p>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 pb-20">
+        <div id="stages" class="flex flex-wrap gap-2 mb-4" role="group" aria-label="Filtrar por etapa"></div>
+        <form id="filters" class="glass-card rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+            <label class="text-sm text-slate-600">Exame <select id="f-type" class="w-full p-2 border rounded-lg mt-1"></select></label>
+            <label class="text-sm text-slate-600">Prioridade <select id="f-priority" class="w-full p-2 border rounded-lg mt-1"></select></label>
+            <label class="text-sm text-slate-600 flex items-end gap-2 pb-2"><input id="f-abnormal" type="checkbox"> Somente com resultados fora da referência</label>
+        </form>
+        <section id="list" class="space-y-3" aria-live="polite"></section>
+        <div id="pagination"></div>
+    </main>
+
+    <!-- Formulário genérico de ação (datas, motivos, validador, resultados) -->
+    <div id="modal-action" class="modal" role="dialog" aria-modal="true" aria-labelledby="action-title">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-lg shadow-2xl relative">
+            <button data-close-modal="modal-action" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h3 id="action-title" class="text-xl font-bold text-slate-800 mb-4"></h3>
+            <form id="form-action" class="space-y-4">
+                <div id="action-fields" class="space-y-3"></div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">Confirmar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-history" class="modal" role="dialog" aria-modal="true" aria-labelledby="history-title">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+            <button data-close-modal="modal-history" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <h3 id="history-title" class="text-xl font-bold text-slate-800 mb-4">Histórico do exame</h3>
+            <ol id="history-body" class="space-y-3"></ol>
+        </div>
+    </div>
+
+    <script type="module" src="/static/js/pages/laboratory.js"></script>
+</body>
+</html>

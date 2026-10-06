@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.domain.entities.appointment import AppointmentStatus
 from app.domain.entities.medical_record import (
     Allergy, AllergyCategory, AllergySeverity, BloodType, Condition, ConditionStatus, Diagnosis,
-    DiagnosisCertainty, EmergencyContact, PatientProfile, Procedure,
+    EmergencyContact, PatientProfile, Procedure,
 )
 from app.infrastructure.persistence.models.appointment_model import AppointmentModel
 from app.infrastructure.persistence.models.medical_record_model import PatientProfileModel

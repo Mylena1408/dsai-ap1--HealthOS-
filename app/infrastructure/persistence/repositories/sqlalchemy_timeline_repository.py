@@ -13,11 +13,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.interfaces.medical_record_repository import TimelineQuery, TimelineRepository
 from app.domain.entities.appointment import AppointmentType
+from app.domain.entities.reference_range import ResultFlag
 from app.domain.entities.timeline import TimelineEvent, TimelineEventType as T
 from app.domain.entities.triage import TriagePriority
+from app.domain.entities.vital_signs import VITAL_RANGES, VitalMetric, VitalSigns
 from app.infrastructure.persistence.models.alert_model import PatientAlertModel
 from app.infrastructure.persistence.models.appointment_model import AppointmentModel
 from app.infrastructure.persistence.models.clinical_model import ClinicalNoteModel
+from app.infrastructure.persistence.models.clinical_monitoring_model import (
+    ExamRequestModel, ExamTypeModel, VitalSignsModel,
+)
 from app.infrastructure.persistence.models.medical_record_model import (
     AllergyModel, ConditionModel, DiagnosisModel, ProcedureModel,
 )
@@ -49,6 +54,7 @@ class SQLAlchemyTimelineRepository(TimelineRepository):
             T.CLINICAL_NOTE: self._notes, T.ALERT: self._alerts, T.TRIAGE: self._triages,
             T.ALLERGY: self._allergies, T.CONDITION: self._conditions,
             T.DIAGNOSIS: self._diagnoses, T.PROCEDURE: self._procedures,
+            T.VITAL_SIGNS: self._vital_signs, T.EXAM: self._exams,
         }
         events: list[TimelineEvent] = []
         for event_type in query.types:
@@ -128,3 +134,49 @@ class SQLAlchemyTimelineRepository(TimelineRepository):
     async def _procedures(self, patient_id):
         return [TimelineEvent(p.performed_at, T.PROCEDURE, f"Procedimento: {p.name}", p.id, description=p.notes)
                 for p in await self._rows(ProcedureModel, patient_id)]
+
+    async def _vital_signs(self, patient_id):
+        events = []
+        for v in await self._rows(VitalSignsModel, patient_id):
+            vitals = VitalSigns(id=v.id, patient_id=v.patient_id, recorded_at=v.recorded_at, **{
+                m.value: getattr(v, m.value) for m in VitalMetric if m != VitalMetric.BMI})
+            abnormal = any(flag.is_abnormal for flag in vitals.flags().values())
+            events.append(TimelineEvent(v.recorded_at, T.VITAL_SIGNS, "Sinais vitais registrados", v.id,
+                                        description=_vitals_text(vitals), status="ALTERADO" if abnormal else "NORMAL"))
+        return events
+
+    async def _exams(self, patient_id):
+        rows = await self.session.execute(
+            select(ExamRequestModel, ExamTypeModel.name)
+            .join(ExamTypeModel, ExamTypeModel.id == ExamRequestModel.exam_type_id)
+            .where(ExamRequestModel.patient_id == patient_id))
+        events = []
+        for exam, name in rows.all():
+            events.append(TimelineEvent(exam.requested_at, T.EXAM, f"Exame solicitado: {name}", exam.id,
+                                        description=exam.clinical_indication, status=exam.status))
+            if exam.released_at:
+                abnormal = [f"{r.analyte_name}: {r.value:g} {r.unit}" for r in exam.results
+                            if r.flag != ResultFlag.NORMAL.value]
+                events.append(TimelineEvent(
+                    exam.released_at, T.EXAM, f"Resultado liberado: {name}", exam.id,
+                    description=("Fora da referência — " + "; ".join(abnormal)) if abnormal else "Dentro da referência",
+                    status="ALTERADO" if abnormal else "NORMAL"))
+        return events
+
+
+VITAL_ABBREVIATIONS = {
+    VitalMetric.HEART_RATE: "FC", VitalMetric.RESPIRATORY_RATE: "FR", VitalMetric.TEMPERATURE: "Temp",
+    VitalMetric.OXYGEN_SATURATION: "SpO₂", VitalMetric.WEIGHT: "Peso", VitalMetric.HEIGHT: "Altura",
+    VitalMetric.GLUCOSE: "Glicemia",
+}
+
+
+def _vitals_text(vitals: VitalSigns) -> str:
+    parts = []
+    if vitals.systolic is not None:
+        parts.append(f"PA {vitals.systolic}/{vitals.diastolic} mmHg")
+    for metric, abbreviation in VITAL_ABBREVIATIONS.items():
+        value = getattr(vitals, metric.value)
+        if value is not None:
+            parts.append(f"{abbreviation} {value:g} {VITAL_RANGES[metric].unit}")
+    return " · ".join(parts)
