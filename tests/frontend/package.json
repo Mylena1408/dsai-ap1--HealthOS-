@@ -1,0 +1,13 @@
+{
+  "name": "healthos-frontend-tests",
+  "private": true,
+  "type": "module",
+  "description": "Testes do frontend em DOM simulado (jsdom). Não fazem parte do deploy.",
+  "scripts": {
+    "test": "node --test components.test.mjs",
+    "smoke": "node pages.smoke.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^24.1.0"
+  }
+}

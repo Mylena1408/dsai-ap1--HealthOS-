@@ -61,3 +61,13 @@ body { font-family: 'Inter', sans-serif; }
 .flag-normal { background: #e7f6e7; color: #006300; }
 .flag-attention { background: #fff4dc; color: #7a4f00; }
 .flag-critical { background: #fbe4e4; color: #a32424; }
+
+/* Medidor (Health Score): o preenchimento indica o nível; a trilha é um tom mais claro
+   da mesma rampa. O nível sempre aparece também em texto com ícone. */
+.viz-root { --series-3: #1baf7a; }
+.meter { height: 10px; border-radius: 9999px; overflow: hidden; }
+.meter > span { display: block; height: 100%; border-radius: 9999px; }
+.meter-good { background: #cde2fb; } .meter-good > span { background: #2a78d6; }
+.meter-attention { background: #fdeccc; } .meter-attention > span { background: #fab219; }
+.meter-critical { background: #f6d4d4; } .meter-critical > span { background: #d03b3b; }
+.meter-na { background: #f0efec; }

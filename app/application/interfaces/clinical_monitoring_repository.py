@@ -37,6 +37,7 @@ class ExamRequestFilters:
     patient_id: Optional[uuid.UUID] = None
     statuses: list[ExamStatus] = field(default_factory=list)
     exam_type_id: Optional[uuid.UUID] = None
+    requested_by: Optional[uuid.UUID] = None
     priority: Optional[ExamPriority] = None
     date_from: Optional[datetime] = None
     date_to: Optional[datetime] = None

@@ -238,3 +238,32 @@ A tabela legada `notifications` mistura valores de status (`READ` e `LIDA`) e n�
 infraestrutura. Cada condição tem `dedup_key`; reavaliações atualizam, agravam ou resolvem
 automaticamente. A avaliação periódica usa uma tarefa asyncio no próprio processo — em várias
 instâncias, ela deveria virar um job externo para não executar em duplicidade.
+
+---
+
+## ADR-019 — Health Score como função pura e painéis por composição
+
+**Decisão.** O Health Score é uma função de domínio sem I/O, que recebe fatos agregados e devolve
+componentes explicados; componentes sem dados são "não aplicáveis" (não puxam a média para baixo).
+É apresentado sempre como **indicador demonstrativo de acompanhamento**. Os painéis compõem os
+casos de uso existentes (consultas, laboratório, farmácia, alertas) e usam um repositório de
+agregações apenas para contagens e séries; os agrupamentos por dia/mês são feitos em Python para
+funcionar igual em SQLite e PostgreSQL.
+
+**Gráficos.** Paleta de três séries validada (azul, laranja, verde-água; CVD ΔE ≥ 9,2 entre todos os
+pares). O verde-água tem contraste 2,8:1, abaixo de 3:1 — por isso o gráfico diário traz rótulos
+diretos e uma visão em tabela. Medidores usam a cor de status sempre acompanhada de ícone e texto.
+
+---
+
+## ADR-020 — Testes de frontend em DOM simulado
+
+**Contexto.** As páginas eram verificadas apenas por análise estática.
+
+**Decisão.** `tests/frontend` usa `jsdom` (dependência só de desenvolvimento, fora do deploy):
+`npm test` testa os componentes de gráfico sem servidor; `npm run smoke` executa todas as páginas,
+as abas do prontuário e as visões do painel contra a API real e falha em qualquer erro de execução.
+`static/js/package.json` marca os scripts como módulos ES para o Node; o navegador o ignora.
+
+**Limite.** O DOM simulado não calcula layout: não detecta sobreposição visual, cortes de texto ou
+problemas de responsividade — isso ainda exige olhar a página em um navegador.

@@ -38,7 +38,7 @@ copy .env.example .env           # ajuste DATABASE_URL, ex.: sqlite:///./app.db
 uvicorn main:app --reload
 ```
 
-Acesse `http://127.0.0.1:8000/` (portal), `/app/prontuario`, `/app/consultas`, `/app/laboratorio`, `/app/farmacia`, `/app/alertas`,
+Acesse `http://127.0.0.1:8000/` (portal), `/app/painel`, `/app/prontuario`, `/app/consultas`, `/app/laboratorio`, `/app/farmacia`, `/app/alertas`,
 `/app/notificacoes`, `/app/auditoria`, `/app/profissionais`, `/app/status` e `/docs` (Swagger).
 
 ### Dados de demonstração
@@ -64,6 +64,14 @@ pytest
 
 Os testes usam bancos SQLite temporários e nunca alteram o `app.db`.
 `tests/api/test_existing_endpoints.py` garante que os endpoints originais continuam funcionando.
+
+Testes do frontend (Node 18+), em `tests/frontend`:
+
+```bash
+cd tests/frontend && npm install
+npm test                                  # componentes de gráfico, sem servidor
+HEALTHOS_URL=http://127.0.0.1:8000 npm run smoke   # todas as páginas contra a API em execução
+```
 
 ## 🩺 Observabilidade
 

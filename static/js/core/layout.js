@@ -4,6 +4,7 @@ import { mountProfileControls } from '../components/profile.js';
 
 const NAV_ITEMS = [
     { id: 'portal', label: 'Portal', href: '/', icon: 'fa-house-medical' },
+    { id: 'painel', label: 'Painel', href: '/app/painel', icon: 'fa-chart-line' },
     { id: 'prontuario', label: 'Prontuário', href: '/app/prontuario', icon: 'fa-notes-medical' },
     { id: 'consultas', label: 'Consultas', href: '/app/consultas', icon: 'fa-calendar-days' },
     { id: 'laboratorio', label: 'Laboratório', href: '/app/laboratorio', icon: 'fa-flask' },

@@ -319,6 +319,44 @@ Ciclo de vida: `ATIVO → RECONHECIDO → RESOLVIDO` (ou `ATIVO → RESOLVIDO`).
 
 ---
 
+## Painéis e Health Score
+
+### Health Score (indicador demonstrativo)
+
+Mede o **acompanhamento** do paciente fictício — não a saúde dele — e **não é diagnóstico**.
+Cinco componentes de 0 a 100; a nota é a média dos componentes **aplicáveis** (um componente
+sem dados não é punido como zero):
+
+| Componente | Janela | Cálculo |
+|---|---|---|
+| Consultas | 12 meses | finalizadas ÷ (finalizadas + não compareceu) |
+| Exames | 12 meses | liberados ÷ solicitados (não cancelados) − 10 por exame atrasado (máx. 30) |
+| Medicamentos | 90 dias | unidades dispensadas ÷ prescritas (itens não suspensos de prescrições não canceladas) |
+| Monitoramento | 90 dias | regularidade (até 3 medições = 60) + estabilidade da última medição (até 40) |
+| Acompanhamento | — | última consulta finalizada: ≤ 180 dias = 100, ≤ 365 = 60, senão 20; +20 se houver consulta futura |
+
+Faixas: **Bom** ≥ 80 · **Atenção** 60–79 · **Insuficiente** < 60. O cálculo é uma função pura de
+domínio (`app/domain/services/health_score.py`); as entradas de todos os pacientes são obtidas em
+lote (sem uma consulta por paciente).
+
+### Painéis
+
+| Perfil | Conteúdo |
+|---|---|
+| Paciente | Health Score com explicação por componente, próximas consultas, medicamentos em uso, exames recentes, últimos sinais vitais, alertas, notificações não lidas |
+| Profissional | agenda de hoje, próximos 7 dias, pacientes atendidos e taxa de comparecimento (30 dias), consultas por dia, exames solicitados por situação, resultados fora da referência |
+| Farmácia | itens abaixo do mínimo/zerados, lotes vencendo/vencidos, fila de receitas, unidades dispensadas por dia, mais dispensados, alertas de estoque |
+| Administração | totais, consultas por dia, exames por situação, novos pacientes por mês, alertas por categoria, distribuição e média do Health Score |
+
+| Método | Endpoint |
+|---|---|
+| GET | `/patients/{id}/health-score` |
+| GET | `/dashboards/patient/{id}` · `/dashboards/professional/{id}` · `/dashboards/pharmacy` · `/dashboards/admin` |
+
+A página `/app/painel` abre na visão do perfil de demonstração escolhido no topo.
+
+---
+
 ## Observabilidade
 
 `/health`, `/status` e `/metrics` — ver README.

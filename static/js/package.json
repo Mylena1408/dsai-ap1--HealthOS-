@@ -1,0 +1,5 @@
+{
+  "type": "module",
+  "private": true,
+  "description": "Marca os scripts do site como módulos ES para as ferramentas Node (tests/frontend). O navegador ignora este arquivo."
+}

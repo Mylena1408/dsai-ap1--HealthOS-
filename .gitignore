@@ -9,3 +9,5 @@ htmlcov/
 .vscode/
 .DS_Store
 Thumbs.db
+# Dependências dos testes de frontend (tests/frontend)
+node_modules/

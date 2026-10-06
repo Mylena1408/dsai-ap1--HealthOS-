@@ -168,6 +168,8 @@ class SQLAlchemyLaboratoryRepository(LaboratoryRepository):
             conditions.append(ExamRequestModel.status.in_([s.value for s in filters.statuses]))
         if filters.exam_type_id:
             conditions.append(ExamRequestModel.exam_type_id == filters.exam_type_id)
+        if filters.requested_by:
+            conditions.append(ExamRequestModel.requested_by == filters.requested_by)
         if filters.priority:
             conditions.append(ExamRequestModel.priority == filters.priority.value)
         if filters.date_from:

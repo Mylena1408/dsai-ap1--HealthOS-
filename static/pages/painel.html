@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthOS | Painel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav id="app-nav" class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50 h-[73px]"></nav>
+
+    <header class="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+        <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Painel</h1>
+        <p class="text-slate-600">Indicadores por perfil, calculados sobre os dados fictícios do sistema.</p>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 pb-20 space-y-6">
+        <div class="flex flex-wrap items-end gap-3">
+            <div class="bg-white p-1 rounded-xl border border-slate-200 flex flex-wrap gap-1" role="tablist" id="views"></div>
+            <div id="subject" class="flex-1 min-w-[16rem] max-w-md"></div>
+        </div>
+        <section id="board" class="space-y-6" aria-live="polite"></section>
+    </main>
+
+    <script type="module" src="/static/js/pages/dashboard.js"></script>
+</body>
+</html>
