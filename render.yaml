@@ -1,8 +1,9 @@
 # Configuração do serviço no Render (Blueprint).
 # Só é aplicada se o serviço for criado/sincronizado como Blueprint no painel do Render;
 # para um serviço já criado pelo painel, use estes mesmos valores em Settings > Build & Deploy
-# e em Environment. A versão do Python vem de .python-version (3.12) — não defina
-# PYTHON_VERSION no painel, pois ela teria prioridade sobre o arquivo.
+# e em Environment. A versão do Python vem de .python-version (3.13); se PYTHON_VERSION existir
+# no painel (hoje: 3.13.4), ela tem prioridade — mantenha-a em 3.13.x (3.14 não tem pacotes
+# para as versões fixadas).
 services:
   - type: web
     name: dsai-ap1-healthos
@@ -13,16 +14,15 @@ services:
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
-      # SQLite dentro do serviço. No plano gratuito o disco não é persistente: o banco volta ao
-      # app.db do repositório a cada deploy/reinício. Para dados persistentes, use um PostgreSQL
-      # do Render e cole aqui a URL (postgres:// é convertida para o driver asyncpg).
+      # Produção usa PostgreSQL: a URL fica só no painel (sync: false = o Blueprint não a altera).
+      # postgres:// e postgresql:// são convertidas para o driver asyncpg.
       - key: DATABASE_URL
-        value: sqlite:///./app.db
+        sync: false
       - key: SECRET_KEY
         generateValue: true
-      # Recria os dados fictícios de demonstração na inicialização (idempotente).
+      # True cria os dados fictícios de demonstração na inicialização (idempotente: não duplica).
       - key: SEED_DEMO_DATA
-        value: "True"
+        value: "False"
       # Horários do sistema no fuso de Belém (o servidor Linux roda em UTC).
       - key: APP_TIMEZONE
         value: America/Belem

@@ -381,9 +381,10 @@ nem existem para as versões testadas (`pydantic-core 2.20.1` não tem pacote pa
 os horários da aplicação são locais e sem fuso, mas o Linux do Render roda em UTC.
 
 **Decisão.**
-- Python 3.12 em `.python-version` (único mecanismo; nada de `PYTHON_VERSION` no painel).
+- Python 3.13 em `.python-version`, igual à `PYTHON_VERSION=3.13.4` já definida no painel (que tem
+  prioridade). A suíte passa em 3.12 e 3.13; 3.14 não tem pacotes para as versões fixadas.
 - `requirements.txt` com versões exatas, diretas e transitivas, conferidas em instalação limpa e
-  com pacotes Linux (manylinux) baixados para 3.12 sem compilação.
+  com pacotes Linux (manylinux) baixados para 3.12 e 3.13 sem compilação.
 - `APP_TIMEZONE` (padrão `America/Belem`) aplicado ao processo em Linux; no Windows vale o fuso
   da máquina.
 - URLs `postgres://`/`postgresql://` convertidas para o driver assíncrono (asyncpg).
@@ -395,6 +396,6 @@ caminhos usam `os.path.join` a partir do próprio arquivo; não há scripts `.ba
 `localhost` no frontend nem bibliotecas que dependam do Windows; leituras de arquivo de texto
 indicam a codificação.
 
-**Limite.** Esta máquina não tem Docker nem WSL: a execução em Linux real (imagem Docker e deploy
-no Render) não foi feita aqui; a compatibilidade foi conferida pelos pacotes Linux e pela execução
-em Windows com as mesmas versões.
+**Verificação.** Esta máquina não tem Docker nem WSL; a compatibilidade foi conferida pelos pacotes
+Linux e pela execução em Windows com as mesmas versões. O deploy de 06/10/2026 no Render (Linux,
+Python 3.13.4, PostgreSQL) subiu a versão 1.10.1 sem erros. A imagem Docker não foi testada.

@@ -1,7 +1,7 @@
 # Ambiente Linux equivalente ao do Render, para reproduzir o deploy no próprio computador.
 #   docker build -t healthos .
 #   docker run --rm -p 8000:8000 -e SECRET_KEY=dev -e SEED_DEMO_DATA=True healthos
-FROM python:3.12-slim
+FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

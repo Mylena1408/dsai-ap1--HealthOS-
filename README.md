@@ -30,12 +30,12 @@ A documentação interativa da API pode ser acessada pelo Swagger:
 
 ## ▶️ Executando localmente
 
-Requer **Python 3.12** (a mesma versão do Render, fixada em `.python-version`).
+Requer **Python 3.13** (a mesma versão do Render, fixada em `.python-version`; 3.12 também passa nos testes).
 
 **Windows (PowerShell)**
 
 ```powershell
-python -m venv venv                # python --version deve mostrar 3.12
+py -3.13 -m venv venv
 venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 copy .env.example .env
@@ -45,14 +45,14 @@ uvicorn main:app --reload
 **Linux / macOS**
 
 ```bash
-python3.12 -m venv venv
+python3.13 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 uvicorn main:app --reload
 ```
 
-**Docker** (Linux com Python 3.12 e o mesmo comando de start do Render)
+**Docker** (Linux com Python 3.13 e o mesmo comando de start do Render)
 
 ```bash
 docker build -t healthos .
@@ -81,13 +81,14 @@ confira em **Settings**:
 
 - **Build Command:** `pip install -r requirements.txt`
 - **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
-- **Python:** vem de `.python-version` (3.12). Não defina `PYTHON_VERSION` no painel: ela tem
-  prioridade sobre o arquivo, e o padrão atual do Render (3.14) não tem pacotes para as versões fixadas.
-- **Environment:** `DATABASE_URL`, `SECRET_KEY`, `SEED_DEMO_DATA=True`, `APP_TIMEZONE=America/Belem`.
+- **Python:** 3.13 (`.python-version`). Se `PYTHON_VERSION` estiver definida no painel (hoje
+  `3.13.4`), ela prevalece: mantenha-a em 3.13.x — o padrão atual do Render (3.14) não tem pacotes
+  para as versões fixadas.
+- **Environment:** `DATABASE_URL` (o PostgreSQL do Render), `SECRET_KEY`, `APP_TIMEZONE=America/Belem`
+  e, para ter dados de demonstração, `SEED_DEMO_DATA=True` (idempotente: não duplica nem apaga nada).
 
-No plano gratuito o disco não é persistente: com SQLite, o banco volta ao `app.db` do repositório a
-cada deploy ou reinício (com `SEED_DEMO_DATA=True` os dados fictícios são recriados). Para guardar
-dados, use um PostgreSQL do Render em `DATABASE_URL`.
+A produção usa PostgreSQL, então os dados persistem entre deploys. As tabelas novas são criadas na
+inicialização; as existentes não são alteradas.
 
 ### Dados de demonstração
 

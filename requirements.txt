@@ -1,4 +1,4 @@
-# Dependências de execução do HealthOS — versões exatas, testadas em Python 3.12
+# Dependências de execução do HealthOS — versões exatas, testadas em Python 3.12 e 3.13
 # (Windows local e pacotes Linux manylinux conferidos). Ver .python-version.
 # Não atualize em bloco: troque uma versão por vez e rode a suíte de testes.
 
@@ -26,6 +26,6 @@ greenlet==3.5.6
 h11==0.16.0
 idna==3.20
 pillow==12.3.0
-pydantic-core==2.20.1       # sem pacote para Python 3.14: por isso o Python fica em 3.12
+pydantic-core==2.20.1       # sem pacote para Python 3.14: por isso o Python fica fixado em 3.13
 python-dotenv==1.2.3
 typing-extensions==4.16.0
