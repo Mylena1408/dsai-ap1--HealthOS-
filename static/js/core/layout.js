@@ -5,6 +5,7 @@ const NAV_ITEMS = [
     { id: 'prontuario', label: 'Prontuário', href: '/app/prontuario', icon: 'fa-notes-medical' },
     { id: 'consultas', label: 'Consultas', href: '/app/consultas', icon: 'fa-calendar-days' },
     { id: 'laboratorio', label: 'Laboratório', href: '/app/laboratorio', icon: 'fa-flask' },
+    { id: 'farmacia', label: 'Farmácia', href: '/app/farmacia', icon: 'fa-prescription-bottle-medical' },
     { id: 'profissionais', label: 'Profissionais', href: '/app/profissionais', icon: 'fa-user-doctor' },
     { id: 'status', label: 'Status', href: '/app/status', icon: 'fa-heart-pulse' },
 ];

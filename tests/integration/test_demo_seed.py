@@ -13,6 +13,7 @@ from app.infrastructure.persistence.models.appointment_model import AppointmentM
 from app.infrastructure.persistence.models.medical_record_model import (
     ConditionModel, DiagnosisModel, PatientProfileModel,
 )
+from app.infrastructure.persistence.models.pharmacy_model import PrescriptionModel, StockLotModel
 from app.infrastructure.persistence.models.professional_model import ProfessionalModel
 from app.infrastructure.persistence.repositories.sqlalchemy_appointment_repository import SQLAlchemyAppointmentRepository
 
@@ -32,12 +33,12 @@ async def _count(session, model):
 
 
 async def test_seed_creates_fictitious_data_and_is_idempotent(db_session):
-    report = await seed_demo_data(db_session, patients=20)
+    report = await seed_demo_data(db_session, patients=20, prescriptions=20)
     assert report.created["patients"] == 20
     assert report.created["medications"] == len(MEDICATIONS)
     assert await _count(db_session, InventoryItemModel) == len(MEDICATIONS) * len(STOCK_LOCATIONS)
 
-    again = await seed_demo_data(db_session, patients=20)
+    again = await seed_demo_data(db_session, patients=20, prescriptions=20)
     assert again.created == {}
     assert again.skipped["patients"] == 20
     assert await _count(db_session, PatientModel) == 20
@@ -45,14 +46,14 @@ async def test_seed_creates_fictitious_data_and_is_idempotent(db_session):
 
 
 async def test_seed_produces_critical_stock_for_demonstration(db_session):
-    await seed_demo_data(db_session, patients=1)
+    await seed_demo_data(db_session, patients=1, prescriptions=20)
     pharmacy = PharmacyUseCase(SQLAlchemyMedicationRepository(db_session), SQLAlchemyInventoryRepository(db_session))
     assert await pharmacy.get_critical_stock_report()
 
 
 async def test_seed_professionals_and_coherent_appointments(db_session):
     now = datetime(2026, 10, 6, 12, 0)
-    report = await seed_demo_data(db_session, patients=30, appointments=100, now=now)
+    report = await seed_demo_data(db_session, patients=30, appointments=100, now=now, prescriptions=20)
     assert report.created["professionals"] == sum(amount for *_, amount in PROFESSIONAL_MIX) == 20
     assert report.created["appointments"] == 100
     assert await _count(db_session, ProfessionalModel) == 20
@@ -76,13 +77,13 @@ async def test_seed_professionals_and_coherent_appointments(db_session):
                 if getattr(a, owner) == getattr(b, owner):
                     assert not a.overlaps(b.start_time, b.end_time)
 
-    again = await seed_demo_data(db_session, patients=30, appointments=100, now=now)
+    again = await seed_demo_data(db_session, patients=30, appointments=100, now=now, prescriptions=20)
     assert "appointments" not in again.created and "professionals" not in again.created
 
 
 async def test_seed_medical_records_are_coherent_and_idempotent(db_session):
     now = datetime(2026, 10, 6, 12, 0)
-    report = await seed_demo_data(db_session, patients=25, appointments=60, now=now)
+    report = await seed_demo_data(db_session, patients=25, appointments=60, now=now, prescriptions=20)
     assert report.created["medical_records"] == 25
     assert await _count(db_session, PatientProfileModel) == 25
 
@@ -99,14 +100,14 @@ async def test_seed_medical_records_are_coherent_and_idempotent(db_session):
         assert appointment.patient_id == diagnosis.patient_id
         assert diagnosis.diagnosed_at == appointment.end_time
 
-    again = await seed_demo_data(db_session, patients=25, appointments=60, now=now)
+    again = await seed_demo_data(db_session, patients=25, appointments=60, now=now, prescriptions=20)
     assert "medical_records" not in again.created
     assert again.skipped["medical_records"] == 25
 
 
 async def test_seed_vitals_and_exams_are_coherent(db_session):
     now = datetime(2026, 10, 6, 12, 0)
-    report = await seed_demo_data(db_session, patients=15, appointments=20, exams=120, now=now)
+    report = await seed_demo_data(db_session, patients=15, appointments=20, exams=120, now=now, prescriptions=20)
     assert report.created["exam_requests"] == 120 and report.created["vital_signs"] >= 15 * 3
 
     repo = SQLAlchemyLaboratoryRepository(db_session)
@@ -124,5 +125,26 @@ async def test_seed_vitals_and_exams_are_coherent(db_session):
         if exam.status == ExamStatus.SCHEDULED:
             assert exam.scheduled_for > exam.history[-1].changed_at
 
-    again = await seed_demo_data(db_session, patients=15, appointments=20, exams=120, now=now)
+    again = await seed_demo_data(db_session, patients=15, appointments=20, exams=120, now=now, prescriptions=20)
     assert "exam_requests" not in again.created and "vital_signs" not in again.created
+
+
+async def test_seed_pharmacy_keeps_lots_consistent_with_legacy_totals(db_session):
+    now = datetime(2026, 10, 6, 12, 0)
+    report = await seed_demo_data(db_session, patients=20, appointments=60, exams=10, now=now, prescriptions=20)
+    assert report.created["stock_lots"] > 0 and report.created["prescriptions"] > 0
+
+    # Invariante (ADR-014): soma dos lotes nunca ultrapassa o total legado do mesmo medicamento/local.
+    totals = {(i.medication_id, i.location_id): i.quantity
+              for i in (await db_session.scalars(select(InventoryItemModel))).all()}
+    lots = {}
+    for lot in (await db_session.scalars(select(StockLotModel))).all():
+        lots[(lot.medication_id, lot.location)] = lots.get((lot.medication_id, lot.location), 0) + lot.quantity
+    assert all(quantity <= totals[key] + 1e-9 for key, quantity in lots.items())
+
+    prescriptions = (await db_session.scalars(select(PrescriptionModel))).all()
+    for prescription in prescriptions:
+        for item in prescription.items:
+            assert 0 <= item.dispensed_quantity <= item.quantity
+    again = await seed_demo_data(db_session, patients=20, appointments=60, exams=10, now=now, prescriptions=20)
+    assert "prescriptions" not in again.created and "stock_lots" not in again.created

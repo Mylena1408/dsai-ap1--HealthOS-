@@ -78,6 +78,8 @@ export const TIMELINE_TYPES = {
     PROCEDIMENTO: { label: 'Procedimento', icon: 'fa-syringe', color: 'bg-teal-500' },
     SINAIS_VITAIS: { label: 'Sinais vitais', icon: 'fa-heart-pulse', color: 'bg-rose-500' },
     EXAME: { label: 'Exame', icon: 'fa-vial', color: 'bg-cyan-600' },
+    PRESCRICAO: { label: 'Prescrição', icon: 'fa-prescription', color: 'bg-violet-600' },
+    DISPENSACAO: { label: 'Dispensação', icon: 'fa-pills', color: 'bg-lime-600' },
 };
 
 /** Etiqueta colorida para qualquer dicionário {valor: {label, color}}. */
@@ -119,3 +121,27 @@ export const EXAM_STATUS = {
 };
 
 export const EXAM_PRIORITY = { ROTINA: 'Rotina', URGENTE: 'Urgente' };
+
+// ------------------------------------------------------------------ farmácia
+
+export const ITEM_STATUS = {
+    EM_USO: { label: 'Em uso', color: 'bg-emerald-100 text-emerald-700' },
+    SUSPENSO: { label: 'Suspenso', color: 'bg-amber-100 text-amber-800' },
+    CONCLUIDO: { label: 'Concluído', color: 'bg-slate-200 text-slate-600' },
+};
+export const PRESCRIPTION_STATUS = {
+    ATIVA: { label: 'Ativa', color: 'bg-blue-100 text-blue-700' },
+    PARCIALMENTE_DISPENSADA: { label: 'Parcialmente dispensada', color: 'bg-amber-100 text-amber-800' },
+    DISPENSADA: { label: 'Dispensada', color: 'bg-emerald-100 text-emerald-700' },
+    CANCELADA: { label: 'Cancelada', color: 'bg-slate-200 text-slate-600' },
+};
+export const ROUTES = {
+    ORAL: 'Oral', SUBLINGUAL: 'Sublingual', TOPICA: 'Tópica', INALATORIA: 'Inalatória',
+    INTRAVENOSA: 'Intravenosa', INTRAMUSCULAR: 'Intramuscular', SUBCUTANEA: 'Subcutânea',
+};
+export const MOVEMENT_TYPES = {
+    ENTRADA: { label: 'Entrada', color: 'bg-emerald-100 text-emerald-700' },
+    DISPENSACAO: { label: 'Dispensação', color: 'bg-blue-100 text-blue-700' },
+    AJUSTE: { label: 'Ajuste', color: 'bg-amber-100 text-amber-800' },
+    DESCARTE: { label: 'Descarte', color: 'bg-red-100 text-red-700' },
+};

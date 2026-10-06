@@ -25,6 +25,7 @@ from app.infrastructure.seed.fake_data import MEDICATIONS, STOCK_LOCATIONS, fake
 from app.infrastructure.seed.clinical_monitoring_seed import seed_exam_requests, seed_vital_signs
 from app.infrastructure.seed.lab_catalog import ensure_lab_catalog
 from app.infrastructure.seed.medical_record_seed import seed_medical_records
+from app.infrastructure.seed.pharmacy_seed import seed_pharmacy
 from app.infrastructure.seed.scheduling_seed import seed_appointments, seed_catalog_and_professionals
 
 DEFAULT_SEED = 2026
@@ -75,7 +76,8 @@ async def seed_medications(session: AsyncSession, rng: random.Random, report: Se
 
 
 async def seed_demo_data(session: AsyncSession, patients: int = 50, appointments: int = 100,
-                         exams: int = 200, seed: int = DEFAULT_SEED, now: datetime | None = None) -> SeedReport:
+                         exams: int = 200, prescriptions: int = 150, seed: int = DEFAULT_SEED,
+                         now: datetime | None = None) -> SeedReport:
     rng = random.Random(seed)
     report = SeedReport()
     await seed_patients(session, patients, rng, report)
@@ -87,5 +89,6 @@ async def seed_demo_data(session: AsyncSession, patients: int = 50, appointments
     await seed_vital_signs(session, rng, report, now)
     await ensure_lab_catalog(session)  # o CLI não passa pelo startup da aplicação
     await seed_exam_requests(session, exams, rng, report, now)
+    await seed_pharmacy(session, rng, report, now, prescriptions)
     await session.commit()
     return report

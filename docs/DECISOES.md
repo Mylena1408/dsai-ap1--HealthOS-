@@ -176,3 +176,29 @@ direto só no último ponto, legenda apenas com 2+ séries, tooltip com cruz de 
 via teclado. Paleta validada (azul `#2a78d6` / laranja `#eb6834`: CVD ΔE 24,7, contraste ≥ 3:1).
 Classificações sempre com **ícone + texto**, nunca só cor. A tabela de histórico é a visão
 tabular equivalente aos gráficos.
+
+---
+
+## ADR-014 — Lotes como detalhe do estoque legado, com reconciliação
+
+**Contexto.** `inventory_items` guarda um total por medicamento e local, alterado pelos
+endpoints legados (`/pharmacy/inventory`, `/pharmacy/dispense`), sem lote nem validade por lote.
+
+**Decisão.** O total legado continua sendo a fonte da verdade. Lotes (`stock_lots`) detalham parte
+desse total; a diferença é "estoque sem lote". Toda operação do módulo novo começa reconciliando:
+se a soma dos lotes passar do total (porque houve saída legada), o excesso é baixado dos lotes por
+FEFO e registrado como movimentação `AJUSTE`. Saídas novas usam FEFO e nunca lotes vencidos.
+
+**Consequências.** Os endpoints e o formato legado não mudam; o estoque nunca fica inconsistente;
+a trilha de movimentações explica cada diferença. Custo: saídas legadas só se refletem nos lotes
+na próxima operação nova (documentado e coberto por teste).
+
+---
+
+## ADR-015 — Regras de segurança clínica didáticas na prescrição
+
+**Decisão.** Papéis verificados pelo tipo do profissional (médico prescreve, farmacêutico
+dispensa — sem autenticação, conforme ADR-002); bloqueio por alergia ativa com correspondência
+textual simples e possibilidade de prosseguir mediante justificativa registrada; limite para
+substâncias controladas; validade de 30 dias. As regras são deliberadamente simples e
+documentadas como didáticas — não substituem um sistema real de apoio à decisão.

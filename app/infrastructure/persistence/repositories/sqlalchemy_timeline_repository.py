@@ -26,7 +26,9 @@ from app.infrastructure.persistence.models.clinical_monitoring_model import (
 from app.infrastructure.persistence.models.medical_record_model import (
     AllergyModel, ConditionModel, DiagnosisModel, ProcedureModel,
 )
+from app.infrastructure.persistence.models.medication_model import MedicationModel
 from app.infrastructure.persistence.models.patient_model import PatientModel
+from app.infrastructure.persistence.models.pharmacy_model import DispensationModel, PrescriptionModel
 from app.infrastructure.persistence.models.professional_model import ProfessionalModel
 from app.infrastructure.persistence.models.triage_model import TriageModel
 
@@ -55,6 +57,7 @@ class SQLAlchemyTimelineRepository(TimelineRepository):
             T.ALLERGY: self._allergies, T.CONDITION: self._conditions,
             T.DIAGNOSIS: self._diagnoses, T.PROCEDURE: self._procedures,
             T.VITAL_SIGNS: self._vital_signs, T.EXAM: self._exams,
+            T.PRESCRIPTION: self._prescriptions, T.DISPENSATION: self._dispensations,
         }
         events: list[TimelineEvent] = []
         for event_type in query.types:
@@ -161,6 +164,35 @@ class SQLAlchemyTimelineRepository(TimelineRepository):
                     exam.released_at, T.EXAM, f"Resultado liberado: {name}", exam.id,
                     description=("Fora da referência — " + "; ".join(abnormal)) if abnormal else "Dentro da referência",
                     status="ALTERADO" if abnormal else "NORMAL"))
+        return events
+
+    async def _medication_names(self, ids):
+        if not ids:
+            return {}
+        rows = await self.session.execute(select(MedicationModel.id, MedicationModel.name)
+                                          .where(MedicationModel.id.in_(ids)))
+        return dict(rows.all())
+
+    async def _prescriptions(self, patient_id):
+        prescriptions = await self._rows(PrescriptionModel, patient_id)
+        names = await self._medication_names({i.medication_id for p in prescriptions for i in p.items})
+        return [TimelineEvent(
+            p.issued_at, T.PRESCRIPTION, f"Prescrição ({len(p.items)} item(ns))", p.id,
+            description="; ".join(f"{names.get(i.medication_id, 'Medicamento')} — {i.dose}, {i.frequency}"
+                                  for i in p.items),
+            status=p.status) for p in prescriptions]
+
+    async def _dispensations(self, patient_id):
+        dispensations = await self._rows(DispensationModel, patient_id)
+        names = await self._medication_names({l.medication_id for d in dispensations for l in d.lines})
+        events = []
+        for d in dispensations:
+            totals = {}
+            for line in d.lines:
+                totals[line.medication_id] = totals.get(line.medication_id, 0) + line.quantity
+            events.append(TimelineEvent(
+                d.dispensed_at, T.DISPENSATION, "Medicamentos dispensados", d.id,
+                description="; ".join(f"{names.get(m, 'Medicamento')}: {q:g}" for m, q in totals.items())))
         return events
 
 

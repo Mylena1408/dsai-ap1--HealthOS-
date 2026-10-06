@@ -195,6 +195,67 @@ alterados) e `EXAME` (solicitação e liberação, listando os analitos fora da 
 
 ---
 
+## Farmácia: prescrição, dispensação e estoque por lote
+
+Fluxo: **consulta → prescrição → farmácia → dispensação → baixa no estoque**.
+Tabelas novas: `medication_categories`, `medication_details` (1:1 com `medications`),
+`stock_lots`, `inventory_movements`, `prescriptions`, `prescription_items`, `dispensations`,
+`dispensation_lines`. As tabelas e rotas legadas (`/pharmacy/...`) continuam iguais.
+
+### Estoque
+
+- **Total por medicamento/local continua em `inventory_items` (legado)**; os lotes detalham parte
+  dele e o restante é "estoque sem lote" (ADR-014). Invariante: soma dos lotes ≤ total.
+- **Entrada** só por lote (`POST /stock/lots`): número do lote único por medicamento/local
+  (normalizado em maiúsculas), validade futura; o total legado é atualizado junto.
+- **Saída FEFO**: lotes válidos do vencimento mais próximo ao mais distante, estoque sem lote por
+  último; **lote vencido nunca é usado**.
+- **Reconciliação**: saídas feitas pelo endpoint legado mexem só no total; antes de qualquer
+  operação nova, a diferença é baixada dos lotes por FEFO e registrada como `AJUSTE`.
+- **Descarte**: livre para lote vencido; dentro da validade exige justificativa (≥ 10 caracteres).
+- Toda mudança gera uma **movimentação** (`ENTRADA`, `DISPENSACAO`, `AJUSTE`, `DESCARTE`) com o
+  saldo após a operação. Medicamento **descontinuado** não recebe lotes nem pode ser prescrito.
+
+### Prescrição
+
+```
+Prescrição:  ATIVA ─► PARCIALMENTE_DISPENSADA ─► DISPENSADA
+               └──────────────┴─────────────────► CANCELADA
+Item:        EM_USO ⇄ SUSPENSO ;  EM_USO ─► CONCLUIDO
+```
+
+- Somente **médicos ativos** prescrevem; vínculo opcional com consulta do mesmo paciente.
+- Sem medicamento repetido; quantidade de 1 a 1000; duração de 1 a 365 dias.
+- **Controle especial** (substância controlada): no máximo 60 unidades por item; a receita é marcada.
+- **Alergia**: se o paciente tem alergia **ativa** cujo texto corresponde ao nome ou princípio
+  ativo, a prescrição é bloqueada (409) — salvo com **justificativa** (≥ 10 caracteres), que fica
+  registrada e aparece para a farmácia.
+- Validade de **30 dias**; receita vencida não é dispensada.
+- "Medicamentos do paciente" = itens de prescrições não canceladas (em uso, suspensos, concluídos).
+
+### Dispensação
+
+- Somente **farmacêuticos ativos**; apenas itens **em uso**, até o saldo prescrito.
+- A baixa ocorre por FEFO e cada linha registra o lote utilizado (ou "sem lote").
+- Falha em qualquer item desfaz a dispensação inteira (transação).
+- O status da prescrição é recalculado (parcial / dispensada). Itens suspensos não bloqueiam a conclusão.
+
+| Método | Endpoint |
+|---|---|
+| GET / POST | `/medication-categories` |
+| GET | `/medications/stock?q=&category_id=&low_stock_only=` |
+| PUT | `/medications/{id}/details` |
+| GET / POST | `/stock/lots` (`expiring_within_days`, `medication_id`, `location`) · POST `/stock/lots/{id}/discard` |
+| GET | `/stock/movements` |
+| GET / POST | `/prescriptions` · GET `/prescriptions/{id}` · POST `/prescriptions/{id}/cancel` |
+| POST | `/prescriptions/{id}/items/{item_id}/suspend` · `/resume` · `/complete` |
+| GET / POST | `/dispensations` |
+| GET | `/patients/{id}/medications?status=` |
+
+A linha do tempo inclui `PRESCRICAO` e `DISPENSACAO`.
+
+---
+
 ## Observabilidade
 
 `/health`, `/status` e `/metrics` — ver README.
