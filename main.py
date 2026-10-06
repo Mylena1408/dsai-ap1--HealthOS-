@@ -35,6 +35,9 @@ from app.infrastructure.persistence.models import (
     triage_model,
 )
 
+# CPF fictício com dígitos verificadores válidos, usado apenas na demonstração.
+DEMO_DOCTOR_CPF = "11144477735"
+
 app = FastAPI(
     title="HealthOS - Sistema Integrado de Gestão Hospitalar",
     description="Plataforma de gestão de saúde com Arquitetura Limpa",
@@ -57,11 +60,15 @@ async def initialize_database():
                 email="medico.demo@healthos.local",
                 password_hash="demo-only",
                 full_name="Médico da Demonstração",
-                cpf="99999999999",
+                cpf=DEMO_DOCTOR_CPF,
                 is_active=True,
             )
             session.add(doctor)
             await session.flush()
+        elif doctor.cpf == "99999999999":
+            # Bancos criados por versões anteriores usavam um CPF que a entidade
+            # User rejeita, o que fazia a listagem de usuários falhar.
+            doctor.cpf = DEMO_DOCTOR_CPF
 
         now = datetime.now().replace(second=0, microsecond=0)
         last_day = now + timedelta(days=14)

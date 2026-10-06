@@ -10,6 +10,7 @@ from app.infrastructure.persistence.repositories.sqlalchemy_user_repository impo
 from app.infrastructure.security.auth_middleware import get_current_user
 from app.infrastructure.security.permission_checker import PermissionChecker
 from app.infrastructure.persistence.database import get_db
+from app.domain.exceptions.base import DomainException
 
 router = APIRouter(prefix="/users", tags=["Administração de Usuários"])
 

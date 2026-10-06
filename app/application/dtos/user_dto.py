@@ -20,7 +20,9 @@ class UserResponseDTO(BaseModel):
     """DTO para retorno de dados do usuário (omite a senha)."""
     id: uuid.UUID
     full_name: str
-    email: EmailStr
+    # str (e não EmailStr): a resposta apenas devolve o que já está gravado, e o
+    # usuário de demonstração usa o domínio reservado ".local".
+    email: str
     cpf: str
     phone: Optional[str]
     is_active: bool

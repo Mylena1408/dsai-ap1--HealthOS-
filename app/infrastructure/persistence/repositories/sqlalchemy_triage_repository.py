@@ -1,5 +1,6 @@
 from typing import List, Optional
 import uuid
+from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from app.domain.entities.triage import Triage, TriagePriority
@@ -34,15 +35,14 @@ class SQLAlchemyTriageRepository(TriageRepository):
         return triage
 
     async def get_by_patient(self, patient_id: uuid.UUID) -> Optional[Triage]:
-        stmt = select(TriageModel).where(TriageModel.patient_id == patient_id)
-        result = await self.session.execute(stmt)
-        db_triage = result.scalar_one_or_none()
-        return self._map_to_domain(db_triage) if db_triage else None
+        return await self.get_latest_by_patient(patient_id)
 
     async def get_latest_by_patient(self, patient_id: uuid.UUID) -> Optional[Triage]:
-        stmt = select(TriageModel).where(TriageModel.patient_id == patient_id).order_by(desc(TriageModel.created_at))
+        # Um paciente pode ter várias triagens; scalar_one_or_none falharia nesse caso.
+        stmt = (select(TriageModel).where(TriageModel.patient_id == patient_id)
+                .order_by(desc(TriageModel.created_at)).limit(1))
         result = await self.session.execute(stmt)
-        db_triage = result.scalar_one_or_none()
+        db_triage = result.scalars().first()
         return self._map_to_domain(db_triage) if db_triage else None
 
     async def update(self, triage: Triage) -> Triage:

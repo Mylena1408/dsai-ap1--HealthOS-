@@ -5,6 +5,7 @@ from app.application.use_cases.authenticate_user_use_case import AuthenticateUse
 from app.infrastructure.persistence.repositories.sqlalchemy_user_repository import SQLAlchemyUserRepository
 from app.infrastructure.security.jwt_handler import JWTHandler
 from app.infrastructure.persistence.database import get_db
+from app.domain.exceptions.base import DomainException
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
 

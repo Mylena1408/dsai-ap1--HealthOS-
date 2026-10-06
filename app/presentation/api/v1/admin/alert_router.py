@@ -8,6 +8,7 @@ from app.application.use_cases.manage_alerts_use_case import ManageAlertsUseCase
 from app.infrastructure.persistence.repositories.sqlalchemy_alert_repository import SQLAlchemyAlertRepository
 from app.infrastructure.security.permission_checker import PermissionChecker
 from app.infrastructure.persistence.database import get_db
+from app.domain.exceptions.base import DomainException
 
 router = APIRouter(prefix="/alerts", tags=["Alertas de Pacientes"])
 

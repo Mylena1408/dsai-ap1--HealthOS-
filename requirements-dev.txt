@@ -1,0 +1,5 @@
+# Dependências para rodar a suíte de testes: pip install -r requirements-dev.txt
+-r requirements.txt
+pytest
+pytest-asyncio
+httpx==0.28.1

@@ -65,16 +65,18 @@ class SQLAlchemyInventoryRepository(InventoryRepository):
         self.session = session
 
     async def save(self, item: InventoryItem) -> InventoryItem:
-        db_item = InventoryItemModel(
-            id=item.id or uuid.uuid4(),
-            medication_id=item.medication_id,
-            location_id=item.location_id,
-            quantity=item.quantity,
-            min_threshold=item.min_threshold,
-            max_threshold=item.max_threshold,
-            expiration_date=item.expiration_date
-        )
-        self.session.add(db_item)
+        # Itens já persistidos são atualizados; adicionar um novo modelo com o
+        # mesmo id causaria violação de chave primária.
+        db_item = await self.session.get(InventoryItemModel, item.id) if item.id else None
+        if db_item is None:
+            db_item = InventoryItemModel(id=item.id or uuid.uuid4())
+            self.session.add(db_item)
+        db_item.medication_id = item.medication_id
+        db_item.location_id = item.location_id
+        db_item.quantity = item.quantity
+        db_item.min_threshold = item.min_threshold
+        db_item.max_threshold = item.max_threshold
+        db_item.expiration_date = item.expiration_date
         await self.session.flush()
         item.id = db_item.id
         return item

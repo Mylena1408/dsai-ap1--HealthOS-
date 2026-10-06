@@ -3,6 +3,7 @@ import uuid
 from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from app.domain.entities.billing import Invoice, BillingItem, BillingStatus, BillingType
 from app.application.interfaces.billing_repository import BillingRepository
 from app.infrastructure.persistence.models.billing_model import InvoiceModel, BillingItemModel
@@ -16,41 +17,50 @@ class SQLAlchemyBillingRepository(BillingRepository):
         self.session = session
 
     async def save_invoice(self, invoice: Invoice) -> Invoice:
-        db_invoice = InvoiceModel(
-            id=invoice.id or uuid.uuid4(),
-            patient_id=invoice.patient_id,
-            invoice_number=invoice.invoice_number,
-            issue_date=invoice.issue_date,
-            due_date=invoice.due_date,
-            status=invoice.status.value,
-            insurance_provider=invoice.insurance_provider,
-            insurance_policy_number=invoice.insurance_policy_number,
-            insurance_coverage_percentage=float(invoice.insurance_coverage_percentage)
-        )
+        # Faturas existentes são atualizadas no lugar; os itens são carregados
+        # antecipadamente porque o lazy loading não funciona em sessões assíncronas.
+        db_invoice = None
+        if invoice.id:
+            result = await self.session.execute(
+                select(InvoiceModel).options(selectinload(InvoiceModel.items))
+                .where(InvoiceModel.id == invoice.id)
+            )
+            db_invoice = result.scalar_one_or_none()
+        if db_invoice is None:
+            db_invoice = InvoiceModel(id=invoice.id or uuid.uuid4(), items=[])
+            self.session.add(db_invoice)
 
-        # Adiciona os itens relacionados
-        db_items = []
+        db_invoice.patient_id = invoice.patient_id
+        db_invoice.invoice_number = invoice.invoice_number
+        db_invoice.issue_date = invoice.issue_date
+        db_invoice.due_date = invoice.due_date
+        db_invoice.status = invoice.status.value
+        db_invoice.insurance_provider = invoice.insurance_provider
+        db_invoice.insurance_policy_number = invoice.insurance_policy_number
+        db_invoice.insurance_coverage_percentage = invoice.insurance_coverage_percentage
+
+        existing_ids = {db_item.id for db_item in db_invoice.items}
         for item in invoice.items:
-            db_item = BillingItemModel(
-                id=item.id or uuid.uuid4(),
+            if item.id in existing_ids:
+                continue
+            item.id = item.id or uuid.uuid4()
+            db_invoice.items.append(BillingItemModel(
+                id=item.id,
                 description=item.description,
                 billing_type=item.billing_type.value,
-                quantity=float(item.quantity),
-                unit_price=float(item.unit_price),
-                discount=float(item.discount)
-            )
-            db_items.append(db_item)
+                quantity=item.quantity,
+                unit_price=item.unit_price,
+                discount=item.discount
+            ))
 
-        db_invoice.items = db_items
-        self.session.add(db_invoice)
         await self.session.flush()
 
         invoice.id = db_invoice.id
         return invoice
 
     async def get_invoice_by_id(self, invoice_id: uuid.UUID) -> Optional[Invoice]:
-        # Usamos join para carregar os itens da fatura em uma única query
-        stmt = select(InvoiceModel).where(InvoiceModel.id == invoice_id)
+        stmt = (select(InvoiceModel).options(selectinload(InvoiceModel.items))
+                .where(InvoiceModel.id == invoice_id))
         result = await self.session.execute(stmt)
         db_invoice = result.scalar_one_or_none()
 
@@ -60,7 +70,8 @@ class SQLAlchemyBillingRepository(BillingRepository):
         return self._map_to_domain(db_invoice)
 
     async def get_invoices_by_patient(self, patient_id: uuid.UUID) -> List[Invoice]:
-        stmt = select(InvoiceModel).where(InvoiceModel.patient_id == patient_id)
+        stmt = (select(InvoiceModel).options(selectinload(InvoiceModel.items))
+                .where(InvoiceModel.patient_id == patient_id))
         result = await self.session.execute(stmt)
         return [self._map_to_domain(i) for i in result.scalars().all()]
 

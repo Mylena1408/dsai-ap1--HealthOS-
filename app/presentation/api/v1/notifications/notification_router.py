@@ -7,6 +7,7 @@ from app.infrastructure.persistence.repositories.sqlalchemy_notification_reposit
 from app.application.use_cases.notification_use_case import NotificationUseCase
 from app.infrastructure.security.permission_checker import PermissionChecker
 from app.infrastructure.persistence.database import get_db
+from app.domain.exceptions.base import DomainException
 
 class NotificationRequestDTO(BaseModel):
     user_id: Optional[uuid.UUID] = None
