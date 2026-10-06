@@ -48,6 +48,12 @@ class ServiceSource(Enum):
 
 
 
+
+def format_brl(value: Decimal) -> str:
+    """Valor em reais no padrão brasileiro (R$ 1.234,50), para mensagens e eventos."""
+    text = f"{Decimal(value).quantize(CENTS):,.2f}"
+    return "R$ " + text.replace(",", "_").replace(".", ",").replace("_", ".")
+
 # Códigos da tabela de preços para cada serviço faturável.
 DEFAULT_EXAM_PRICE_CODE = "EXAME-PADRAO"
 
@@ -164,7 +170,7 @@ class Invoice:
         if amount <= 0:
             raise BusinessRuleViolation("O valor do pagamento deve ser maior que zero.")
         if amount > self.balance():
-            raise BusinessRuleViolation(f"O pagamento excede o saldo em aberto (R$ {self.balance()}).")
+            raise BusinessRuleViolation(f"O pagamento excede o saldo em aberto ({format_brl(self.balance())}).")
         payment.amount = amount
         self.payments.append(payment)
         self.status = BillingStatus.PAID if self.balance() == 0 else BillingStatus.PARTIALLY_PAID

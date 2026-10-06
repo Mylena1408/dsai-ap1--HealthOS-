@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthOS | Relatórios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav id="app-nav" class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50 h-[73px]"></nav>
+
+    <header class="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+        <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Relatórios</h1>
+        <p class="text-slate-600">Visualize na tela ou baixe em CSV (abre no Excel) e PDF. Cada exportação fica registrada na auditoria.</p>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 pb-20 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <aside>
+            <ul id="catalog" class="space-y-2" aria-label="Relatórios disponíveis"></ul>
+        </aside>
+
+        <section class="lg:col-span-3 space-y-4">
+            <div class="glass-card rounded-2xl p-5">
+                <h2 id="report-title" class="font-bold text-slate-800">Escolha um relatório</h2>
+                <p id="report-description" class="text-sm text-slate-500 mb-4"></p>
+                <form id="form-report" class="hidden flex flex-wrap items-end gap-3">
+                    <label data-period class="text-sm text-slate-600">De<input id="r-start" type="date" class="block p-2 border rounded-lg"></label>
+                    <label data-period class="text-sm text-slate-600">Até<input id="r-end" type="date" class="block p-2 border rounded-lg"></label>
+                    <label id="status-field" class="text-sm text-slate-600">Situação<select id="r-status" class="block p-2 border rounded-lg"></select></label>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700">
+                        <i class="fas fa-eye" aria-hidden="true"></i> Visualizar</button>
+                    <a id="download-csv" class="border bg-white px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100">
+                        <i class="fas fa-file-csv" aria-hidden="true"></i> Baixar CSV</a>
+                    <a id="download-pdf" class="border bg-white px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100">
+                        <i class="fas fa-file-pdf" aria-hidden="true"></i> Baixar PDF</a>
+                </form>
+            </div>
+            <div id="preview" class="glass-card rounded-2xl p-5 hidden" aria-live="polite"></div>
+        </section>
+    </main>
+
+    <script type="module" src="/static/js/pages/reports.js"></script>
+</body>
+</html>

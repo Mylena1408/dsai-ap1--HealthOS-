@@ -53,6 +53,7 @@ const PAGES = [
     ["static/pages/laboratorio.html", "/app/laboratorio", "pages/laboratory.js"],
     ["static/pages/farmacia.html", "/app/farmacia", "pages/pharmacy.js"],
     ["static/pages/financeiro.html", "/app/financeiro", "pages/finance.js"],
+    ["static/pages/relatorios.html", "/app/relatorios", "pages/reports.js"],
     ["static/pages/assistente.html", "/app/assistente", "pages/assistant.js"],
     ["static/pages/alertas.html", "/app/alertas", "pages/alerts.js"],
     ["static/pages/notificacoes.html", "/app/notificacoes", "pages/notifications.js"],
@@ -140,6 +141,18 @@ if (patient) {
         check("financeiro › registrar pagamento", finance, `situação=${after.status}`);
         if (after.status !== "PAGO") failures++;
     }
+
+    // Relatórios: pré-visualização e links de download.
+    const reports = await openPage("static/pages/relatorios.html", "/app/relatorios?report=faturas");
+    await reports.load("pages/reports.js");
+    reports.document.getElementById("form-report").dispatchEvent(new reports.window.Event("submit", { cancelable: true }));
+    await sleep(2000);
+    const previewRows = reports.document.querySelectorAll("#preview tbody tr").length;
+    const pdfLink = reports.document.getElementById("download-pdf").href;
+    check("relatórios › faturas", reports, `linhas=${previewRows} pdf=${pdfLink.includes("/reports/faturas?format=pdf")}`);
+    if (!previewRows || !pdfLink.includes("/reports/faturas?format=pdf")) failures++;
+    const pdf = await nodeFetch(pdfLink);
+    if (pdf.headers.get("content-type") !== "application/pdf") { failures++; console.log("FALHA download PDF"); }
 
     const doctor = (await api("/professionals?professional_type=MEDICO&limit=1")).items[0];
     const profiles = [

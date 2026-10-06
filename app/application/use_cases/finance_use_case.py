@@ -20,7 +20,7 @@ from app.application.services.events import EventPublisher, NullPublisher
 from app.application.use_cases.dashboard_use_case import last_months
 from app.domain.entities.billing import (
     CENTS, DEFAULT_EXAM_PRICE_CODE, OPEN_STATUSES, BillingItem, BillingStatus, Invoice, Payment, PaymentMethod,
-    ServiceSource,
+    ServiceSource, format_brl,
 )
 from app.domain.events import DomainEvent, EventType
 from app.domain.exceptions.common import BusinessRuleViolation, ConflictError, EntityNotFoundError
@@ -122,7 +122,7 @@ class FinanceUseCase:
         saved = await self.invoices.save_invoice(invoice)
         if request.issue:
             await self._publish(EventType.INVOICE_ISSUED, saved, f"Fatura {saved.invoice_number} emitida "
-                                f"(R$ {saved.calculate_gross_total():.2f}).")
+                                f"({format_brl(saved.calculate_gross_total())}).")
         return await self._detail(saved)
 
     async def issue(self, invoice_id: uuid.UUID) -> InvoiceDetailDTO:
@@ -130,7 +130,7 @@ class FinanceUseCase:
         invoice.issue(self.clock())
         await self.invoices.save_invoice(invoice)
         await self._publish(EventType.INVOICE_ISSUED, invoice, f"Fatura {invoice.invoice_number} emitida "
-                            f"(R$ {invoice.calculate_gross_total():.2f}).")
+                            f"({format_brl(invoice.calculate_gross_total())}).")
         return await self._detail(invoice)
 
     async def register_payment(self, invoice_id: uuid.UUID, amount: Decimal, method: PaymentMethod,
@@ -140,7 +140,7 @@ class FinanceUseCase:
         invoice.register_payment(payment)
         await self.invoices.save_invoice(invoice)
         await self._publish(EventType.PAYMENT_RECORDED, invoice,
-                            f"Pagamento de R$ {payment.amount:.2f} ({method.value}) na fatura {invoice.invoice_number}"
+                            f"Pagamento de {format_brl(payment.amount)} ({method.value}) na fatura {invoice.invoice_number}"
                             + (" — quitada." if invoice.status == BillingStatus.PAID else "."),
                             {"amount": str(payment.amount), "method": method.value, "status": invoice.status.value})
         return await self._detail(invoice)

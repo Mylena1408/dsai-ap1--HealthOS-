@@ -312,3 +312,20 @@ status `ATRASADO` que nada aplicava. O banco de produção não pode receber `AL
 
 **Limite.** Não há estorno nem conciliação bancária: são conceitos fora do escopo didático.
 
+---
+
+## ADR-023 — Relatórios por catálogo, com formatação na infraestrutura
+
+**Decisão.** Os relatórios seguem o mesmo desenho das regras de alerta: um catálogo na aplicação
+(título, colunas com tipo, filtros aceitos) e uma fonte de dados na infraestrutura com uma consulta
+por relatório. O caso de uso valida período, situação e limite de linhas e devolve uma tabela neutra;
+CSV e PDF são apenas formas de apresentá-la. Acrescentar um relatório = uma entrada no catálogo e
+um método na fonte (um teste garante que nenhum fica sem consulta).
+
+**PDF com fpdf2.** Biblioteca em Python puro, sem dependências do sistema operacional, o que
+mantém o deploy simples. As fontes padrão do PDF cobrem Latin-1; caracteres fora dela (travessão,
+"≤") são trocados por equivalentes.
+
+**Privacidade e rastreabilidade.** Os relatórios não incluem identificadores diretos (CPF, contato)
+e toda exportação é auditada (o quê, em que formato, quantas linhas), não o conteúdo.
+

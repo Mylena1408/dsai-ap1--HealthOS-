@@ -357,6 +357,33 @@ A página `/app/painel` abre na visão do perfil de demonstração escolhido no 
 
 ---
 
+## Relatórios
+
+| Relatório | Recorte | Filtro de situação |
+|---|---|---|
+| Consultas por período | início da consulta | situação da consulta |
+| Exames solicitados | data da solicitação | situação do exame |
+| Dispensações de medicamentos | data da dispensação | — |
+| Posição de estoque por lote | retrato no momento (sem período) | — |
+| Faturas emitidas | data de emissão | situação da fatura (inclui "em atraso") |
+| Trilha de auditoria | data do evento | — |
+
+`GET /reports` lista o catálogo; `GET /reports/{chave}?start=&end=&status=&format=json|csv|pdf`
+gera o relatório. Período padrão: últimos 30 dias; máximo de 366 dias e 5.000 linhas (o JSON
+informa `truncated` quando o limite é atingido).
+
+- **CSV** para Excel em português: separador `;`, vírgula decimal, datas `dd/mm/aaaa` e BOM UTF-8.
+  Textos que começam com `=`, `+`, `-` ou `@` recebem `'` na frente (evita injeção de fórmulas).
+- **PDF** (fpdf2): cabeçalho com período e data de geração, rodapé com paginação e o aviso de dados
+  fictícios; paisagem quando há muitas colunas.
+- **JSON** traz os valores originais (códigos, ISO 8601) e os rótulos legíveis dos códigos.
+
+Cada geração registra `RELATORIO_EXPORTADO` na auditoria (relatório, formato, período, linhas),
+sem copiar o conteúdo. CPF, telefone e endereço não aparecem em nenhum relatório.
+Página: `/app/relatorios`.
+
+---
+
 ## Financeiro
 
 Amplia o faturamento original sem alterar suas tabelas (`invoices`, `billing_items`) nem suas

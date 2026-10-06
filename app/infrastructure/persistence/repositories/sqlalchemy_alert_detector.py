@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.application.interfaces.engagement_repository import AlertDetector
 from app.application.services import alert_rules as params
 from app.domain.entities.appointment import ACTIVE_STATUSES, AppointmentStatus
+from app.domain.entities.billing import format_brl
 from app.domain.entities.laboratory import ExamStatus
 from app.domain.entities.medical_record import ConditionStatus
 from app.domain.entities.reference_range import ResultFlag
@@ -197,7 +198,7 @@ class SQLAlchemyAlertDetector(AlertDetector):
                 rule_code="FATURA_VENCIDA", dedup_key=f"FATURA_VENCIDA:{invoice.id}", category=Cat.ADMINISTRATIVE,
                 level=Lvl.CRITICAL if days > params.INVOICE_OVERDUE_CRITICAL_DAYS else Lvl.WARNING,
                 title=f"Fatura vencida: {invoice.number} — {invoice.patient_name}",
-                message=f"Saldo de R$ {balance:.2f} vencido em {invoice.due_date:%d/%m/%Y} ({days} dia(s)).",
+                message=f"Saldo de {format_brl(balance)} vencido em {invoice.due_date:%d/%m/%Y} ({days} dia(s)).",
                 subject_type="Fatura", subject_id=invoice.id, patient_id=invoice.patient_id, link="/app/financeiro"))
         return candidates
 
