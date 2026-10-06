@@ -84,3 +84,12 @@ test("resposta da IA: texto escapado, alerta de urgência, registros e aviso", a
     assert.match(box.textContent, /não substituem avaliação profissional/);
     assert.match(providerBadge({ demo_mode: true, model: "x" }), /Modo demonstração/);
 });
+
+test("destaque da busca não injeta HTML e não quebra entidades", async () => {
+    const { highlightTerm } = await import("../../static/js/core/dom.js");
+    assert.equal(highlightTerm("Maria & <b>Ana</b>", "ana"),
+                 'Maria &amp; &lt;b&gt;<mark class="bg-amber-100 rounded px-0.5">Ana</mark>&lt;/b&gt;');
+    assert.equal(highlightTerm("A & B", "amp"), "A &amp; B");  // o termo não casa dentro de &amp;
+    assert.equal(highlightTerm("custo (R$)", "(R$"), 'custo <mark class="bg-amber-100 rounded px-0.5">(R$</mark>)');
+    assert.equal(highlightTerm("texto", "  "), "texto");
+});

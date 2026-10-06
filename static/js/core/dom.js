@@ -7,6 +7,15 @@ export function escapeHtml(value) {
     ));
 }
 
+/** Destaca o termo buscado: divide o texto original e escapa cada pedaço (o termo nunca vira HTML). */
+export function highlightTerm(text, term) {
+    const needle = term.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (!needle) return escapeHtml(text);
+    return String(text).split(new RegExp(`(${needle})`, 'gi'))
+        .map((piece, index) => index % 2 ? `<mark class="bg-amber-100 rounded px-0.5">${escapeHtml(piece)}</mark>` : escapeHtml(piece))
+        .join('');
+}
+
 export function isValidUuid(value) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value).trim());
 }

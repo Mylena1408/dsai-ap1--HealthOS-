@@ -329,3 +329,18 @@ mantém o deploy simples. As fontes padrão do PDF cobrem Latin-1; caracteres fo
 **Privacidade e rastreabilidade.** Os relatórios não incluem identificadores diretos (CPF, contato)
 e toda exportação é auditada (o quê, em que formato, quantas linhas), não o conteúdo.
 
+---
+
+## ADR-024 — Busca global com consultas simples e resultados mínimos
+
+**Decisão.** Uma consulta `LIKE` por tipo de entidade, limitada por grupo, em vez de um índice de
+busca dedicado (FTS/Elasticsearch): o volume é pequeno e o comportamento fica igual em SQLite e
+PostgreSQL. O termo é escapado (`%`, `_`) e sempre enviado como parâmetro.
+
+**Privacidade.** Os resultados mostram só o necessário para reconhecer o registro; o CPF vai
+mascarado. O link leva à página que já tem as regras de exibição completas.
+
+**Limite.** No SQLite, `ILIKE` só ignora maiúsculas/minúsculas em letras sem acento ("álvaro" não
+encontra "Álvaro"); no PostgreSQL a comparação é completa. Os relatórios, que estão em memória,
+são comparados sem acentos.
+

@@ -357,6 +357,26 @@ A página `/app/painel` abre na visão do perfil de demonstração escolhido no 
 
 ---
 
+## Busca global
+
+Campo no topo de todas as páginas (atalho: tecla `/`) e página `/app/busca`.
+`GET /search?q=&per_group=` (mínimo de 2 e máximo de 80 caracteres) devolve grupos com o total de
+correspondências e até `per_group` itens, cada um com o link da página certa:
+
+| Grupo | Busca por | Abre |
+|---|---|---|
+| Pacientes | nome; CPF quando o termo tem 3+ dígitos (pontuação ignorada) | prontuário |
+| Profissionais | nome ou registro | agenda do profissional |
+| Medicamentos | nome comercial ou princípio ativo | farmácia |
+| Exames | código da amostra | prontuário do paciente |
+| Faturas | número | detalhe da fatura no financeiro |
+| Relatórios | título ou descrição (sem acentos) | relatório já selecionado |
+
+O CPF aparece mascarado nos resultados (`***.456.789-**`). `%` e `_` digitados são tratados como
+texto, não como curingas.
+
+---
+
 ## Relatórios
 
 | Relatório | Recorte | Filtro de situação |

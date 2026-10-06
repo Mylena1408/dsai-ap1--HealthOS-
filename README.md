@@ -38,7 +38,7 @@ copy .env.example .env           # ajuste DATABASE_URL, ex.: sqlite:///./app.db
 uvicorn main:app --reload
 ```
 
-Acesse `http://127.0.0.1:8000/` (portal), `/app/painel`, `/app/prontuario`, `/app/consultas`, `/app/laboratorio`, `/app/farmacia`, `/app/financeiro`, `/app/relatorios`, `/app/alertas`,
+Acesse `http://127.0.0.1:8000/` (portal), `/app/painel`, `/app/prontuario`, `/app/consultas`, `/app/laboratorio`, `/app/farmacia`, `/app/financeiro`, `/app/relatorios`, `/app/busca`, `/app/alertas`,
 `/app/assistente`, `/app/notificacoes`, `/app/auditoria`, `/app/profissionais`, `/app/status` e `/docs` (Swagger).
 
 ### Dados de demonstração
@@ -54,6 +54,11 @@ Ao final, as regras de alerta são avaliadas e geram alertas e notificações pa
 
 Não há login: o **perfil de demonstração** (canto superior direito) escolhe se a caixa de
 notificações exibida é de um paciente, de um profissional ou de um setor.
+
+### Relatórios e busca
+
+Relatórios em `/app/relatorios` (JSON na tela, CSV para Excel e PDF). A busca global fica no topo
+de todas as páginas (tecla `/`).
 
 ### Assistente educacional (IA)
 

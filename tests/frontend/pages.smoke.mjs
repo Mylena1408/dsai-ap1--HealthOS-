@@ -54,6 +54,7 @@ const PAGES = [
     ["static/pages/farmacia.html", "/app/farmacia", "pages/pharmacy.js"],
     ["static/pages/financeiro.html", "/app/financeiro", "pages/finance.js"],
     ["static/pages/relatorios.html", "/app/relatorios", "pages/reports.js"],
+    ["static/pages/busca.html", "/app/busca", "pages/search.js"],
     ["static/pages/assistente.html", "/app/assistente", "pages/assistant.js"],
     ["static/pages/alertas.html", "/app/alertas", "pages/alerts.js"],
     ["static/pages/notificacoes.html", "/app/notificacoes", "pages/notifications.js"],
@@ -153,6 +154,20 @@ if (patient) {
     if (!previewRows || !pdfLink.includes("/reports/faturas?format=pdf")) failures++;
     const pdf = await nodeFetch(pdfLink);
     if (pdf.headers.get("content-type") !== "application/pdf") { failures++; console.log("FALHA download PDF"); }
+
+    // Busca global: resultados agrupados e link de fatura que abre o detalhe no financeiro.
+    const found = await openPage("static/pages/busca.html", "/app/busca?q=FAT-");
+    await found.load("pages/search.js");
+    const invoiceLink = found.document.querySelector('a[href^="/app/financeiro?invoice="]');
+    check("busca › faturas", found, `grupos=${found.document.querySelectorAll("#results section").length}`);
+    if (!invoiceLink) { failures++; console.log("FALHA busca sem link de fatura"); }
+    else {
+        const opened = await openPage("static/pages/financeiro.html", invoiceLink.getAttribute("href"));
+        await opened.load("pages/finance.js");
+        const title = opened.document.querySelector("#invoice-detail #invoice-title");
+        check("financeiro › abrir fatura pela busca", opened, title ? title.textContent : "SEM DETALHE");
+        if (!title) failures++;
+    }
 
     const doctor = (await api("/professionals?professional_type=MEDICO&limit=1")).items[0];
     const profiles = [

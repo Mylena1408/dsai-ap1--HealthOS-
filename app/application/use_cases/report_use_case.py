@@ -10,7 +10,8 @@ import uuid
 from app.application.dtos.report_dto import ReportCatalogItemDTO, ReportColumnDTO, ReportDTO
 from app.application.interfaces.report_source import ReportQuery, ReportSource
 from app.application.services.events import EventPublisher, NullPublisher
-from app.application.services.report_catalog import REPORTS, REPORTS_BY_KEY, ColumnKind, ReportDefinition, code_label
+from app.application.services.code_labels import code_label
+from app.application.services.report_catalog import REPORTS, REPORTS_BY_KEY, ColumnKind, ReportDefinition
 from app.domain.events import DomainEvent, EventType
 from app.domain.exceptions.common import BusinessRuleViolation, EntityNotFoundError
 

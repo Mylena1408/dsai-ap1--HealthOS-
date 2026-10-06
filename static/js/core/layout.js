@@ -43,8 +43,30 @@ export function renderNav(activeId) {
                 <i class="fas fa-book-open" aria-hidden="true"></i><span class="hidden xl:inline">API Docs</span>
             </a>
         </div>
+        <form id="nav-search" action="/app/busca" role="search" class="shrink-0 flex items-center">
+            <label for="nav-search-input" class="sr-only">Buscar no sistema</label>
+            <input id="nav-search-input" name="q" type="search" minlength="2" maxlength="80" placeholder="Buscar ( / )"
+                class="hidden md:block w-36 lg:w-44 p-2 border rounded-lg text-sm">
+            <a href="/app/busca" class="md:hidden px-2 py-2 text-slate-600" title="Buscar" aria-label="Buscar"><i class="fas fa-magnifying-glass" aria-hidden="true"></i></a>
+        </form>
         <div id="nav-profile" class="shrink-0"></div>`;
     mountProfileControls(document.getElementById('nav-profile'));
+    enableSearchShortcut();
+}
+
+let searchShortcutEnabled = false;
+
+/** Tecla "/" leva ao campo de busca (exceto quando já se está digitando em um campo). */
+function enableSearchShortcut() {
+    if (searchShortcutEnabled) return;
+    searchShortcutEnabled = true;
+    document.addEventListener('keydown', event => {
+        const typing = event.target.closest?.('input, textarea, select, [contenteditable="true"]');
+        const input = document.getElementById('nav-search-input');
+        if (event.key !== '/' || typing || !input || input.offsetParent === null) return;
+        event.preventDefault();
+        input.focus();
+    });
 }
 
 /** Faixa que lembra, em todas as páginas, que o sistema é demonstrativo. */

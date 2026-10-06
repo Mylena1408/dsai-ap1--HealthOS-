@@ -7,7 +7,8 @@ import io
 from fpdf import FPDF
 from fpdf.fonts import FontFace
 
-from app.application.services.report_catalog import ColumnKind, code_label
+from app.application.services.code_labels import code_label
+from app.application.services.report_catalog import ColumnKind
 from app.application.use_cases.report_use_case import DISCLAIMER, ReportTable
 
 # Células de texto que começam com estes caracteres seriam interpretadas como fórmula por planilhas.

@@ -25,6 +25,7 @@ from app.presentation.api.v1.dashboards.router import router as dashboards_route
 from app.presentation.api.v1.assistant.router import router as assistant_router
 from app.presentation.api.v1.finance.router import router as finance_router
 from app.presentation.api.v1.reports.router import router as reports_router
+from app.presentation.api.v1.search.router import router as search_router
 from app.infrastructure.scheduler import AlertScheduler
 from app.infrastructure.seed.lab_catalog import ensure_lab_catalog
 from app.infrastructure.seed.price_table import ensure_price_table
@@ -184,6 +185,7 @@ app.include_router(dashboards_router, prefix="/api/v1")
 app.include_router(assistant_router, prefix="/api/v1")
 app.include_router(finance_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")
+app.include_router(search_router, prefix="/api/v1")
 
 BASE_DIR = os.path.dirname(__file__)
 

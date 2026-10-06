@@ -263,3 +263,6 @@ document.addEventListener('submit', event => {
 
 loadSummary();
 loadInvoices();
+// Vindo da busca global: /app/financeiro?invoice=<id> abre a fatura.
+const requestedInvoice = new URLSearchParams(window.location.search).get('invoice');
+if (requestedInvoice) openInvoice(requestedInvoice);
