@@ -44,6 +44,11 @@ async def seed_vital_signs(session: AsyncSession, rng: random.Random, report: "S
         report.add("vital_signs", created=False)
         return
     repo = SQLAlchemyVitalSignsRepository(session)
+    # Medições registradas pela equipe de enfermagem (aparecem no histórico de cada enfermeiro).
+    # O revezamento por posição não consome números aleatórios: os demais dados do seed não mudam.
+    professionals, _ = await SQLAlchemyProfessionalRepository(session).search(ProfessionalFilters(limit=1000))
+    nurses = sorted((p.id for p in professionals if p.professional_type == ProfessionalType.NURSE), key=str)
+    measurement = 0
     for patient in (await session.scalars(select(PatientModel).order_by(PatientModel.cpf))).all():
         height = rng.randint(150, 190)
         weight = round(rng.uniform(19, 34) * (height / 100) ** 2, 1)
@@ -61,7 +66,9 @@ async def seed_vital_signs(session: AsyncSession, rng: random.Random, report: "S
                 oxygen_saturation=rng.choice([99, 98, 97, 96, 95, 93]),
                 weight_kg=weight, height_cm=height if index == 0 else None,
                 glucose_mg_dl=rng.choice([None, None, rng.randint(75, 98), rng.randint(100, 180)]),
+                professional_id=nurses[measurement % len(nurses)] if nurses else None,
             ))
+            measurement += 1
             report.add("vital_signs", created=True)
 
 

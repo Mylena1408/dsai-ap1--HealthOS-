@@ -138,9 +138,13 @@ async def initialize_database():
         await session.commit()
 
     if settings.SEED_DEMO_DATA:
-        async with AsyncSessionLocal() as session:
-            report = await seed_demo_data(session)
-        logging.getLogger("healthos.seed").info("Dados de demonstração: criados=%s", report.created)
+        # Dados de demonstração nunca devem impedir o sistema de subir: em caso de erro, registra e segue.
+        try:
+            async with AsyncSessionLocal() as session:
+                report = await seed_demo_data(session)
+            logging.getLogger("healthos.seed").info("Dados de demonstração: criados=%s", report.created)
+        except Exception:
+            logging.getLogger("healthos.seed").exception("Falha ao gerar os dados de demonstração; o sistema segue sem eles.")
 
     alert_scheduler.start()
 

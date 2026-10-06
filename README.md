@@ -123,6 +123,8 @@ As respostas são educacionais, não emitem diagnóstico e só recebem primeiro 
 registros clínicos do paciente fictício.
 
 Roteiro de apresentação passo a passo: [`docs/DEMONSTRACAO.md`](docs/DEMONSTRACAO.md).
+Dados de exemplo (médicos, enfermeiros, medicamentos, pacientes) e onde ver cada histórico:
+[`docs/DADOS_DE_EXEMPLO.md`](docs/DADOS_DE_EXEMPLO.md).
 
 ## ✅ Testes
 

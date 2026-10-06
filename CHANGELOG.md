@@ -4,6 +4,13 @@ Expansão incremental do HealthOS, um ciclo por branch (cada branch parte da ant
 Detalhes de cada módulo em [`docs/MODULOS.md`](docs/MODULOS.md); decisões em [`docs/DECISOES.md`](docs/DECISOES.md).
 Em todas as versões: dados fictícios, sem autenticação real e sem diagnóstico médico.
 
+## 1.11.0 — Histórico dos profissionais e dados de exemplo
+- Histórico de atividades no detalhe de cada profissional (consultas, sinais vitais, prescrições,
+  dispensações, exames) e `GET /api/v1/professionals/{id}/activity`.
+- Seed: os sinais vitais passam a ser registrados pela equipe de enfermagem.
+- Falha no seed não impede mais a inicialização (registra o erro e segue).
+- Seed conferido em PostgreSQL 16; dados de exemplo documentados em `docs/DADOS_DE_EXEMPLO.md`.
+
 ## 1.10.1 — Compatibilidade Linux/Render (`fix/compatibilidade-linux-render`)
 - Python 3.13 fixado (`.python-version`, igual ao painel do Render) e dependências com versões
   exatas: o build deixa de depender das versões mais novas disponíveis no dia.

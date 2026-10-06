@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import datetime, time
 from typing import Optional
 import uuid
 
@@ -73,3 +73,17 @@ class ProfessionalResponseDTO(BaseModel):
     status: ProfessionalStatus
     bio: Optional[str]
     working_hours: list[WorkingHoursDTO]
+
+
+class ActivityItemDTO(BaseModel):
+    kind: str  # CONSULTA, SINAIS_VITAIS, PRESCRICAO, DISPENSACAO, EXAME_SOLICITADO, EXAME_VALIDADO
+    occurred_at: datetime
+    description: str
+    patient_id: Optional[uuid.UUID]
+    patient_name: Optional[str]
+
+
+class ProfessionalActivityDTO(BaseModel):
+    professional_id: uuid.UUID
+    totals: dict[str, int]  # quantidade por tipo (só os tipos com registro)
+    items: list[ActivityItemDTO]  # mais recentes primeiro

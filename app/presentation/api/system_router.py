@@ -16,7 +16,7 @@ from app.infrastructure.persistence.models.professional_model import Professiona
 from app.infrastructure.persistence.models.schedule_model import ScheduleModel
 from app.infrastructure.persistence.models.user_model import UserModel
 
-APP_VERSION = "1.10.1"
+APP_VERSION = "1.11.0"
 
 router = APIRouter(tags=["Sistema"])
 

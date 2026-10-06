@@ -1,7 +1,7 @@
 // Página de profissionais: listagem com filtros, detalhes e cadastro.
 import { apiCall } from '../core/api.js';
 import {
-    escapeHtml, enableModalDismiss, openModal, renderEmpty, renderLoading, showResult, toast,
+    escapeHtml, enableModalDismiss, formatDateTime, openModal, renderEmpty, renderLoading, showResult, toast,
 } from '../core/dom.js';
 import { renderNav, renderDemoBanner } from '../core/layout.js';
 import { PROFESSIONAL_STATUS, PROFESSIONAL_TYPES, WEEKDAYS, fillSelect } from '../core/labels.js';
@@ -66,9 +66,45 @@ function showDetail(p) {
         </dl>
         <h4 class="font-semibold text-slate-700 mb-2">Grade semanal</h4>
         <table class="w-full text-sm mb-6"><tbody>${byDay}</tbody></table>
+        <h4 class="font-semibold text-slate-700 mb-2">Histórico de atividades</h4>
+        <div id="detail-activity" class="mb-6" aria-live="polite"></div>
         <a href="/app/consultas?professional=${encodeURIComponent(p.id)}" class="block text-center w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">
             <i class="fas fa-calendar-days"></i> Ver agenda</a>`;
     openModal('modal-detail');
+    loadActivity(p.id);
+}
+
+const ACTIVITY = {
+    CONSULTA: { label: 'Consultas', icon: 'fa-calendar-check' },
+    SINAIS_VITAIS: { label: 'Sinais vitais', icon: 'fa-heart-pulse' },
+    PRESCRICAO: { label: 'Prescrições', icon: 'fa-prescription' },
+    DISPENSACAO: { label: 'Dispensações', icon: 'fa-pills' },
+    EXAME_SOLICITADO: { label: 'Exames solicitados', icon: 'fa-vial' },
+    EXAME_VALIDADO: { label: 'Exames validados', icon: 'fa-check-double' },
+};
+
+async function loadActivity(professionalId) {
+    const target = $('detail-activity');
+    renderLoading(target);
+    try {
+        const data = await apiCall(`/professionals/${professionalId}/activity?limit=15`);
+        const totals = Object.entries(data.totals);
+        if (!totals.length) return renderEmpty(target, 'Nenhuma atividade registrada por este profissional.');
+        target.innerHTML = `
+            <div class="flex flex-wrap gap-2 mb-3">${totals.map(([kind, total]) => `
+                <span class="text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-700">
+                    <i class="fas ${ACTIVITY[kind]?.icon || 'fa-circle'}" aria-hidden="true"></i>
+                    ${escapeHtml(ACTIVITY[kind]?.label || kind)}: <span class="tabular-nums">${total}</span></span>`).join('')}</div>
+            <ul class="divide-y text-sm max-h-72 overflow-y-auto">${data.items.map(item => `
+                <li class="py-2">
+                    <div class="flex justify-between gap-2"><span class="text-slate-800">${escapeHtml(item.description)}</span>
+                        <span class="text-xs text-slate-500 whitespace-nowrap">${formatDateTime(item.occurred_at)}</span></div>
+                    ${item.patient_id ? `<a href="/app/prontuario?patient=${encodeURIComponent(item.patient_id)}"
+                        class="text-xs text-blue-700 hover:underline">${escapeHtml(item.patient_name || 'Paciente')}</a>` : ''}
+                </li>`).join('')}</ul>`;
+    } catch (err) {
+        renderEmpty(target, `Erro: ${err.message}`);
+    }
 }
 
 async function loadCatalogs() {
