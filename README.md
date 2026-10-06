@@ -73,6 +73,8 @@ pip install -r requirements-ai.txt
 As respostas são educacionais, não emitem diagnóstico e só recebem primeiro nome, idade e
 registros clínicos do paciente fictício.
 
+Roteiro de apresentação passo a passo: [`docs/DEMONSTRACAO.md`](docs/DEMONSTRACAO.md).
+
 ## ✅ Testes
 
 ```bash
