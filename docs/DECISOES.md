@@ -286,8 +286,11 @@ pode transformar o sistema em ferramenta de diagnóstico.
 **Contexto mínimo.** `PatientContextBuilder` monta o contexto a partir dos casos de uso existentes
 e envia apenas primeiro nome, idade e fatos clínicos; nenhum identificador direto sai do sistema.
 
-**Segurança da resposta.** Sinais de alerta nos sintomas sempre geram orientação de urgência, em
-qualquer provedor. Toda resposta carrega o aviso educacional. A auditoria registra o uso, não o
+**Segurança da resposta.** No provedor `demo`, sinais de alerta nos sintomas (dor no peito, desmaio,
+falta de ar...) geram a orientação de urgência (SAMU 192) e marcam a resposta como urgente. No
+provedor `anthropic`, essa orientação existe apenas como instrução no prompt de sistema: o caso de uso
+não detecta sinais de alerta por conta própria, e a resposta não é marcada como urgente (lacuna
+registrada em `SPEC/2026-10-06-assistente-ia.md`). Toda resposta carrega o aviso educacional. A auditoria registra o uso, não o
 conteúdo. O histórico do chat fica em tabelas novas, somente por acréscimo.
 
 **Consequência.** Trocar de provedor é configuração, não código; o modo demonstração não usa um

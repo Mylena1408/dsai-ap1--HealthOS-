@@ -126,6 +126,14 @@ Roteiro de apresentação passo a passo: [`docs/DEMONSTRACAO.md`](docs/DEMONSTRA
 Dados de exemplo (médicos, enfermeiros, medicamentos, pacientes) e onde ver cada histórico:
 [`docs/DADOS_DE_EXEMPLO.md`](docs/DADOS_DE_EXEMPLO.md).
 
+## 📐 Especificações
+
+Cada parte do sistema tem uma especificação em [`SPEC/`](SPEC), um arquivo por parte, com a data em que
+foi escrita: `AAAA-MM-DD-<parte>.md` (o quê e por quê, modelo de dados, rotas, critérios de aceitação,
+testes esperados e fora do escopo). Cada spec entra em um commit **anterior** ao código que ela
+descreve, então o histórico do git mostra a ordem: spec, depois código. As specs de 2026-10-06 foram
+escritas depois do código daquele dia; a regra vale a partir delas.
+
 ## ✅ Testes
 
 ```bash
