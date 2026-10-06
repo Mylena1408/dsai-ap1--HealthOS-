@@ -41,3 +41,11 @@ def test_invalid_timezone_keeps_system_clock(monkeypatch):
     monkeypatch.setattr(settings_module, "ZoneInfo", missing)
     assert settings_module.apply_timezone("Marte/Olimpo") is False
     assert settings_module.apply_timezone("") is False
+
+
+def test_posix_timezone_does_not_need_the_zone_database(monkeypatch):
+    calls = []
+    monkeypatch.setattr(settings_module.time, "tzset", lambda: calls.append(os.environ["TZ"]), raising=False)
+    monkeypatch.setattr(settings_module, "ZoneInfo", lambda name: pytest.fail("POSIX não consulta a base"))
+    monkeypatch.setenv("TZ", "UTC")
+    assert settings_module.apply_timezone("<-03>3") is True and calls == ["<-03>3"]

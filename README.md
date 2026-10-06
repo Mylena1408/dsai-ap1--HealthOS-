@@ -30,16 +30,64 @@ A documentação interativa da API pode ser acessada pelo Swagger:
 
 ## ▶️ Executando localmente
 
-```bash
-python -m venv venv
-venv\Scripts\activate            # Windows  (Linux/macOS: source venv/bin/activate)
+Requer **Python 3.12** (a mesma versão do Render, fixada em `.python-version`).
+
+**Windows (PowerShell)**
+
+```powershell
+python -m venv venv                # python --version deve mostrar 3.12
+venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-copy .env.example .env           # ajuste DATABASE_URL, ex.: sqlite:///./app.db
+copy .env.example .env
 uvicorn main:app --reload
+```
+
+**Linux / macOS**
+
+```bash
+python3.12 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn main:app --reload
+```
+
+**Docker** (Linux com Python 3.12 e o mesmo comando de start do Render)
+
+```bash
+docker build -t healthos .
+docker run --rm -p 8000:8000 -e SECRET_KEY=dev -e SEED_DEMO_DATA=True healthos
 ```
 
 Acesse `http://127.0.0.1:8000/` (portal), `/app/painel`, `/app/prontuario`, `/app/consultas`, `/app/laboratorio`, `/app/farmacia`, `/app/financeiro`, `/app/relatorios`, `/app/busca`, `/app/alertas`,
 `/app/assistente`, `/app/notificacoes`, `/app/auditoria`, `/app/profissionais`, `/app/status` e `/docs` (Swagger).
+
+### Variáveis de ambiente
+
+| Variável | Obrigatória | Padrão / exemplo | Para quê |
+|---|---|---|---|
+| `DATABASE_URL` | sim | `sqlite:///./app.db` | Banco. `postgres://`/`postgresql://` também funcionam (driver asyncpg) |
+| `SECRET_KEY` | sim | qualquer texto | Endpoint legado de login (demonstração) |
+| `SEED_DEMO_DATA` | não | `False` | `True` cria os dados fictícios na inicialização (idempotente) |
+| `APP_TIMEZONE` | não | `America/Belem` | Fuso dos horários; servidores Linux rodam em UTC. Alternativa sem base de fusos: `<-03>3` |
+| `ALERT_EVALUATION_INTERVAL_MINUTES` | não | `15` | Avaliação automática de alertas (`0` desliga) |
+| `AI_PROVIDER` | não | `demo` | `anthropic` usa o modelo real (requer `requirements-ai.txt` e `ANTHROPIC_API_KEY`) |
+| `PORT` | só no Render/Docker | definida pela plataforma | Porta usada no comando de start |
+
+### Deploy no Render
+
+A configuração está em [`render.yaml`](render.yaml). Para o serviço já existente (criado pelo painel),
+confira em **Settings**:
+
+- **Build Command:** `pip install -r requirements.txt`
+- **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
+- **Python:** vem de `.python-version` (3.12). Não defina `PYTHON_VERSION` no painel: ela tem
+  prioridade sobre o arquivo, e o padrão atual do Render (3.14) não tem pacotes para as versões fixadas.
+- **Environment:** `DATABASE_URL`, `SECRET_KEY`, `SEED_DEMO_DATA=True`, `APP_TIMEZONE=America/Belem`.
+
+No plano gratuito o disco não é persistente: com SQLite, o banco volta ao `app.db` do repositório a
+cada deploy ou reinício (com `SEED_DEMO_DATA=True` os dados fictícios são recriados). Para guardar
+dados, use um PostgreSQL do Render em `DATABASE_URL`.
 
 ### Dados de demonstração
 
@@ -89,10 +137,13 @@ Testes do frontend (Node 18+), em `tests/frontend`:
 
 ```bash
 cd tests/frontend && npm install
-npm test                                  # componentes de gráfico, sem servidor
+npm test                                           # componentes de gráfico, sem servidor
 HEALTHOS_URL=http://127.0.0.1:8000 npm run smoke   # todas as páginas contra a API em execução
 HEALTHOS_URL=http://127.0.0.1:8000 npm run a11y    # navegador real: acessibilidade, 4 larguras, teclado
 ```
+
+No PowerShell, defina a variável antes: `$env:HEALTHOS_URL="http://127.0.0.1:8000"; npm run smoke`.
+O `npm run a11y` usa o Edge ou o Chrome instalado (ou o caminho em `BROWSER_PATH`).
 
 ## 🩺 Observabilidade
 

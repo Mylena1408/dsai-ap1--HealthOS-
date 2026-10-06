@@ -6,7 +6,7 @@ nada aqui é diagnóstico ou orientação médica real.
 ## Preparação (antes da apresentação)
 
 ```bash
-venv\Scripts\activate
+venv\Scripts\Activate.ps1            # Linux/macOS: source venv/bin/activate
 python -m scripts.seed_demo           # 50 pacientes e todo o resto; pode rodar de novo sem duplicar
 uvicorn main:app --reload
 ```

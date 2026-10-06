@@ -37,11 +37,15 @@ def apply_timezone(name: str) -> bool:
     """
     if not name or not hasattr(time, "tzset"):
         return False
-    try:
-        ZoneInfo(name)  # confere se o fuso existe no sistema antes de aplicá-lo
-    except (ZoneInfoNotFoundError, ValueError):
-        logging.getLogger("healthos.config").warning("APP_TIMEZONE inválido (%s); mantendo o fuso do sistema.", name)
-        return False
+    # Nomes IANA ("America/Belem") dependem da base de fusos do sistema; a forma POSIX ("<-03>3",
+    # UTC-3 fixo) funciona mesmo sem ela.
+    if "/" in name:
+        try:
+            ZoneInfo(name)
+        except (ZoneInfoNotFoundError, ValueError):
+            logging.getLogger("healthos.config").warning(
+                "APP_TIMEZONE %s não existe neste sistema; use a forma POSIX (ex.: <-03>3). Mantendo o fuso atual.", name)
+            return False
     os.environ["TZ"] = name
     time.tzset()
     return True

@@ -1,0 +1,11 @@
+# Fora da imagem: ambientes locais, segredos, caches e dependências de teste do frontend
+venv/
+.venv/
+.env
+.git/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+tests/frontend/node_modules/
+htmlcov/
+.coverage
