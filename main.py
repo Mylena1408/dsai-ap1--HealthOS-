@@ -22,6 +22,7 @@ from app.presentation.api.v1.clinical_monitoring.router import router as clinica
 from app.presentation.api.v1.pharmacy_v2.router import router as pharmacy_v2_router
 from app.presentation.api.v1.engagement.router import router as engagement_router
 from app.presentation.api.v1.dashboards.router import router as dashboards_router
+from app.presentation.api.v1.assistant.router import router as assistant_router
 from app.infrastructure.scheduler import AlertScheduler
 from app.infrastructure.seed.lab_catalog import ensure_lab_catalog
 from app.presentation.api.error_handlers import register_error_handlers
@@ -41,6 +42,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 # Registra todos os modelos no metadata antes de criar tabelas.
 from app.infrastructure.persistence.models import (
     alert_model,
+    assistant_model,
     appointment_model,
     audit_model,
     billing_model,
@@ -174,6 +176,7 @@ app.include_router(clinical_monitoring_router, prefix="/api/v1")
 app.include_router(pharmacy_v2_router, prefix="/api/v1")
 app.include_router(engagement_router, prefix="/api/v1")
 app.include_router(dashboards_router, prefix="/api/v1")
+app.include_router(assistant_router, prefix="/api/v1")
 
 BASE_DIR = os.path.dirname(__file__)
 

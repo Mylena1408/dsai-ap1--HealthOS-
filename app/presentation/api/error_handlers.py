@@ -6,12 +6,15 @@ routers legados continuam tratando suas próprias exceções como antes.
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
-from app.domain.exceptions.common import BusinessRuleViolation, ConflictError, EntityNotFoundError
+from app.domain.exceptions.common import (
+    BusinessRuleViolation, ConflictError, EntityNotFoundError, ServiceUnavailableError,
+)
 
 _STATUS_BY_EXCEPTION = {
     EntityNotFoundError: status.HTTP_404_NOT_FOUND,
     ConflictError: status.HTTP_409_CONFLICT,  # inclui InvalidTransitionError
     BusinessRuleViolation: status.HTTP_400_BAD_REQUEST,
+    ServiceUnavailableError: status.HTTP_503_SERVICE_UNAVAILABLE,
 }
 
 

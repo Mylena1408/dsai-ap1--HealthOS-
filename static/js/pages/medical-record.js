@@ -83,9 +83,13 @@ function renderRecord() {
                     <p class="text-sm text-slate-600">${r.age} anos · ${escapeHtml(p.gender)} · nascimento ${formatDate(p.birth_date + 'T00:00')} · CPF ${escapeHtml(p.cpf)}</p>
                     <p class="text-sm text-slate-600">${escapeHtml(p.insurance_provider || 'Particular')}${p.phone ? ` · ${escapeHtml(p.phone)}` : ''}</p>
                 </div>
-                <div class="text-center bg-red-50 text-red-700 rounded-xl px-4 py-2">
-                    <div class="text-xs uppercase">Tipo sanguíneo</div>
-                    <div class="text-xl font-bold">${escapeHtml(BLOOD_TYPES[r.profile.blood_type])}</div>
+                <div class="flex items-center gap-3">
+                    <a href="/app/assistente?patient=${encodeURIComponent(p.id)}" class="px-3 py-2 rounded-lg border text-sm font-semibold text-blue-700 hover:bg-blue-50">
+                        <i class="fas fa-robot" aria-hidden="true"></i> Assistente</a>
+                    <div class="text-center bg-red-50 text-red-700 rounded-xl px-4 py-2">
+                        <div class="text-xs uppercase">Tipo sanguíneo</div>
+                        <div class="text-xl font-bold">${escapeHtml(BLOOD_TYPES[r.profile.blood_type])}</div>
+                    </div>
                 </div>
             </div>
             <div class="mt-3 flex flex-wrap gap-2 items-center"><span class="text-sm font-medium text-slate-700">Alergias:</span> ${allergyChips}</div>

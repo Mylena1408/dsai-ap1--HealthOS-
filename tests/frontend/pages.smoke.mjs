@@ -52,6 +52,7 @@ const PAGES = [
     ["static/pages/consultas.html", "/app/consultas", "pages/appointments.js"],
     ["static/pages/laboratorio.html", "/app/laboratorio", "pages/laboratory.js"],
     ["static/pages/farmacia.html", "/app/farmacia", "pages/pharmacy.js"],
+    ["static/pages/assistente.html", "/app/assistente", "pages/assistant.js"],
     ["static/pages/alertas.html", "/app/alertas", "pages/alerts.js"],
     ["static/pages/notificacoes.html", "/app/notificacoes", "pages/notifications.js"],
     ["static/pages/auditoria.html", "/app/auditoria", "pages/audit.js"],
@@ -87,6 +88,31 @@ if (patient) {
         await sleep(1500);
         check(`prontuário › ${tab}`, record, `svg=${record.document.getElementById("tab-content").querySelectorAll("svg").length}`);
     }
+    // Explicação de exame pela IA na aba Exames.
+    record.document.querySelector('[data-tab="exames"]').click();
+    await sleep(1500);
+    const explain = record.document.querySelector("[data-explain]");
+    if (explain) {
+        explain.click();
+        await sleep(1500);
+        const ok = record.document.querySelector("[data-explanation] [data-ai-response]");
+        check("prontuário › explicar exame (IA)", record, ok ? "resposta exibida" : "SEM RESPOSTA");
+        if (!ok) failures++;
+    }
+
+    // Assistente: resumo pontual e uma troca no chat.
+    const assistant = await openPage("static/pages/assistente.html", `/app/assistente?patient=${patient.id}`);
+    await assistant.load("pages/assistant.js");
+    assistant.document.getElementById("btn-summary").click();
+    await sleep(1500);
+    assistant.document.getElementById("message").value = "Quais medicamentos estão em uso?";
+    assistant.document.getElementById("form-message").dispatchEvent(new assistant.window.Event("submit", { cancelable: true }));
+    await sleep(2500);
+    const bubbles = assistant.document.querySelectorAll("#messages .rounded-2xl").length;
+    const summary = assistant.document.querySelector("#ai-result [data-ai-response]");
+    check("assistente › resumo + chat", assistant, `resumo=${Boolean(summary)} bolhas=${bubbles}`);
+    if (!summary || bubbles !== 2) failures++;
+
     const doctor = (await api("/professionals?professional_type=MEDICO&limit=1")).items[0];
     const profiles = [
         ["paciente", { audience: "PACIENTE", recipient_id: patient.id, label: patient.full_name }],

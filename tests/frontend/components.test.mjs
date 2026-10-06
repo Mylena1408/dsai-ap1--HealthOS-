@@ -67,3 +67,20 @@ test("escapeHtml neutraliza marcação vinda da API", async () => {
     assert.equal(escapeHtml('<img src=x onerror="alert(1)">'), "&lt;img src=x onerror=&quot;alert(1)&quot;&gt;");
     assert.equal(escapeHtml(null), "");
 });
+
+test("resposta da IA: texto escapado, alerta de urgência, registros e aviso", async () => {
+    const { aiResponseCard, providerBadge } = await import("../../static/js/components/ai-response.js");
+    const html = aiResponseCard({
+        feature: "ORIENTACAO_SINTOMAS", text: "Linha 1\n<img src=x onerror=alert(1)>", provider: "demo",
+        model: "regras", urgent: true, facts_used: [{ category: "Alergia", text: "Dipirona" }],
+        disclaimer: "As informações apresentadas são educacionais e não substituem avaliação profissional.",
+    });
+    const box = document.createElement("div");
+    box.innerHTML = html;
+    assert.equal(box.querySelector("img"), null);
+    assert.match(box.textContent, /Orientação sobre sintomas/);
+    assert.match(box.querySelector("[role=alert]").textContent, /192/);
+    assert.match(box.querySelector("details").textContent, /Registros consultados \(1\)/);
+    assert.match(box.textContent, /não substituem avaliação profissional/);
+    assert.match(providerBadge({ demo_mode: true, model: "x" }), /Modo demonstração/);
+});

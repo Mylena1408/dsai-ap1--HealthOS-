@@ -39,7 +39,7 @@ uvicorn main:app --reload
 ```
 
 Acesse `http://127.0.0.1:8000/` (portal), `/app/painel`, `/app/prontuario`, `/app/consultas`, `/app/laboratorio`, `/app/farmacia`, `/app/alertas`,
-`/app/notificacoes`, `/app/auditoria`, `/app/profissionais`, `/app/status` e `/docs` (Swagger).
+`/app/assistente`, `/app/notificacoes`, `/app/auditoria`, `/app/profissionais`, `/app/status` e `/docs` (Swagger).
 
 ### Dados de demonstração
 
@@ -54,6 +54,19 @@ Ao final, as regras de alerta são avaliadas e geram alertas e notificações pa
 
 Não há login: o **perfil de demonstração** (canto superior direito) escolhe se a caixa de
 notificações exibida é de um paciente, de um profissional ou de um setor.
+
+### Assistente educacional (IA)
+
+Por padrão (`AI_PROVIDER=demo`) o assistente responde com regras determinísticas, sem rede e sem
+chave de API. Para usar um modelo real:
+
+```bash
+pip install -r requirements-ai.txt
+# no .env: AI_PROVIDER=anthropic e ANTHROPIC_API_KEY=<sua chave>   (nunca versione a chave)
+```
+
+As respostas são educacionais, não emitem diagnóstico e só recebem primeiro nome, idade e
+registros clínicos do paciente fictício.
 
 ## ✅ Testes
 

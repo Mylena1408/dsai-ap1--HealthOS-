@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthOS | Assistente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav id="app-nav" class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50 h-[73px]"></nav>
+
+    <header class="max-w-7xl mx-auto px-4 sm:px-6 py-10 flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Assistente educacional</h1>
+            <p class="text-slate-600">Organiza e explica os registros do prontuário. Não emite diagnósticos nem prescreve.</p>
+        </div>
+        <div id="provider" aria-live="polite"></div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 pb-20 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <aside class="space-y-4">
+            <section class="glass-card rounded-2xl p-5">
+                <h2 class="font-bold text-slate-800 mb-3">Paciente</h2>
+                <div><input id="patient-search" type="search" placeholder="Buscar por nome ou CPF" class="w-full p-2 border rounded-lg"
+                        aria-label="Buscar paciente"></div>
+                <p id="patient-info" class="text-sm text-slate-600 mt-2">Nenhum paciente selecionado: perguntas gerais.</p>
+                <div class="flex flex-wrap gap-2 mt-3">
+                    <button id="btn-summary" disabled class="px-3 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50">
+                        <i class="fas fa-file-medical" aria-hidden="true"></i> Resumir prontuário</button>
+                    <button id="btn-insights" disabled class="px-3 py-2 rounded-lg text-sm font-semibold border bg-white hover:bg-slate-100 disabled:opacity-50">
+                        <i class="fas fa-lightbulb" aria-hidden="true"></i> Observações</button>
+                    <button id="btn-clear-patient" class="hidden px-3 py-2 rounded-lg text-sm border bg-white hover:bg-slate-100">
+                        <i class="fas fa-xmark" aria-hidden="true"></i> Remover seleção</button>
+                </div>
+            </section>
+
+            <section class="glass-card rounded-2xl p-5">
+                <div class="flex items-center justify-between gap-2 mb-3">
+                    <h2 class="font-bold text-slate-800">Conversas</h2>
+                    <button id="btn-new" class="px-3 py-1 rounded-lg text-sm font-semibold border bg-white hover:bg-slate-100">
+                        <i class="fas fa-plus" aria-hidden="true"></i> Nova</button>
+                </div>
+                <label class="text-sm text-slate-600">Mostrar
+                    <select id="conv-status" class="p-1 border rounded-lg ml-1">
+                        <option value="ATIVA">Ativas</option><option value="ARQUIVADA">Arquivadas</option>
+                    </select></label>
+                <ul id="conversations" class="mt-3 space-y-1" aria-live="polite"></ul>
+                <div id="conv-pagination"></div>
+            </section>
+
+            <section class="glass-card rounded-2xl p-5">
+                <h2 class="font-bold text-slate-800 mb-1">Organizar sintomas</h2>
+                <p class="text-xs text-slate-500 mb-3">Ajuda a preparar a conversa com o profissional; sinais de alerta geram orientação de urgência.</p>
+                <form id="form-symptoms" class="space-y-2">
+                    <textarea id="symptoms" required minlength="3" maxlength="2000" rows="3" class="w-full p-2 border rounded-lg text-sm"
+                        placeholder="Ex.: tosse há três dias e febre baixa" aria-label="Descrição dos sintomas"></textarea>
+                    <button type="submit" class="px-3 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700">
+                        <i class="fas fa-list-check" aria-hidden="true"></i> Organizar</button>
+                </form>
+            </section>
+        </aside>
+
+        <section class="lg:col-span-2 space-y-4">
+            <div id="ai-result" class="glass-card rounded-2xl p-5 hidden" aria-live="polite"></div>
+
+            <div class="glass-card rounded-2xl p-5 flex flex-col min-h-[28rem]">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-3 mb-3">
+                    <h2 id="chat-title" class="font-bold text-slate-800 truncate">Nova conversa</h2>
+                    <button id="btn-archive" class="hidden px-3 py-1 rounded-lg text-sm border bg-white hover:bg-slate-100">
+                        <i class="fas fa-box-archive" aria-hidden="true"></i> Arquivar</button>
+                </div>
+                <div id="messages" class="flex-1 space-y-3 overflow-y-auto max-h-[32rem] pr-1" aria-live="polite"></div>
+                <div id="suggestions" class="flex flex-wrap gap-2 mt-3"></div>
+                <form id="form-message" class="flex gap-2 mt-3">
+                    <label for="message" class="sr-only">Mensagem</label>
+                    <textarea id="message" required maxlength="2000" rows="2" class="flex-1 p-2 border rounded-lg text-sm"
+                        placeholder="Pergunte sobre exames, medicamentos, sinais vitais..."></textarea>
+                    <button type="submit" id="btn-send" class="px-4 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50">
+                        <i class="fas fa-paper-plane" aria-hidden="true"></i><span class="sr-only">Enviar</span></button>
+                </form>
+                <p id="disclaimer" class="text-xs text-amber-700 mt-3"></p>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="/static/js/pages/assistant.js"></script>
+</body>
+</html>

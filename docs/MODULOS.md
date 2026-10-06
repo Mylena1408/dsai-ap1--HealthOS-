@@ -357,6 +357,40 @@ A página `/app/painel` abre na visão do perfil de demonstração escolhido no 
 
 ---
 
+## Assistente educacional (IA) e chat
+
+Organiza e explica os registros do prontuário fictício. **Não diagnostica, não prescreve e não
+substitui avaliação profissional**: toda resposta traz o aviso "As informações apresentadas são
+educacionais e não substituem avaliação profissional."
+
+| Função | O que faz |
+|---|---|
+| Resumo do prontuário | Agrupa alergias, condições, medicamentos, exames, sinais vitais e consultas |
+| Explicação de exame | Explica cada analito de um exame **liberado** e o que significa estar fora da faixa |
+| Orientação sobre sintomas | Organiza os sintomas para a consulta; sinais de alerta (dor no peito, desmaio, falta de ar…) geram orientação de urgência (SAMU 192) |
+| Observações | Pontos de atenção para o acompanhamento (exames fora da referência, retorno não agendado…) |
+| Chat | Perguntas sobre o paciente selecionado, com histórico persistido (`assistant_conversations`, `assistant_messages`) |
+
+**Provedores** (`AI_PROVIDER`): `demo` (padrão) responde com regras determinísticas, sem rede e sem
+chave; `anthropic` usa o modelo `AI_MODEL` (padrão `claude-opus-5-5`) e exige `ANTHROPIC_API_KEY`
+e `pip install -r requirements-ai.txt`. Se o provedor real falhar, a API responde 503 e nada é gravado.
+
+**Dados enviados ao provedor**: apenas primeiro nome, idade e fatos clínicos resumidos. CPF, e-mail,
+telefone e endereço nunca entram no contexto. A auditoria registra o uso (`ASSISTENTE_CONSULTADO`:
+função, provedor, modelo, urgência), nunca o conteúdo das perguntas ou respostas.
+
+| Método | Endpoint |
+|---|---|
+| GET | `/ai/status` |
+| POST | `/ai/patients/{id}/summary` · `/ai/patients/{id}/insights` · `/ai/exams/{id}/analysis` · `/ai/symptoms` |
+| POST/GET | `/conversations` · `/conversations/{id}` |
+| POST | `/conversations/{id}/messages` · `/conversations/{id}/archive` |
+
+A página `/app/assistente` reúne as funções e o chat; na aba Exames do prontuário, cada exame
+liberado tem o botão "Explicar resultado (IA)".
+
+---
+
 ## Observabilidade
 
 `/health`, `/status` e `/metrics` — ver README.

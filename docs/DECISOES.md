@@ -267,3 +267,29 @@ as abas do prontuário e as visões do painel contra a API real e falha em qualq
 
 **Limite.** O DOM simulado não calcula layout: não detecta sobreposição visual, cortes de texto ou
 problemas de responsividade — isso ainda exige olhar a página em um navegador.
+
+---
+
+## ADR-021 — Camada de IA desacoplada, com modo demonstração
+
+**Contexto.** O assistente precisa funcionar em sala de aula sem chave de API e sem rede, e não
+pode transformar o sistema em ferramenta de diagnóstico.
+
+**Decisão.** A aplicação depende da interface `AIService`; a fábrica escolhe a implementação por
+`AI_PROVIDER`:
+- `DemoAIService` (padrão): regras determinísticas sobre o contexto do paciente — mesmas entradas,
+  mesma resposta, o que também torna os testes estáveis;
+- `ClaudeAIService`: SDK oficial `anthropic` (dependência opcional em `requirements-ai.txt`,
+  importada só quando usada), com prompt de sistema que proíbe diagnóstico e prescrição, recusa
+  tratada como resposta educada e erros do SDK convertidos em `ServiceUnavailableError` (503).
+
+**Contexto mínimo.** `PatientContextBuilder` monta o contexto a partir dos casos de uso existentes
+e envia apenas primeiro nome, idade e fatos clínicos; nenhum identificador direto sai do sistema.
+
+**Segurança da resposta.** Sinais de alerta nos sintomas sempre geram orientação de urgência, em
+qualquer provedor. Toda resposta carrega o aviso educacional. A auditoria registra o uso, não o
+conteúdo. O histórico do chat fica em tabelas novas, somente por acréscimo.
+
+**Consequência.** Trocar de provedor é configuração, não código; o modo demonstração não usa um
+modelo de linguagem, e a interface deixa isso visível com o selo "Modo demonstração".
+

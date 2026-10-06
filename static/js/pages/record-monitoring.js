@@ -4,6 +4,7 @@ import { escapeHtml, formatDateTime, toast } from '../core/dom.js';
 import {
     BMI_CATEGORIES, EXAM_PRIORITY, EXAM_STATUS, RESULT_FLAGS, badge, fillSelect, flagBadge,
 } from '../core/labels.js';
+import { aiResponseCard } from '../components/ai-response.js';
 import { renderLineChart } from '../components/line-chart.js';
 
 const $ = id => document.getElementById(id);
@@ -139,7 +140,10 @@ export async function renderExamsTab(container, { patientId, onChange }) {
                     <span class="text-sm text-slate-500">· solicitado em ${formatDateTime(e.requested_at)}${e.requested_by_name ? ` por ${escapeHtml(e.requested_by_name)}` : ''}</span></span>
                 <span class="flex gap-2 items-center">${e.priority === 'URGENTE' ? '<span class="text-xs font-semibold text-red-700">URGENTE</span>' : ''}${badge(EXAM_STATUS, e.status)}</span>
             </div>
-            ${e.status === 'LIBERADO' ? resultsTable(e)
+            ${e.status === 'LIBERADO' ? resultsTable(e) + `
+                <button data-explain="${escapeHtml(e.id)}" class="mt-2 px-3 py-1 rounded-lg border text-xs font-semibold text-blue-700 hover:bg-blue-50">
+                    <i class="fas fa-robot" aria-hidden="true"></i> Explicar resultado (IA)</button>
+                <div data-explanation="${escapeHtml(e.id)}" class="hidden mt-2 bg-slate-50 border rounded-xl p-3" aria-live="polite"></div>`
                 : `<p class="text-xs text-slate-500 mt-1">${e.status === 'CANCELADO' ? `Cancelado: ${escapeHtml(e.cancellation_reason || '')}`
                     : 'Resultados disponíveis após validação e liberação pelo laboratório.'}</p>`}
         </li>`).join('');
@@ -170,6 +174,20 @@ export async function renderExamsTab(container, { patientId, onChange }) {
             toast(err.message, 'error');
         }
     });
+
+    container.querySelectorAll('[data-explain]').forEach(button => button.addEventListener('click', async () => {
+        const target = container.querySelector(`[data-explanation="${button.dataset.explain}"]`);
+        target.classList.remove('hidden');
+        target.innerHTML = '<p class="text-sm text-slate-500"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Consultando o assistente...</p>';
+        button.disabled = true;
+        try {
+            target.innerHTML = aiResponseCard(await apiCall(`/ai/exams/${button.dataset.explain}/analysis`, 'POST'));
+        } catch (err) {
+            target.innerHTML = `<p class="text-sm text-red-700">${escapeHtml(err.message)}</p>`;
+        } finally {
+            button.disabled = false;
+        }
+    }));
 
     container.querySelectorAll('[data-analyte]').forEach(button => button.addEventListener('click', async () => {
         const history = await apiCall(`/patients/${patientId}/exams/analytes/${encodeURIComponent(button.dataset.analyte)}/history`);

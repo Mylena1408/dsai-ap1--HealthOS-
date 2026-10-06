@@ -1,0 +1,2 @@
+# Opcional: provedor de IA real (AI_PROVIDER=anthropic). O modo demo não precisa disto.
+anthropic

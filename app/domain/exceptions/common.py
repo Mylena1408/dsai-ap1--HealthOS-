@@ -21,6 +21,10 @@ class ConflictError(DomainException):
     """A operação conflita com o estado atual dos dados (HTTP 409)."""
 
 
+class ServiceUnavailableError(DomainException):
+    """Um serviço externo necessário à operação está indisponível (HTTP 503)."""
+
+
 class InvalidTransitionError(ConflictError):
     """Transição de estado não permitida pela máquina de estados (HTTP 409)."""
 
