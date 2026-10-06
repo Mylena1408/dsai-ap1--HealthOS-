@@ -1,0 +1,24 @@
+/* Estilos compartilhados pelas páginas do HealthOS (complementam o Tailwind). */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+body { font-family: 'Inter', sans-serif; }
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.modal.active { display: flex; }
+.modal > div { max-height: calc(100vh - 2rem); overflow-y: auto; }

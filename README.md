@@ -16,13 +16,71 @@ A documentação interativa da API pode ser acessada pelo Swagger:
 
 ## 🛠️ Tecnologias
 
-* Python
+* Python 3.12
 * FastAPI
-* SQLAlchemy
-* PostgreSQL
+* SQLAlchemy 2 (assíncrono)
+* SQLite (local) ou PostgreSQL (via `asyncpg`)
 * Uvicorn
 * Pydantic
+* HTML + JavaScript (módulos ES) + Tailwind via CDN
 * Render
+
+> ⚠️ **Aplicação didática.** Todos os dados são fictícios, não há autenticação
+> real e nada aqui substitui avaliação de um profissional de saúde.
+
+## ▶️ Executando localmente
+
+```bash
+python -m venv venv
+venv\Scripts\activate            # Windows  (Linux/macOS: source venv/bin/activate)
+pip install -r requirements.txt
+copy .env.example .env           # ajuste DATABASE_URL, ex.: sqlite:///./app.db
+uvicorn main:app --reload
+```
+
+Acesse `http://127.0.0.1:8000/` (portal), `/app/status` (status do sistema) e `/docs` (Swagger).
+
+### Dados de demonstração
+
+```bash
+python -m scripts.seed_demo                  # 50 pacientes + catálogo e estoque fictícios
+python -m scripts.seed_demo --patients 120   # mais pacientes
+```
+
+O gerador é determinístico e idempotente: rodar de novo não duplica registros.
+Para popular automaticamente no startup, defina `SEED_DEMO_DATA=True` no `.env`.
+
+## ✅ Testes
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+Os testes usam bancos SQLite temporários e nunca alteram o `app.db`.
+`tests/api/test_existing_endpoints.py` garante que os endpoints originais continuam funcionando.
+
+## 🩺 Observabilidade
+
+| Endpoint   | Descrição                                                        |
+|------------|------------------------------------------------------------------|
+| `/health`  | Liveness: o processo está respondendo                            |
+| `/status`  | Versão, uptime, conexão com o banco e contagem de registros      |
+| `/metrics` | Requisições por rota, latência média/máxima e erros desde o boot |
+
+## 🗂️ Estrutura
+
+```
+app/domain          entidades e regras de negócio
+app/application     casos de uso, interfaces de repositório, DTOs
+app/infrastructure  persistência, observabilidade, dados de demonstração
+app/presentation    routers da API
+static/             frontend modular (core/ e pages/)
+tests/              unit/, integration/ e api/
+docs/DECISOES.md    decisões arquiteturais (ADRs)
+```
+
+Mais detalhes em [ARCHITECTURE.md](ARCHITECTURE.md) e [docs/DECISOES.md](docs/DECISOES.md).
 
 ## 🎓 Projeto acadêmico
 

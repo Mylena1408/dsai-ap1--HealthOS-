@@ -6,45 +6,11 @@
     <title>HealthOS | Portal Hospitalar</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-            z-index: 100;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal.active { display: flex; }
-    </style>
+    <link rel="stylesheet" href="/static/css/app.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
 
-    <nav class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-        <div class="flex items-center gap-2">
-            <div class="bg-blue-600 p-2 rounded-lg">
-                <i class="fas fa-hospital-user text-white text-xl"></i>
-            </div>
-            <span class="text-2xl font-bold text-slate-800 tracking-tight">Health<span class="text-blue-600">OS</span></span>
-        </div>
-        <div class="flex items-center gap-4">
-            <a href="/docs" target="_blank" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2">
-                <i class="fas fa-book-open"></i> API Docs
-            </a>
-        </div>
-    </nav>
+    <nav id="app-nav" class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50 h-[73px]"></nav>
 
     <header class="max-w-4xl mx-auto px-6 py-12 text-center">
         <h1 id="page-title" class="text-3xl font-extrabold text-slate-900 mb-2">Portal do Paciente</h1>
@@ -53,15 +19,15 @@
 
     <div class="max-w-4xl mx-auto px-6 mb-6 flex justify-center">
         <div class="bg-white p-1 rounded-xl border border-slate-200 flex gap-2">
-            <button onclick="switchView('patient')" id="btn-view-patient" class="px-4 py-2 rounded-lg text-sm font-bold transition-all bg-blue-600 text-white">Visão Paciente</button>
-            <button onclick="switchView('doctor')" id="btn-view-doctor" class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:bg-slate-100">Visão Médico</button>
+            <button data-view="patient" id="btn-view-patient" class="px-4 py-2 rounded-lg text-sm font-bold transition-all bg-blue-600 text-white">Visão Paciente</button>
+            <button data-view="doctor" id="btn-view-doctor" class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:bg-slate-100">Visão Médico</button>
         </div>
     </div>
 
     <main class="max-w-4xl mx-auto px-6 pb-20">
         <div id="grid-patient" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <!-- Botão 1: Cadastro -->
-            <button onclick="openModal('modal-cadastro')" class="glass-card p-6 rounded-2xl text-left hover:border-blue-500 transition-all group">
+            <button data-open-modal="modal-cadastro" class="glass-card p-6 rounded-2xl text-left hover:border-blue-500 transition-all group">
                 <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <i class="fas fa-user-plus"></i>
                 </div>
@@ -70,7 +36,7 @@
             </button>
 
             <!-- Botão 2: Consultas -->
-            <button onclick="openModal('modal-consultas')" class="glass-card p-6 rounded-2xl text-left hover:border-blue-500 transition-all group">
+            <button data-open-modal="modal-consultas" class="glass-card p-6 rounded-2xl text-left hover:border-blue-500 transition-all group">
                 <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <i class="fas fa-calendar-alt"></i>
                 </div>
@@ -79,7 +45,7 @@
             </button>
 
             <!-- Botão 3: Agenda -->
-            <button onclick="openModal('modal-agenda'); fetchAvailableSlots()" class="glass-card p-6 rounded-2xl text-left hover:border-blue-500 transition-all group">
+            <button data-open-modal="modal-agenda" data-action="fetch-slots" class="glass-card p-6 rounded-2xl text-left hover:border-blue-500 transition-all group">
                 <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <i class="fas fa-calendar-check"></i>
                 </div>
@@ -88,7 +54,7 @@
             </button>
 
             <!-- Botão 4: Fatura -->
-            <button onclick="openModal('modal-fatura')" class="glass-card p-6 rounded-2xl text-left hover:border-blue-500 transition-all group">
+            <button data-open-modal="modal-fatura" class="glass-card p-6 rounded-2xl text-left hover:border-blue-500 transition-all group">
                 <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <i class="fas fa-credit-card"></i>
                 </div>
@@ -99,7 +65,7 @@
 
         <div id="grid-doctor" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-6">
             <!-- Botão 1: Prontuários -->
-            <button onclick="openModal('modal-doc-history')" class="glass-card p-6 rounded-2xl text-left hover:border-emerald-500 transition-all group">
+            <button data-open-modal="modal-doc-history" class="glass-card p-6 rounded-2xl text-left hover:border-emerald-500 transition-all group">
                 <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                     <i class="fas fa-file-medical"></i>
                 </div>
@@ -108,7 +74,7 @@
             </button>
 
             <!-- Botão 2: Nova Evolução -->
-            <button onclick="openModal('modal-doc-new')" class="glass-card p-6 rounded-2xl text-left hover:border-emerald-500 transition-all group">
+            <button data-open-modal="modal-doc-new" class="glass-card p-6 rounded-2xl text-left hover:border-emerald-500 transition-all group">
                 <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                     <i class="fas fa-pen-square"></i>
                 </div>
@@ -117,7 +83,7 @@
             </button>
 
             <!-- Botão 3: Gerir Alertas -->
-            <button onclick="openModal('modal-doc-alerts')" class="glass-card p-6 rounded-2xl text-left hover:border-emerald-500 transition-all group">
+            <button data-open-modal="modal-doc-alerts" class="glass-card p-6 rounded-2xl text-left hover:border-emerald-500 transition-all group">
                 <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
@@ -126,7 +92,7 @@
             </button>
 
             <!-- Botão 4: Prescrever Medicamento -->
-            <button onclick="openModal('modal-doc-pharmacy')" class="glass-card p-6 rounded-2xl text-left hover:border-emerald-500 transition-all group">
+            <button data-open-modal="modal-doc-pharmacy" class="glass-card p-6 rounded-2xl text-left hover:border-emerald-500 transition-all group">
                 <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                     <i class="fas fa-pills"></i>
                 </div>
@@ -139,7 +105,7 @@
     <!-- MODALS -->
     <div id="modal-cadastro" class="modal">
         <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
-            <button onclick="closeModal('modal-cadastro')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <button data-close-modal="modal-cadastro" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
             <h3 class="text-2xl font-bold text-slate-800 mb-6">Cadastro de Paciente</h3>
             <form id="form-cadastro" class="space-y-4">
                 <input type="text" id="p-fullname" placeholder="Nome Completo" required class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
@@ -161,11 +127,11 @@
 
     <div id="modal-consultas" class="modal">
         <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
-            <button onclick="closeModal('modal-consultas')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <button data-close-modal="modal-consultas" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
             <h3 class="text-2xl font-bold text-slate-800 mb-6">Minhas Consultas</h3>
             <div class="space-y-4">
                 <input type="text" id="p-consult-id" placeholder="Seu ID de Paciente" class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
-                <button onclick="fetchConsultations()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">Consultar Agenda</button>
+                <button data-action="fetch-consultations" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">Consultar Agenda</button>
             </div>
             <div id="res-consultas" class="mt-6 space-y-3 hidden"></div>
         </div>
@@ -173,10 +139,10 @@
 
     <div id="modal-agenda" class="modal">
         <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
-            <button onclick="closeModal('modal-agenda')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <button data-close-modal="modal-agenda" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
             <h3 class="text-2xl font-bold text-slate-800 mb-6">Agendar Consulta</h3>
             <form id="form-agenda" class="space-y-4">
-                <button type="button" onclick="fetchAvailableSlots()" class="w-full bg-slate-100 text-slate-700 py-2 rounded-lg">Carregar horários disponíveis</button>
+                <button type="button" data-action="fetch-slots" class="w-full bg-slate-100 text-slate-700 py-2 rounded-lg">Carregar horários disponíveis</button>
                 <select id="p-slot-id" required class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
                     <option value="">Selecione um horário</option>
                 </select>
@@ -189,11 +155,11 @@
 
     <div id="modal-fatura" class="modal">
         <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
-            <button onclick="closeModal('modal-fatura')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <button data-close-modal="modal-fatura" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
             <h3 class="text-2xl font-bold text-slate-800 mb-6">Minhas Faturas</h3>
             <div class="space-y-4">
                 <input type="text" id="p-bill-id" placeholder="ID do Paciente" class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
-                <button onclick="fetchBilling()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">Buscar Débitos</button>
+                <button data-action="fetch-billing" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">Buscar Débitos</button>
             </div>
             <div id="res-fatura" class="mt-6 space-y-2 hidden"></div>
         </div>
@@ -202,11 +168,11 @@
     <!-- MODALS MÉDICO -->
     <div id="modal-doc-history" class="modal">
         <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
-            <button onclick="closeModal('modal-doc-history')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <button data-close-modal="modal-doc-history" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
             <h3 class="text-2xl font-bold text-slate-800 mb-6">Histórico Clínico</h3>
             <div class="space-y-4">
                 <input type="text" id="d-patient-id" placeholder="ID do Paciente" class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500">
-                <button onclick="fetchClinicalHistory()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">Buscar Prontuário</button>
+                <button data-action="fetch-history" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">Buscar Prontuário</button>
             </div>
             <div id="res-doc-history" class="mt-6 space-y-3 hidden"></div>
         </div>
@@ -214,7 +180,7 @@
 
     <div id="modal-doc-new" class="modal">
         <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
-            <button onclick="closeModal('modal-doc-new')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <button data-close-modal="modal-doc-new" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
             <h3 class="text-2xl font-bold text-slate-800 mb-6">Nova Evolução Clínica</h3>
             <form id="form-doc-new" class="space-y-4">
                 <input type="text" id="d-note-patient-id" placeholder="ID do Paciente" required class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500">
@@ -228,7 +194,7 @@
 
     <div id="modal-doc-alerts" class="modal">
         <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
-            <button onclick="closeModal('modal-doc-alerts')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <button data-close-modal="modal-doc-alerts" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
             <h3 class="text-2xl font-bold text-slate-800 mb-6">Configurar Alertas</h3>
             <form id="form-doc-alerts" class="space-y-4">
                 <input type="text" id="d-alert-patient-id" placeholder="ID do Paciente" required class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500">
@@ -243,7 +209,7 @@
 
     <div id="modal-doc-pharmacy" class="modal">
         <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
-            <button onclick="closeModal('modal-doc-pharmacy')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            <button data-close-modal="modal-doc-pharmacy" aria-label="Fechar" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
             <h3 class="text-2xl font-bold text-slate-800 mb-6">Dispensar Medicação</h3>
             <form id="form-doc-pharmacy" class="space-y-4">
                 <input type="text" id="d-pharm-med-id" placeholder="ID do Medicamento" required class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500">
@@ -255,300 +221,6 @@
         </div>
     </div>
 
-    <script>
-        const API_BASE = window.location.origin + "/api/v1";
-        function openModal(id) { document.getElementById(id).classList.add('active'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-        // Dados vindos da API são escapados antes de entrar em innerHTML (evita XSS).
-        function escapeHtml(value) {
-            return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
-        }
-
-        function isValidUuid(value) {
-            return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
-        }
-
-        function rememberPatientId(patientId) {
-            localStorage.setItem('healthos.patientId', patientId);
-            ['p-id-agenda', 'p-consult-id', 'p-bill-id'].forEach(id => {
-                const input = document.getElementById(id);
-                if (input) input.value = patientId;
-            });
-        }
-
-        const savedPatientId = localStorage.getItem('healthos.patientId');
-        if (savedPatientId) rememberPatientId(savedPatientId);
-
-        function switchView(view) {
-            const isPatient = view === 'patient';
-            document.getElementById('grid-patient').classList.toggle('hidden', !isPatient);
-            document.getElementById('grid-doctor').classList.toggle('hidden', isPatient);
-            document.getElementById('btn-view-patient').className = isPatient ? 'px-4 py-2 rounded-lg text-sm font-bold transition-all bg-blue-600 text-white' : 'px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:bg-slate-100';
-            document.getElementById('btn-view-doctor').className = !isPatient ? 'px-4 py-2 rounded-lg text-sm font-bold transition-all bg-blue-600 text-white' : 'px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:bg-slate-100';
-            document.getElementById('page-title').innerText = isPatient ? 'Portal do Paciente' : 'Portal do Médico';
-            document.getElementById('page-subtitle').innerText = isPatient ? 'Demonstração de serviços integrados para o usuário final.' : 'Gestão clínica e acompanhamento de pacientes.';
-        }
-
-        function getAuthHeader() { return { 'Content-Type': 'application/json' }; }
-
-        async function apiCall(endpoint, method = 'GET', body = null) {
-            const options = { method, headers: getAuthHeader() };
-            if (body) options.body = JSON.stringify(body);
-            let response;
-            try {
-                response = await fetch(`${API_BASE}${endpoint}`, options);
-            } catch (error) {
-                throw new Error('Não foi possível conectar à API. Verifique sua conexão e tente novamente.');
-            }
-            if (!response.ok) {
-                const err = await response.json().catch(() => ({}));
-                let message = err.detail;
-                if (Array.isArray(message)) {
-                    message = message.map(item => {
-                        const field = Array.isArray(item.loc) ? item.loc.slice(1).join('.') : '';
-                        return `${field ? `${field}: ` : ''}${item.msg || JSON.stringify(item)}`;
-                    }).join('; ');
-                } else if (message && typeof message === 'object') {
-                    message = JSON.stringify(message);
-                }
-                throw new Error(message || `Falha na requisição (HTTP ${response.status})`);
-            }
-            return response.json();
-        }
-
-        document.getElementById('form-cadastro').onsubmit = async (e) => {
-            e.preventDefault();
-            const resDiv = document.getElementById('res-cadastro');
-            resDiv.classList.remove('hidden', 'bg-green-100', 'bg-red-100');
-            try {
-                // Limpeza do CPF: remove qualquer caractere que não seja número
-                const rawCpf = document.getElementById('p-cpf').value;
-                const cleanCpf = rawCpf.replace(/\D/g, '');
-
-                const data = {
-                    full_name: document.getElementById('p-fullname').value,
-                    cpf: cleanCpf,
-                    birth_date: document.getElementById('p-birth').value,
-                    gender: document.getElementById('p-gender').value
-                };
-                const res = await apiCall('/admin/patients', 'POST', data);
-                rememberPatientId(res.id);
-                resDiv.innerText = `Sucesso! Seu ID de Paciente é: ${res.id}`;
-                resDiv.classList.add('bg-green-100', 'text-green-700');
-            } catch (err) {
-                resDiv.innerText = `Erro: ${err.message}`;
-                resDiv.classList.add('bg-red-100', 'text-red-700');
-            }
-            resDiv.classList.remove('hidden');
-        };
-
-        async function fetchConsultations() {
-            const pid = document.getElementById('p-consult-id').value.trim();
-            const resDiv = document.getElementById('res-consultas');
-            resDiv.innerHTML = "";
-            if (!isValidUuid(pid)) return alert('Informe o ID UUID recebido ao cadastrar o paciente.');
-            try {
-                const res = await apiCall(`/clinical/patients/${pid}/appointments`);
-                resDiv.classList.remove('hidden');
-                if (res.length === 0) {
-                    resDiv.innerHTML = "<p class='text-slate-500 text-center'>Nenhuma consulta agendada.</p>";
-                    return;
-                }
-                res.forEach(app => {
-                    const item = document.createElement('div');
-                    item.className = "p-3 border rounded-lg bg-white flex flex-col gap-1";
-                    item.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-slate-800">Consulta Agendada</span>
-                            <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">${escapeHtml(app.status)}</span>
-                        </div>
-                        <div class="text-sm text-slate-600">
-                            <i class="fas fa-calendar"></i> ${new Date(app.start_time).toLocaleString()}
-                        </div>
-                    `;
-                    resDiv.appendChild(item);
-                });
-            } catch (err) {
-                alert(`Erro: ${err.message}`);
-            }
-        }
-
-        async function fetchAvailableSlots() {
-            const select = document.getElementById('p-slot-id');
-            select.innerHTML = '<option value="">Carregando horários...</option>';
-            try {
-                const slots = await apiCall('/clinical/availability');
-                select.innerHTML = '<option value="">Selecione um horário</option>';
-                const periods = [
-                    { label: 'Manhã (antes das 12h)', test: hour => hour < 12 },
-                    { label: 'Tarde (12h às 18h)', test: hour => hour >= 12 && hour < 18 },
-                    { label: 'Noite (a partir das 18h)', test: hour => hour >= 18 }
-                ];
-                const groups = periods.map(period => {
-                    const group = document.createElement('optgroup');
-                    group.label = period.label;
-                    select.appendChild(group);
-                    return { ...period, group };
-                });
-                slots.forEach(slot => {
-                    const startsAt = new Date(slot.start_time);
-                    const option = document.createElement('option');
-                    option.value = slot.id;
-                    option.textContent = `${startsAt.toLocaleDateString('pt-BR')} às ${startsAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} — ${slot.duration_minutes} min`;
-                    const group = groups.find(period => period.test(startsAt.getHours()));
-                    group.group.appendChild(option);
-                });
-                groups.forEach(({ group }) => {
-                    if (!group.children.length) group.remove();
-                });
-                if (!slots.length) select.innerHTML = '<option value="">Sem horários futuros disponíveis</option>';
-            } catch (err) {
-                select.innerHTML = '<option value="">Erro ao carregar horários</option>';
-                alert(`Erro: ${err.message}`);
-            }
-        }
-
-        document.getElementById('form-agenda').onsubmit = async (e) => {
-            e.preventDefault();
-            const resDiv = document.getElementById('res-agenda');
-            resDiv.classList.remove('hidden', 'bg-green-100', 'bg-red-100');
-            try {
-                const patientId = document.getElementById('p-id-agenda').value.trim();
-                if (!isValidUuid(patientId)) throw new Error('Cadastre o paciente e use o ID UUID retornado para reservar a consulta.');
-                const data = { slot_id: document.getElementById('p-slot-id').value, patient_id: patientId };
-                const res = await apiCall('/clinical/schedule', 'POST', data);
-                resDiv.innerText = `Sucesso! Consulta agendada.`;
-                resDiv.classList.add('bg-green-100', 'text-green-700');
-            } catch (err) {
-                resDiv.innerText = `Erro: ${err.message}`;
-                resDiv.classList.add('bg-red-100', 'text-red-700');
-            }
-            resDiv.classList.remove('hidden');
-        };
-
-        async function fetchBilling() {
-            const pid = document.getElementById('p-bill-id').value.trim();
-            const resDiv = document.getElementById('res-fatura');
-            resDiv.innerHTML = "";
-            if (!isValidUuid(pid)) return alert('Informe o ID UUID recebido ao cadastrar o paciente.');
-            try {
-                const res = await apiCall(`/billing/patients/${pid}/summary`);
-                resDiv.classList.remove('hidden');
-                if (res.length === 0) {
-                    resDiv.innerHTML = "<p class='text-slate-500 text-center'>Nenhum débito pendente encontrado.</p>";
-                    return;
-                }
-                res.forEach(inv => {
-                    const card = document.createElement('article');
-                    card.className = 'p-4 border rounded-lg bg-white space-y-2';
-                    const money = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
-                    const due = inv.due_date ? new Date(inv.due_date) : null;
-                    const overdue = due && due < new Date() && inv.status !== 'PAGO';
-                    const dueLabel = due ? due.toLocaleDateString('pt-BR') : 'Não informado';
-                    card.innerHTML = `
-                        <div class="flex justify-between gap-2">
-                            <strong>Débito ${escapeHtml(inv.number)}</strong>
-                            <span class="text-xs ${overdue ? 'text-red-600' : 'text-slate-500'}">${overdue ? 'Vencido' : escapeHtml(inv.status)}</span>
-                        </div>
-                        <div class="text-sm text-slate-600">Total dos serviços: ${money(inv.gross_total)}</div>
-                        <div class="text-sm text-slate-600">Cobertura do convênio: ${money(inv.insurance_share)}</div>
-                        <div class="font-bold text-blue-700">Valor devido pelo paciente: ${money(inv.patient_share)}</div>
-                        <div class="text-sm ${overdue ? 'text-red-600' : 'text-slate-600'}">Vencimento: ${dueLabel}</div>`;
-                    resDiv.appendChild(card);
-                });
-            } catch (err) {
-                alert(`Erro: ${err.message}`);
-            }
-        }
-
-        // FUNÇÕES DO MÉDICO
-        async function fetchClinicalHistory() {
-            const pid = document.getElementById('d-patient-id').value;
-            const resDiv = document.getElementById('res-doc-history');
-            resDiv.innerHTML = "";
-            try {
-                const res = await apiCall(`/clinical/patients/${pid}/history`);
-                resDiv.classList.remove('hidden');
-                if (res.length === 0) {
-                    resDiv.innerHTML = "<p class='text-slate-500 text-center'>Sem histórico clínico disponível.</p>";
-                    return;
-                }
-                res.forEach(note => {
-                    const item = document.createElement('div');
-                    item.className = "p-3 border rounded-lg bg-white flex flex-col gap-2";
-                    item.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-slate-800">Nota de Evolução</span>
-                            <span class="text-xs ${note.status === 'FINALIZED' ? 'bg-gray-100 text-gray-600' : 'bg-yellow-100 text-yellow-600'} px-2 py-1 rounded-full">${escapeHtml(note.status)}</span>
-                        </div>
-                        <div class="text-sm text-slate-600 whitespace-pre-line">${escapeHtml(note.content)}</div>
-                        <div class="text-xs text-slate-400 text-right">${new Date(note.timestamp).toLocaleString('pt-BR')}</div>
-                    `;
-                    resDiv.appendChild(item);
-                });
-            } catch (err) {
-                alert(`Erro: ${err.message}`);
-            }
-        }
-
-        document.getElementById('form-doc-new').onsubmit = async (e) => {
-            e.preventDefault();
-            const resDiv = document.getElementById('res-doc-new');
-            resDiv.classList.remove('hidden', 'bg-green-100', 'bg-red-100');
-            try {
-                const data = {
-                    patient_id: document.getElementById('d-note-patient-id').value,
-                    doctor_id: document.getElementById('d-note-doctor-id').value,
-                    content: document.getElementById('d-note-content').value
-                };
-                const res = await apiCall('/clinical/notes', 'POST', data);
-                resDiv.innerText = `Sucesso! Nota salva.`;
-                resDiv.classList.add('bg-green-100', 'text-green-700');
-            } catch (err) {
-                resDiv.innerText = `Erro: ${err.message}`;
-                resDiv.classList.add('bg-red-100', 'text-red-700');
-            }
-            resDiv.classList.remove('hidden');
-        };
-
-        document.getElementById('form-doc-alerts').onsubmit = async (e) => {
-            e.preventDefault();
-            const resDiv = document.getElementById('res-doc-alerts');
-            resDiv.classList.remove('hidden', 'bg-green-100', 'bg-red-100');
-            try {
-                const data = {
-                    patient_id: document.getElementById('d-alert-patient-id').value,
-                    alert_type: document.getElementById('d-alert-type').value,
-                    severity: document.getElementById('d-alert-severity').value,
-                    description: document.getElementById('d-alert-msg').value
-                };
-                const res = await apiCall('/admin/alerts', 'POST', data);
-                resDiv.innerText = `Sucesso! Alerta criado.`;
-                resDiv.classList.add('bg-green-100', 'text-green-700');
-            } catch (err) {
-                resDiv.innerText = `Erro: ${err.message}`;
-                resDiv.classList.add('bg-red-100', 'text-red-700');
-            }
-            resDiv.classList.remove('hidden');
-        };
-
-        document.getElementById('form-doc-pharmacy').onsubmit = async (e) => {
-            e.preventDefault();
-            const resDiv = document.getElementById('res-doc-pharmacy');
-            resDiv.classList.remove('hidden', 'bg-green-100', 'bg-red-100');
-            try {
-                const medicationId = document.getElementById('d-pharm-med-id').value;
-                const locationId = document.getElementById('d-pharm-location-id').value;
-                const res = await apiCall(`/pharmacy/dispense/${medicationId}/${locationId}`, 'POST', { quantity: Number(document.getElementById('d-pharm-qty').value) });
-                resDiv.innerText = `Sucesso! Dispensação registrada.`;
-                resDiv.classList.add('bg-green-100', 'text-green-700');
-            } catch (err) {
-                resDiv.innerText = `Erro: ${err.message}`;
-                resDiv.classList.add('bg-red-100', 'text-red-700');
-            }
-            resDiv.classList.remove('hidden');
-        };
-    </script>
+    <script type="module" src="/static/js/pages/portal.js"></script>
 </body>
 </html>

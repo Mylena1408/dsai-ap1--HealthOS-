@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -20,6 +20,13 @@ from app.infrastructure.persistence.models.user_model import Base
 from app.infrastructure.persistence.models.user_model import UserModel
 from app.infrastructure.persistence.models.schedule_model import ScheduleModel
 from app.domain.entities.schedule import ScheduleStatus
+from app.presentation.api.system_router import router as system_router, APP_VERSION
+from app.infrastructure.observability.request_logging import request_metrics_middleware
+import logging
+from config.settings import settings
+from app.infrastructure.seed.demo_seed import seed_demo_data
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 # Registra todos os modelos no metadata antes de criar tabelas.
 from app.infrastructure.persistence.models import (
@@ -41,7 +48,7 @@ DEMO_DOCTOR_CPF = "11144477735"
 app = FastAPI(
     title="HealthOS - Sistema Integrado de Gestão Hospitalar",
     description="Plataforma de gestão de saúde com Arquitetura Limpa",
-    version="1.0.0"
+    version=APP_VERSION
 )
 
 @app.on_event("startup")
@@ -99,6 +106,11 @@ async def initialize_database():
 
         await session.commit()
 
+    if settings.SEED_DEMO_DATA:
+        async with AsyncSessionLocal() as session:
+            report = await seed_demo_data(session)
+        logging.getLogger("healthos.seed").info("Dados de demonstração: criados=%s", report.created)
+
 # Configuração de CORS
 app.add_middleware(
     CORSMiddleware,
@@ -107,6 +119,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.middleware("http")(request_metrics_middleware)
+
+# Observabilidade (fora de /api para facilitar health checks do Render)
+app.include_router(system_router)
 
 # Registro de Rotas (Prefixos Únicos)
 app.include_router(auth_router, prefix="/api/v1", tags=["Autenticação"])
@@ -118,10 +135,25 @@ app.include_router(billing_router, prefix="/api/v1", tags=["Faturamento"])
 app.include_router(notification_router, prefix="/api/v1", tags=["Notificações"])
 app.include_router(clinical_router, prefix="/api/v1", tags=["Serviços Clínicos"])
 
+BASE_DIR = os.path.dirname(__file__)
+
+# Módulos JavaScript e páginas do frontend
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+
 # Rota para servir o Portal Visual (Landing Page)
 @app.get("/", response_class=FileResponse)
 async def read_index():
-    return FileResponse(os.path.join(os.path.dirname(__file__), "index.html"))
+    return FileResponse(os.path.join(BASE_DIR, "index.html"))
+
+# Páginas do frontend modular: /app/status -> static/pages/status.html
+PAGES_DIR = os.path.join(BASE_DIR, "static", "pages")
+
+@app.get("/app/{page}", response_class=FileResponse, include_in_schema=False)
+async def read_page(page: str = Path(..., pattern=r"^[a-z][a-z0-9-]*$")):
+    file_path = os.path.join(PAGES_DIR, f"{page}.html")
+    if not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="Página não encontrada.")
+    return FileResponse(file_path)
 
 # Rota para a documentação (opcional, o FastAPI já cria /docs, mas podemos criar um alias)
 @app.get("/docs-link", include_in_schema=False)
