@@ -53,10 +53,14 @@ Página da interface: `/app/assistente`.
 - Sintomas: a descrição tem de 3 a 2000 caracteres (422 fora disso). O paciente é opcional.
 
 ### Sinais de alerta (SAMU 192)
-- No modo demonstração, sintomas ou perguntas do chat com sinais de alerta (ex.: "dor no peito", "falta de ar", "desmaio", "convulsão", "sangramento intenso", "pensamentos suicidas") geram resposta com `urgent = true`.
-- O texto orienta: procurar atendimento de urgência agora ou ligar para o SAMU (192).
-- A detecção ignora acentos e maiúsculas.
-- No provedor Claude, o prompt de sistema manda orientar atendimento de urgência imediato (SAMU 192) diante desses sinais.
+- **Em qualquer provedor**, sintomas ou mensagens do chat com sinais de alerta (ex.: "dor no peito", "falta de ar", "desmaio", "convulsão", "sangramento intenso", "pensamentos suicidas") recebem a resposta padrão de urgência, com `urgent = true`.
+- O texto orienta: procurar atendimento de urgência agora ou ligar para o SAMU (192), com o aviso educacional.
+- A detecção é feita pelo caso de uso **antes** de chamar o provedor e ignora acentos e maiúsculas. Havendo sinal de alerta, o provedor de IA não é chamado: nenhum dado do paciente sai do sistema.
+- A resposta de urgência identifica o provedor configurado e o modelo `regra-de-seguranca`. A auditoria registra `urgent = true`.
+- No chat, a pergunta e a resposta de urgência são gravadas na conversa como qualquer troca.
+- Além disso, o prompt de sistema do provedor Claude também manda orientar atendimento de urgência diante desses sinais (segunda camada).
+
+> Revisão de 2026-10-06: antes, a garantia valia só no modo demonstração; no provedor Claude a orientação dependia do modelo seguir o prompt.
 
 ### Modo demonstração (`demo`)
 - Não usa rede nem modelo de linguagem. Mesmas entradas geram a mesma resposta.
@@ -87,7 +91,7 @@ Página da interface: `/app/assistente`.
 ## Testes esperados
 
 - Unidade: `tests/unit/test_assistant.py` (regras da conversa, resumo determinístico, explicação de exame, sinais de alerta, sintomas sem alerta, intenções do chat, chat sem paciente, formato da chamada ao Claude, histórico com contexto atualizado, recusa e indisponibilidade).
-- Integração: `tests/integration/test_assistant_use_case.py` (contexto sem identificadores, funções sobre dados reais, chat persistido, falha do provedor vira 503 sem gravar).
+- Integração: `tests/integration/test_assistant_use_case.py` (contexto sem identificadores, funções sobre dados reais, chat persistido, falha do provedor vira 503 sem gravar, sinais de alerta respondidos sem chamar o provedor — inclusive com um provedor que não seja o demo).
 - API: `tests/api/test_assistant_api.py` (modo demonstração, resumo, observações e exame, 400/404/422, sintomas, ciclo da conversa com 409).
 - Frontend: `tests/frontend/pages.smoke.mjs` abre `/app/assistente` com resumo e chat.
 
