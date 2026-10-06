@@ -17,6 +17,7 @@ from app.presentation.api.v1.notifications.notification_router import router as 
 from app.presentation.api.v1.clinical.router import router as clinical_router
 from app.presentation.api.v1.professionals.router import router as professionals_router
 from app.presentation.api.v1.appointments.router import router as appointments_router
+from app.presentation.api.v1.medical_records.router import router as medical_records_router
 from app.presentation.api.error_handlers import register_error_handlers
 from app.infrastructure.persistence.database import engine, AsyncSessionLocal
 from app.infrastructure.persistence.models.user_model import Base
@@ -38,6 +39,7 @@ from app.infrastructure.persistence.models import (
     audit_model,
     billing_model,
     clinical_model,
+    medical_record_model,
     medication_model,
     notification_model,
     patient_model,
@@ -144,6 +146,7 @@ app.include_router(clinical_router, prefix="/api/v1", tags=["Serviços Clínicos
 register_error_handlers(app)
 app.include_router(professionals_router, prefix="/api/v1")
 app.include_router(appointments_router, prefix="/api/v1")
+app.include_router(medical_records_router, prefix="/api/v1")
 
 BASE_DIR = os.path.dirname(__file__)
 

@@ -8,6 +8,7 @@ import {
     APPOINTMENT_STATUS, APPOINTMENT_TYPES, TRANSITION_ACTIONS, WEEKDAYS, fillSelect, statusBadge,
 } from '../core/labels.js';
 import { renderPagination } from '../components/pagination.js';
+import { createPatientPicker } from '../components/patient-picker.js';
 
 const PAGE_SIZE = 15;
 const RESCHEDULABLE = ['AGENDADA', 'CONFIRMADA'];
@@ -232,6 +233,7 @@ function refreshNewSlots() {
 }
 
 async function setupNewForm(professionals) {
+    const patientPicker = createPatientPicker($('n-patient'));
     fillSelect($('n-professional'), professionals, 'Selecione o profissional');
     fillSelect($('n-type'), APPOINTMENT_TYPES);
     $('n-date').min = isoDate(new Date());
@@ -243,22 +245,15 @@ async function setupNewForm(professionals) {
         if ($('f-professional').value) $('n-professional').value = $('f-professional').value;
         openModal('modal-new');
         refreshNewSlots();
-        try {
-            // Endpoint legado de pacientes: retorna no máximo 100 registros.
-            const patients = await apiCall('/admin/patients/?limit=100');
-            patients.sort((a, b) => a.full_name.localeCompare(b.full_name));
-            fillSelect($('n-patient'), Object.fromEntries(patients.map(p => [p.id, p.full_name])), 'Selecione o paciente');
-        } catch (err) {
-            toast(err.message, 'error');
-        }
     });
 
     $('form-new').addEventListener('submit', async event => {
         event.preventDefault();
+        if (!patientPicker.value) return showResult($('res-new'), 'Selecione um paciente da lista de sugestões.', false);
         if (!pickedSlot) return showResult($('res-new'), 'Escolha um dos horários livres.', false);
         try {
             const created = await apiCall('/appointments', 'POST', {
-                patient_id: $('n-patient').value, professional_id: $('n-professional').value,
+                patient_id: patientPicker.value.id, professional_id: $('n-professional').value,
                 start_time: pickedSlot.start_time, appointment_type: $('n-type').value,
                 reason: $('n-reason').value.trim() || null,
             });

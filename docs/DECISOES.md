@@ -121,3 +121,27 @@ novos não precisam de `try/except`. Os routers legados não foram alterados.
 
 **Decisão.** Nas tabelas novas, `created_at`/`updated_at` usam
 `default=datetime.now` / `onupdate=datetime.now` (valor conhecido pelo Python).
+
+---
+
+## ADR-009 — Linha do tempo agregada na leitura
+
+**Contexto.** Os eventos clínicos vivem em tabelas de módulos diferentes (inclusive
+legadas). Manter uma tabela de eventos exigiria gravar em dois lugares a cada mudança.
+
+**Decisão.** A linha do tempo é montada na leitura: o repositório consulta só as
+fontes pedidas, converte cada registro em `TimelineEvent` e o caso de uso ordena e
+pagina em memória.
+
+**Consequências.** Nenhuma escrita duplicada e nenhuma alteração em tabelas
+legadas. O custo cresce com o volume de registros *de um paciente*, o que é
+adequado ao escopo didático; com volumes grandes, a evolução natural seria uma
+tabela de eventos alimentada pela auditoria (prevista em ciclo posterior).
+
+---
+
+## ADR-010 — Busca de pacientes em rota nova
+
+**Decisão.** A busca paginada fica em `GET /api/v1/patients`, em vez de alterar
+`GET /api/v1/admin/patients/` (que retorna uma lista simples, sem filtro). O
+contrato legado permanece idêntico; as telas novas usam a rota nova.

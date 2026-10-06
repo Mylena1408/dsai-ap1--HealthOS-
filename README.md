@@ -38,12 +38,12 @@ copy .env.example .env           # ajuste DATABASE_URL, ex.: sqlite:///./app.db
 uvicorn main:app --reload
 ```
 
-Acesse `http://127.0.0.1:8000/` (portal), `/app/consultas`, `/app/profissionais`, `/app/status` e `/docs` (Swagger).
+Acesse `http://127.0.0.1:8000/` (portal), `/app/prontuario`, `/app/consultas`, `/app/profissionais`, `/app/status` e `/docs` (Swagger).
 
 ### Dados de demonstração
 
 ```bash
-python -m scripts.seed_demo                  # 50 pacientes, 20 profissionais, 100 consultas, farmácia
+python -m scripts.seed_demo                  # 50 pacientes com prontuário, 20 profissionais, 100 consultas, farmácia
 python -m scripts.seed_demo --patients 120   # mais pacientes
 ```
 

@@ -80,6 +80,36 @@ APPOINTMENT_REASONS = [
 ]
 
 
+# Prontuário (dados ilustrativos; códigos no estilo CID-10 apenas para demonstração)
+# Tipos sanguíneos com repetição para uma distribuição aproximada.
+BLOOD_TYPES = ["O+"] * 9 + ["A+"] * 7 + ["B+"] * 2 + ["O-", "A-", "AB+", "NAO_INFORMADO", "NAO_INFORMADO"]
+OCCUPATIONS = ["Professor(a)", "Engenheiro(a)", "Comerciante", "Estudante", "Aposentado(a)", "Agricultor(a)",
+               "Motorista", "Analista de sistemas", "Autônomo(a)", None]
+KINSHIPS = ["Mãe", "Pai", "Irmã", "Irmão", "Cônjuge", "Filho(a)", "Amigo(a)"]
+# (substância, categoria, gravidade, reação)
+ALLERGENS = [
+    ("Penicilina", "MEDICAMENTO", "GRAVE", "Placas avermelhadas na pele"),
+    ("Dipirona", "MEDICAMENTO", "MODERADA", "Coceira"),
+    ("Ácaros", "AMBIENTAL", "LEVE", "Espirros e coriza"),
+    ("Camarão", "ALIMENTO", "GRAVE", "Inchaço nos lábios"),
+    ("Lactose", "ALIMENTO", "LEVE", "Desconforto abdominal"),
+    ("Látex", "OUTRO", "MODERADA", "Vermelhidão local"),
+]
+# (condição, código ilustrativo, idade mínima em anos para o início)
+CONDITIONS = [
+    ("Hipertensão arterial", "I10", 30), ("Diabetes mellitus tipo 2", "E11", 35), ("Asma", "J45", 5),
+    ("Rinite alérgica", "J30", 5), ("Hipotireoidismo", "E03", 25), ("Dislipidemia", "E78", 30),
+    ("Enxaqueca", "G43", 15), ("Lombalgia crônica", "M54", 25),
+]
+DIAGNOSES = [
+    ("Infecção de vias aéreas superiores", "J06"), ("Gastrite", "K29"), ("Cefaleia tensional", "G44"),
+    ("Hipertensão arterial descompensada", "I10"), ("Ansiedade", "F41"), ("Dor lombar", "M54"),
+    ("Sinusite aguda", "J01"), ("Dermatite de contato", "L25"),
+]
+PROCEDURES = ["Aferição de pressão arterial", "Glicemia capilar", "Curativo simples", "Nebulização",
+              "Eletrocardiograma de repouso", "Retirada de pontos", "Vacinação de rotina"]
+
+
 def fake_professional_name(rng: random.Random, title: str) -> str:
     return f"{title} {rng.choice(FIRST_NAMES)} {rng.choice(LAST_NAMES)}"
 

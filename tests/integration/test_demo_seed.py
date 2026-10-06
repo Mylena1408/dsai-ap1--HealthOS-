@@ -4,6 +4,10 @@ from sqlalchemy import func, select
 
 from app.application.interfaces.appointment_repository import AppointmentFilters
 from app.domain.entities.appointment import AppointmentStatus as S
+from app.infrastructure.persistence.models.appointment_model import AppointmentModel
+from app.infrastructure.persistence.models.medical_record_model import (
+    ConditionModel, DiagnosisModel, PatientProfileModel,
+)
 from app.infrastructure.persistence.models.professional_model import ProfessionalModel
 from app.infrastructure.persistence.repositories.sqlalchemy_appointment_repository import SQLAlchemyAppointmentRepository
 
@@ -69,3 +73,27 @@ async def test_seed_professionals_and_coherent_appointments(db_session):
 
     again = await seed_demo_data(db_session, patients=30, appointments=100, now=now)
     assert "appointments" not in again.created and "professionals" not in again.created
+
+
+async def test_seed_medical_records_are_coherent_and_idempotent(db_session):
+    now = datetime(2026, 10, 6, 12, 0)
+    report = await seed_demo_data(db_session, patients=25, appointments=60, now=now)
+    assert report.created["medical_records"] == 25
+    assert await _count(db_session, PatientProfileModel) == 25
+
+    patients = {p.id: p for p in (await db_session.scalars(select(PatientModel))).all()}
+    for condition in (await db_session.scalars(select(ConditionModel))).all():
+        assert patients[condition.patient_id].birth_date < condition.onset_date <= now.date()
+        if condition.resolved_date:
+            assert condition.onset_date <= condition.resolved_date <= now.date()
+
+    finished = {a.id: a for a in (await db_session.scalars(
+        select(AppointmentModel).where(AppointmentModel.status == "FINALIZADA"))).all()}
+    for diagnosis in (await db_session.scalars(select(DiagnosisModel))).all():
+        appointment = finished[diagnosis.appointment_id]  # só consultas finalizadas
+        assert appointment.patient_id == diagnosis.patient_id
+        assert diagnosis.diagnosed_at == appointment.end_time
+
+    again = await seed_demo_data(db_session, patients=25, appointments=60, now=now)
+    assert "medical_records" not in again.created
+    assert again.skipped["medical_records"] == 25

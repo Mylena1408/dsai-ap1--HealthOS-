@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthOS | Prontuário</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav id="app-nav" class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50 h-[73px]"></nav>
+
+    <header class="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+        <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Prontuário Eletrônico</h1>
+        <p class="text-slate-600">Resumo clínico, linha do tempo e registros estruturados de cada paciente fictício.</p>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 pb-20 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <aside class="glass-card rounded-2xl p-4 h-fit lg:sticky lg:top-24">
+            <label for="search" class="text-sm font-medium text-slate-700">Buscar paciente</label>
+            <input id="search" type="search" placeholder="Nome, CPF ou e-mail" class="w-full p-2 border rounded-lg mt-1 mb-3 outline-none focus:border-blue-500">
+            <ul id="patients" class="divide-y max-h-[60vh] overflow-y-auto" aria-live="polite"></ul>
+            <button id="more" class="hidden w-full mt-3 text-sm text-blue-700 font-semibold py-2 rounded-lg hover:bg-blue-50">Carregar mais</button>
+        </aside>
+
+        <section id="record" class="lg:col-span-2 space-y-4" aria-live="polite"></section>
+    </main>
+
+    <script type="module" src="/static/js/pages/medical-record.js"></script>
+</body>
+</html>

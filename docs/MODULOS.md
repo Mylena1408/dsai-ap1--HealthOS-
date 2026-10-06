@@ -90,6 +90,45 @@ AGENDADA ──► CONFIRMADA ──► EM_ANDAMENTO ──► FINALIZADA
 
 ---
 
+## Prontuário eletrônico
+
+Tabelas novas ligadas ao paciente legado: `patient_profiles` (1:1), `patient_emergency_contacts`,
+`patient_allergies`, `patient_conditions`, `patient_diagnoses`, `patient_procedures`.
+
+| Registro | Regras |
+|---|---|
+| Perfil | Tipo sanguíneo (`A+` … `O-`, `NAO_INFORMADO`), ocupação, observações |
+| Contatos de emergência | No máximo 3; telefone com 10 a 13 dígitos; **sempre exatamente um principal** (o primeiro cadastrado ou o marcado; ao remover o principal, outro assume) |
+| Alergias | Categoria (medicamento, alimento, ambiental, outro) e gravidade (leve, moderada, grave). **Não pode haver duas alergias ativas à mesma substância** (sem diferenciar maiúsculas/espaços). `ATIVA → RESOLVIDA` uma única vez |
+| Condições | `ATIVA ⇄ CONTROLADA → RESOLVIDA`, e `RESOLVIDA → ATIVA` (recidiva). Início não pode ser futuro nem anterior ao nascimento; resolução não pode ser anterior ao início |
+| Diagnósticos | Certeza `SUSPEITA → CONFIRMADA` ou `SUSPEITA → DESCARTADA` (somente hipóteses mudam). Se vinculado a uma consulta, ela deve ser do mesmo paciente e não pode estar cancelada/não comparecida; sem profissional informado, herda o da consulta |
+| Procedimentos | Data de realização não pode ser futura; mesmas regras de vínculo com consulta |
+
+### Linha do tempo
+
+Reúne, em ordem cronológica, eventos de **todas** as fontes: cadastro, consultas, notas
+clínicas (legado), alertas (legado), triagens (legado), alergias (registro e resolução),
+condições (início e resolução), diagnósticos e procedimentos. Filtros por tipo e período;
+ordem crescente ou decrescente; paginação.
+
+> Limitação conhecida: tabelas legadas preenchem `created_at` com `func.now()` do banco,
+> que no SQLite é UTC; por isso cadastro, alertas e triagens podem aparecer deslocados em
+> relação ao horário local.
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| GET | `/patients?q=&order_by=name\|recent&limit=&offset=` | Busca paginada (nome, CPF ou e-mail) |
+| GET | `/patients/{id}/record` | Resumo: dados, perfil, alergias ativas, problemas ativos, diagnósticos recentes, próximas consultas e última consulta |
+| GET | `/patients/{id}/timeline?types=&date_from=&date_to=&newest_first=&limit=&offset=` | Linha do tempo |
+| PUT | `/patients/{id}/profile` | Atualiza o perfil |
+| POST / DELETE | `/patients/{id}/emergency-contacts[/{contact_id}]` | Adiciona / remove contato |
+| GET / POST | `/patients/{id}/allergies` · POST `.../{allergy_id}/resolve` | Alergias |
+| GET / POST | `/patients/{id}/conditions` · PATCH `.../{condition_id}/status` | Condições |
+| GET / POST | `/patients/{id}/diagnoses` · POST `.../{id}/confirm` · `.../{id}/rule-out` | Diagnósticos |
+| GET / POST | `/patients/{id}/procedures` | Procedimentos |
+
+---
+
 ## Observabilidade
 
 `/health`, `/status` e `/metrics` — ver README.
