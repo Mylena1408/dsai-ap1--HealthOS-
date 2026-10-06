@@ -368,3 +368,33 @@ mínimo de 4,5:1; rótulos de valor dos gráficos com espaço calculado pelo con
 
 **Limite.** A ferramenta automática encontra cerca de metade dos problemas de acessibilidade; leitura
 com leitor de tela real (NVDA) continua recomendada.
+
+---
+
+## ADR-026 — Ambiente reproduzível entre Windows e Linux/Render
+
+**Contexto.** O `requirements.txt` original era uma cópia do Python global do Windows (Anaconda,
+Django, `pywin32`, `pywinpty`), que quebrou o deploy; depois foi reduzido a nomes sem versão. Com
+isso o Render instalava sempre as versões mais novas — diferentes das testadas — e, como serviços
+criados a partir de 2026-02 usam Python 3.14 por padrão, o build passou a depender de pacotes que
+nem existem para as versões testadas (`pydantic-core 2.20.1` não tem pacote para 3.14). Além disso,
+os horários da aplicação são locais e sem fuso, mas o Linux do Render roda em UTC.
+
+**Decisão.**
+- Python 3.12 em `.python-version` (único mecanismo; nada de `PYTHON_VERSION` no painel).
+- `requirements.txt` com versões exatas, diretas e transitivas, conferidas em instalação limpa e
+  com pacotes Linux (manylinux) baixados para 3.12 sem compilação.
+- `APP_TIMEZONE` (padrão `America/Belem`) aplicado ao processo em Linux; no Windows vale o fuso
+  da máquina.
+- URLs `postgres://`/`postgresql://` convertidas para o driver assíncrono (asyncpg).
+- `render.yaml` e `Dockerfile` documentam o mesmo comando de start
+  (`uvicorn main:app --host 0.0.0.0 --port $PORT`).
+
+**O que não precisou mudar.** Imports e nomes de arquivos já batiam em maiúsculas/minúsculas;
+caminhos usam `os.path.join` a partir do próprio arquivo; não há scripts `.bat`/PowerShell, URLs de
+`localhost` no frontend nem bibliotecas que dependam do Windows; leituras de arquivo de texto
+indicam a codificação.
+
+**Limite.** Esta máquina não tem Docker nem WSL: a execução em Linux real (imagem Docker e deploy
+no Render) não foi feita aqui; a compatibilidade foi conferida pelos pacotes Linux e pela execução
+em Windows com as mesmas versões.

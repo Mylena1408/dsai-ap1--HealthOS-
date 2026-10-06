@@ -4,6 +4,13 @@ Expansão incremental do HealthOS, um ciclo por branch (cada branch parte da ant
 Detalhes de cada módulo em [`docs/MODULOS.md`](docs/MODULOS.md); decisões em [`docs/DECISOES.md`](docs/DECISOES.md).
 Em todas as versões: dados fictícios, sem autenticação real e sem diagnóstico médico.
 
+## 1.10.1 — Compatibilidade Linux/Render (`fix/compatibilidade-linux-render`)
+- Python 3.12 fixado (`.python-version`) e dependências com versões exatas: o build do Render deixa
+  de depender das versões mais novas disponíveis no dia.
+- Fuso horário configurável (`APP_TIMEZONE`, padrão `America/Belem`): o servidor Linux roda em UTC.
+- `DATABASE_URL` do PostgreSQL do Render aceita sem ajuste manual.
+- `render.yaml`, `Dockerfile` e README com instruções para Windows, Linux, Docker e Render. ADR-026.
+
 ## 1.10.0 — Revisão visual e acessibilidade (`feature/revisao-visual-acessibilidade`)
 - Navegação reorganizada em Painel + menus "Atendimento" e "Gestão" e menu para celular
   (antes, metade das páginas ficava escondida em telas largas e todas sumiam no celular).
