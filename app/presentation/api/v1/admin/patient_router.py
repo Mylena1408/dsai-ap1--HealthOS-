@@ -9,6 +9,7 @@ from app.infrastructure.persistence.repositories.sqlalchemy_patient_repository i
 from app.infrastructure.security.permission_checker import PermissionChecker
 from app.domain.exceptions.base import DomainException
 from app.infrastructure.persistence.database import get_db
+from app.presentation.api.dependencies import get_events
 
 router = APIRouter(tags=["Gestão de Pacientes"])
 
@@ -19,10 +20,11 @@ async def get_patient_repo(session: AsyncSession = Depends(get_db)):
               dependencies=[]) # Removed admin permission for registration to allow self-registration in demo
 async def create_patient(
     request: PatientCreateDTO,
-    repo: SQLAlchemyPatientRepository = Depends(get_patient_repo)
+    repo: SQLAlchemyPatientRepository = Depends(get_patient_repo),
+    events=Depends(get_events),
 ):
     try:
-        use_case = ManagePatientUseCase(repo)
+        use_case = ManagePatientUseCase(repo, events)
         return await use_case.create_patient(request)
     except DomainException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)

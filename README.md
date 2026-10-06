@@ -38,7 +38,8 @@ copy .env.example .env           # ajuste DATABASE_URL, ex.: sqlite:///./app.db
 uvicorn main:app --reload
 ```
 
-Acesse `http://127.0.0.1:8000/` (portal), `/app/prontuario`, `/app/consultas`, `/app/laboratorio`, `/app/farmacia`, `/app/profissionais`, `/app/status` e `/docs` (Swagger).
+Acesse `http://127.0.0.1:8000/` (portal), `/app/prontuario`, `/app/consultas`, `/app/laboratorio`, `/app/farmacia`, `/app/alertas`,
+`/app/notificacoes`, `/app/auditoria`, `/app/profissionais`, `/app/status` e `/docs` (Swagger).
 
 ### Dados de demonstração
 
@@ -49,6 +50,10 @@ python -m scripts.seed_demo --patients 120   # mais pacientes
 
 O gerador é determinístico e idempotente: rodar de novo não duplica registros.
 Para popular automaticamente no startup, defina `SEED_DEMO_DATA=True` no `.env`.
+Ao final, as regras de alerta são avaliadas e geram alertas e notificações para os setores.
+
+Não há login: o **perfil de demonstração** (canto superior direito) escolhe se a caixa de
+notificações exibida é de um paciente, de um profissional ou de um setor.
 
 ## ✅ Testes
 

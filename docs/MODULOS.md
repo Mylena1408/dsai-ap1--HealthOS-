@@ -256,6 +256,69 @@ A linha do tempo inclui `PRESCRICAO` e `DISPENSACAO`.
 
 ---
 
+## Eventos de domínio, auditoria, notificações e alertas
+
+### Eventos de domínio
+
+Os casos de uso publicam **fatos** (`PACIENTE_CRIADO`, `CONSULTA_AGENDADA`, `CONSULTA_CANCELADA`,
+`EXAME_SOLICITADO`, `RESULTADO_LIBERADO`, `PRESCRICAO_EMITIDA`, `MEDICAMENTO_DISPENSADO`,
+`ESTOQUE_ENTRADA`, `ESTOQUE_DESCARTE`, `ALERTA_GERADO`, `ALERTA_RESOLVIDO` e outros) sem saber
+quem reage. Dois manipuladores são registrados por requisição, na **mesma transação**:
+
+- **Trilha de auditoria** — grava todo evento em `audit_events` (sem chaves estrangeiras, para que
+  o registro sobreviva ao dado descrito). Rastreabilidade **didática**, não controle de segurança.
+- **Política de notificações** — decide quem é avisado:
+
+| Evento | Quem recebe |
+|---|---|
+| Consulta agendada / remarcada / cancelada | paciente e profissional |
+| Exame solicitado | setor Laboratório (prioridade alta se urgente) |
+| Resultado liberado | paciente e profissional solicitante (alta se fora da referência) |
+| Prescrição emitida | setor Farmácia e paciente |
+| Medicamentos dispensados | paciente |
+| Alerta gerado / agravado | setor responsável pela regra (alta se crítico) |
+
+### Caixa de notificações (`inbox_notifications`)
+
+Destinatário: **paciente**, **profissional** ou **setor** (Recepção, Laboratório, Farmácia,
+Coordenação clínica, Administração). Estados: `NAO_LIDA ⇄ LIDA → ARQUIVADA → (desarquivar) LIDA`;
+arquivar uma não lida registra a leitura. Nada é enviado por e-mail/SMS. A rota legada
+`/notifications/...` continua igual.
+
+No portal, o **perfil de demonstração** (canto superior direito, sem senha) escolhe qual caixa o
+sino e a página `/app/notificacoes` exibem.
+
+### Alertas por regra (`system_alerts`)
+
+| Regra | Categoria | Nível | Setor |
+|---|---|---|---|
+| `ESTOQUE_BAIXO` — estoque ≤ mínimo | Estoque | Atenção (Crítico se zerado) | Farmácia |
+| `LOTE_VENCENDO` — lote com saldo vencendo em ≤ 30 dias | Medicamento | Atenção (Crítico se vencido) | Farmácia |
+| `CONSULTA_PROXIMA_NAO_CONFIRMADA` — próximas 24 h | Consulta | Info | Recepção |
+| `EXAME_FORA_REFERENCIA` — liberado nos últimos 30 dias | Laboratorial | Atenção (Crítico se valor crítico) | Coordenação clínica |
+| `EXAME_ATRASADO` — coletado e com prazo vencido | Laboratorial | Atenção | Laboratório |
+| `SINAL_VITAL_CRITICO` — **última** medição (7 dias) com valor crítico | Clínico | Crítico | Coordenação clínica |
+| `PACIENTE_SEM_ACOMPANHAMENTO` — condição ativa, sem consulta há 180 dias e sem consulta futura | Clínico | Info | Coordenação clínica |
+
+Ciclo de vida: `ATIVO → RECONHECIDO → RESOLVIDO` (ou `ATIVO → RESOLVIDO`).
+
+- Cada condição tem uma **chave de deduplicação**: reavaliar não duplica alertas.
+- Se a condição **piora** (ex.: lote passa a vencido), o alerta é **agravado** e o setor é avisado de novo.
+- Se a condição **deixa de existir** (ex.: reposição de estoque, nova medição normal), o alerta é
+  **resolvido automaticamente**. Resolução manual exige nota (≥ 5 caracteres).
+- A avaliação roda no startup e a cada `ALERT_EVALUATION_INTERVAL_MINUTES` (padrão 15; 0 desliga),
+  além de `POST /alerts/evaluate`.
+
+| Método | Endpoint |
+|---|---|
+| GET | `/alerts?status=&category=&level=&patient_id=&rule_code=` · `/alerts/summary` · `/alerts/rules` |
+| POST | `/alerts/evaluate` · `/alerts/{id}/acknowledge` · `/alerts/{id}/resolve` |
+| GET | `/inbox?audience=&recipient_id=&sector=&status=&category=` · `/inbox/counts` |
+| POST | `/inbox/{id}/read` · `/unread` · `/archive` · `/unarchive` · `/inbox/mark-all-read` |
+| GET | `/audit-events?event_type=&entity_type=&entity_id=&patient_id=&date_from=&date_to=` · `/audit-events/counts` |
+
+---
+
 ## Observabilidade
 
 `/health`, `/status` e `/metrics` — ver README.

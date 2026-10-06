@@ -202,3 +202,39 @@ dispensa — sem autenticação, conforme ADR-002); bloqueio por alergia ativa c
 textual simples e possibilidade de prosseguir mediante justificativa registrada; limite para
 substâncias controladas; validade de 30 dias. As regras são deliberadamente simples e
 documentadas como didáticas — não substituem um sistema real de apoio à decisão.
+
+---
+
+## ADR-016 — Eventos de domínio com publicador em processo
+
+**Contexto.** Auditoria e notificações precisam reagir a operações de vários módulos.
+Chamar esses serviços dentro de cada caso de uso acoplaria todos os módulos entre si.
+
+**Decisão.** Os casos de uso publicam `DomainEvent`s em um `EventPublisher` injetado (padrão
+`NullPublisher`, o que mantém os testes de unidade e o código legado intactos). Em cada requisição,
+o publicador entrega os eventos, de forma síncrona, à trilha de auditoria e à política de
+notificações, usando a **mesma sessão** — se a operação falhar, nada é gravado; se um manipulador
+falhar, a operação é desfeita. Não há fila/broker: não há volume nem requisito que justifique.
+
+**Consequências.** Novos interessados (ex.: indicadores) entram registrando um manipulador.
+Eventos não são reprocessáveis — aceitável no escopo didático.
+
+---
+
+## ADR-017 — Auditoria e caixa de notificações em tabelas novas
+
+**Contexto.** O `AuditInterceptor` legado nunca foi ativado e, se fosse, falharia: grava um
+`user_id` aleatório em `audit_logs.user_id`, que tem chave estrangeira obrigatória para `users`.
+A tabela legada `notifications` mistura valores de status (`READ` e `LIDA`) e não tem "arquivada".
+
+**Decisão.** `audit_events` e `inbox_notifications` são novas; o legado não é alterado (as rotas
+`/notifications/...` continuam funcionando como antes) e fica documentado como tal.
+
+---
+
+## ADR-018 — Alertas por regra com deduplicação e resolução automática
+
+**Decisão.** Regras declaradas na aplicação (`alert_rules.py`) e consultas no detector de
+infraestrutura. Cada condição tem `dedup_key`; reavaliações atualizam, agravam ou resolvem
+automaticamente. A avaliação periódica usa uma tarefa asyncio no próprio processo — em várias
+instâncias, ela deveria virar um job externo para não executar em duplicidade.

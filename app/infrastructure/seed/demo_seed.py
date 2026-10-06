@@ -13,7 +13,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.dtos.patient_dto import PatientCreateDTO
 from app.application.use_cases.manage_patient_use_case import ManagePatientUseCase
+from app.application.use_cases.alert_engine_use_case import AlertEngineUseCase
 from app.application.use_cases.pharmacy_use_case import PharmacyUseCase
+from app.infrastructure.events import build_publisher
+from app.infrastructure.persistence.repositories.sqlalchemy_alert_detector import SQLAlchemyAlertDetector
+from app.infrastructure.persistence.repositories.sqlalchemy_engagement_repository import (
+    SQLAlchemySystemAlertRepository,
+)
 from app.infrastructure.persistence.models.medication_model import MedicationModel
 from app.infrastructure.persistence.models.patient_model import PatientModel
 from app.infrastructure.persistence.repositories.sqlalchemy_medication_repository import (
@@ -42,7 +48,7 @@ class SeedReport:
 
 
 async def seed_patients(session: AsyncSession, total: int, rng: random.Random, report: SeedReport) -> None:
-    use_case = ManagePatientUseCase(SQLAlchemyPatientRepository(session))
+    use_case = ManagePatientUseCase(SQLAlchemyPatientRepository(session), build_publisher(session))
     existing = set((await session.execute(select(PatientModel.cpf))).scalars().all())
     for _ in range(total):
         data = fake_patient(rng)
@@ -90,5 +96,10 @@ async def seed_demo_data(session: AsyncSession, patients: int = 50, appointments
     await ensure_lab_catalog(session)  # o CLI não passa pelo startup da aplicação
     await seed_exam_requests(session, exams, rng, report, now)
     await seed_pharmacy(session, rng, report, now, prescriptions)
+    # Com os dados prontos, as regras de alerta produzem alertas e notificações para os setores.
+    evaluation = await AlertEngineUseCase(SQLAlchemySystemAlertRepository(session), SQLAlchemyAlertDetector(session),
+                                          build_publisher(session), clock=lambda: now).evaluate()
+    if evaluation.opened:
+        report.created["system_alerts"] = evaluation.opened
     await session.commit()
     return report

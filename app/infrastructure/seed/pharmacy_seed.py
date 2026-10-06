@@ -24,6 +24,7 @@ from app.domain.entities.pharmacy import (
 )
 from app.domain.entities.professional import ProfessionalType
 from app.domain.exceptions.base import DomainException
+from app.infrastructure.events import build_publisher
 from app.infrastructure.persistence.models.appointment_model import AppointmentModel
 from app.infrastructure.persistence.models.medication_model import InventoryItemModel, MedicationModel
 from app.infrastructure.persistence.models.patient_model import PatientModel
@@ -123,7 +124,7 @@ async def _seed_prescriptions(session, repo, rng, report, now, total) -> None:
     use_case = PrescriptionUseCase(
         repo, SQLAlchemyPatientDirectoryRepository(session), professional_repo,
         SQLAlchemyAppointmentRepository(session), records,
-        stock, clock=clock)
+        stock, clock=clock, events=build_publisher(session))
 
     professionals, _ = await professional_repo.search(ProfessionalFilters(limit=1000))
     doctors = [p.id for p in professionals if p.professional_type == ProfessionalType.DOCTOR]

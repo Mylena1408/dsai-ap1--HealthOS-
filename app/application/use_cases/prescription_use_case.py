@@ -20,6 +20,8 @@ from app.domain.entities.pharmacy import (
     PrescriptionItem,
 )
 from app.domain.entities.professional import ProfessionalType
+from app.application.services.events import EventPublisher, NullPublisher
+from app.domain.events import DomainEvent, EventType
 from app.domain.exceptions.common import BusinessRuleViolation, ConflictError, EntityNotFoundError
 
 MIN_OVERRIDE_REASON = 10
@@ -36,8 +38,10 @@ class PrescriptionUseCase:
 
     def __init__(self, repo: PharmacyRepository, directory: PatientDirectoryRepository,
                  professional_repo: ProfessionalRepository, appointment_repo: AppointmentRepository,
-                 records: MedicalRecordRepository, stock: StockService, clock: Callable[[], datetime] = datetime.now):
+                 records: MedicalRecordRepository, stock: StockService, clock: Callable[[], datetime] = datetime.now,
+                 events: EventPublisher = NullPublisher()):
         self.repo = repo
+        self.events = events
         self.directory = directory
         self.professional_repo = professional_repo
         self.appointment_repo = appointment_repo
@@ -74,7 +78,15 @@ class PrescriptionUseCase:
             allergy_override_reason=dto.allergy_override_reason.strip() if dto.allergy_override_reason else None,
             items=[PrescriptionItem(**item.model_dump()) for item in dto.items],
         )
-        return (await self._prescription_dtos([await self.repo.save_prescription(prescription)]))[0]
+        response = (await self._prescription_dtos([await self.repo.save_prescription(prescription)]))[0]
+        await self.events.publish(DomainEvent(
+            event_type=EventType.PRESCRIPTION_ISSUED, occurred_at=response.issued_at, entity_type="Prescricao",
+            entity_id=response.id, patient_id=response.patient_id, professional_id=response.prescriber_id,
+            summary=f"Prescrição emitida por {response.prescriber_name} para {response.patient_name}: "
+                    + "; ".join(f"{i.medication_name} ({i.quantity:g})" for i in response.items) + ".",
+            data={"special_control": response.special_control,
+                  "allergy_override": bool(response.allergy_override_reason)}))
+        return response
 
     async def get(self, prescription_id: uuid.UUID) -> PrescriptionDTO:
         return (await self._prescription_dtos([await self._get(prescription_id)]))[0]
@@ -86,7 +98,12 @@ class PrescriptionUseCase:
     async def cancel(self, prescription_id: uuid.UUID, reason: str) -> PrescriptionDTO:
         prescription = await self._get(prescription_id)
         prescription.cancel(reason)
-        return (await self._prescription_dtos([await self.repo.save_prescription(prescription)]))[0]
+        response = (await self._prescription_dtos([await self.repo.save_prescription(prescription)]))[0]
+        await self.events.publish(DomainEvent(
+            event_type=EventType.PRESCRIPTION_CANCELLED, occurred_at=self.clock(), entity_type="Prescricao",
+            entity_id=response.id, patient_id=response.patient_id, professional_id=response.prescriber_id,
+            summary=f"Prescrição de {response.patient_name} cancelada: {reason}."))
+        return response
 
     async def change_item(self, prescription_id: uuid.UUID, item_id: uuid.UUID, action: str,
                           reason: Optional[str] = None) -> PrescriptionDTO:
@@ -151,6 +168,13 @@ class PrescriptionUseCase:
         saved = await self.repo.save_dispensation(dispensation)
         dto_out = (await self._dispensation_dtos([saved]))[0]
         dto_out.prescription_status = prescription.status
+        await self.events.publish(DomainEvent(
+            event_type=EventType.MEDICATION_DISPENSED, occurred_at=now, entity_type="Dispensacao",
+            entity_id=saved.id, patient_id=saved.patient_id, professional_id=saved.pharmacist_id,
+            summary=f"Medicamentos dispensados por {dto_out.pharmacist_name}: "
+                    + "; ".join(f"{l.medication_name} {l.quantity:g}" + (f" (lote {l.lot_number})" if l.lot_number else "")
+                                for l in dto_out.lines) + ".",
+            data={"prescription_id": saved.prescription_id, "location": saved.location}))
         return dto_out
 
     async def dispensations(self, prescription_id: Optional[uuid.UUID] = None, patient_id: Optional[uuid.UUID] = None,

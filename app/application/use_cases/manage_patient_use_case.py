@@ -4,6 +4,9 @@ from app.application.interfaces.patient_repository import PatientRepository
 from app.application.dtos.patient_dto import PatientCreateDTO, PatientUpdateDTO, PatientResponseDTO
 from app.domain.entities.patient import Patient
 from app.domain.exceptions.base import DomainException
+from app.application.services.events import EventPublisher, NullPublisher
+from app.domain.events import DomainEvent, EventType
+from datetime import datetime
 
 class ManagePatientUseCase:
     """
@@ -11,8 +14,9 @@ class ManagePatientUseCase:
     Orquestra a criação, busca e atualização de dados cadastrais.
     """
 
-    def __init__(self, patient_repository: PatientRepository):
+    def __init__(self, patient_repository: PatientRepository, events: EventPublisher = NullPublisher()):
         self.patient_repository = patient_repository
+        self.events = events
 
     async def create_patient(self, request: PatientCreateDTO) -> PatientResponseDTO:
         # 1. Validação de Unicidade: CPF já cadastrado?
@@ -38,6 +42,10 @@ class ManagePatientUseCase:
 
         # 3. Persistência
         created_patient = await self.patient_repository.save(patient)
+        await self.events.publish(DomainEvent(
+            event_type=EventType.PATIENT_CREATED, occurred_at=datetime.now(), entity_type="Paciente",
+            entity_id=created_patient.id, patient_id=created_patient.id,
+            summary=f"Paciente cadastrado: {created_patient.full_name}."))
 
         # 4. Retorno via DTO
         return PatientResponseDTO(

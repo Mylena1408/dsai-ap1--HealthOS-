@@ -21,6 +21,7 @@ from app.application.use_cases.pharmacy_stock_use_case import PharmacyStockUseCa
 from app.application.use_cases.prescription_use_case import PrescriptionUseCase
 from app.domain.entities.pharmacy import ItemStatus, MovementType, PrescriptionStatus
 from app.infrastructure.persistence.database import get_db
+from app.presentation.api.dependencies import get_events
 from app.infrastructure.persistence.repositories.sqlalchemy_appointment_repository import SQLAlchemyAppointmentRepository
 from app.infrastructure.persistence.repositories.sqlalchemy_medical_record_repository import (
     SQLAlchemyMedicalRecordRepository, SQLAlchemyPatientDirectoryRepository,
@@ -36,18 +37,18 @@ from app.infrastructure.persistence.repositories.sqlalchemy_professional_reposit
 router = APIRouter()
 
 
-async def get_stock(session: AsyncSession = Depends(get_db)) -> PharmacyStockUseCase:
+async def get_stock(session: AsyncSession = Depends(get_db), events=Depends(get_events)) -> PharmacyStockUseCase:
     repo = SQLAlchemyPharmacyRepository(session)
     return PharmacyStockUseCase(repo, StockService(repo, SQLAlchemyInventoryRepository(session)),
-                                SQLAlchemyMedicationRepository(session))
+                                SQLAlchemyMedicationRepository(session), events=events)
 
 
-async def get_prescriptions(session: AsyncSession = Depends(get_db)) -> PrescriptionUseCase:
+async def get_prescriptions(session: AsyncSession = Depends(get_db), events=Depends(get_events)) -> PrescriptionUseCase:
     repo = SQLAlchemyPharmacyRepository(session)
     return PrescriptionUseCase(
         repo, SQLAlchemyPatientDirectoryRepository(session), SQLAlchemyProfessionalRepository(session),
         SQLAlchemyAppointmentRepository(session), SQLAlchemyMedicalRecordRepository(session),
-        StockService(repo, SQLAlchemyInventoryRepository(session)))
+        StockService(repo, SQLAlchemyInventoryRepository(session)), events=events)
 
 
 Stock = Depends(get_stock)

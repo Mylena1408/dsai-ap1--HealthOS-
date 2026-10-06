@@ -21,6 +21,8 @@ from app.domain.entities.medical_record import (
     Allergy, AllergyStatus, Condition, ConditionStatus, Diagnosis, EmergencyContact, PatientProfile, Procedure,
 )
 from app.domain.entities.patient import Patient
+from app.application.services.events import EventPublisher, NullPublisher
+from app.domain.events import DomainEvent, EventType
 from app.domain.exceptions.common import BusinessRuleViolation, ConflictError, EntityNotFoundError
 
 DISCLAIMER = ("Prontuário didático com dados fictícios. As informações são educacionais "
@@ -39,8 +41,9 @@ class MedicalRecordUseCase:
     def __init__(self, records: MedicalRecordRepository, directory: PatientDirectoryRepository,
                  timeline: TimelineRepository, appointment_repo: AppointmentRepository,
                  professional_repo: ProfessionalRepository, appointments: AppointmentUseCase,
-                 clock: Callable[[], datetime] = datetime.now):
+                 clock: Callable[[], datetime] = datetime.now, events: EventPublisher = NullPublisher()):
         self.records = records
+        self.events = events
         self.directory = directory
         self.timeline_repo = timeline
         self.appointment_repo = appointment_repo
@@ -114,8 +117,13 @@ class MedicalRecordUseCase:
         existing = await self.records.list_allergies(patient_id)
         if any(a.status == AllergyStatus.ACTIVE and a.same_substance(dto.substance) for a in existing):
             raise ConflictError(f"Já existe uma alergia ativa a '{dto.substance}' para este paciente.")
-        allergy = Allergy(patient_id=patient_id, recorded_at=self.clock(), **dto.model_dump())
-        return self._allergy_dto(await self.records.save_allergy(allergy))
+        allergy = await self.records.save_allergy(
+            Allergy(patient_id=patient_id, recorded_at=self.clock(), **dto.model_dump()))
+        await self.events.publish(DomainEvent(
+            event_type=EventType.ALLERGY_RECORDED, occurred_at=allergy.recorded_at, entity_type="Alergia",
+            entity_id=allergy.id, patient_id=patient_id,
+            summary=f"Alergia registrada: {allergy.substance} ({allergy.severity.value})."))
+        return self._allergy_dto(allergy)
 
     async def resolve_allergy(self, patient_id: uuid.UUID, allergy_id: uuid.UUID) -> AllergyDTO:
         allergy = await self.records.get_allergy(allergy_id)
@@ -156,8 +164,12 @@ class MedicalRecordUseCase:
         await self._patient(patient_id)
         data = dto.model_dump()
         data["professional_id"] = await self._resolve_professional(patient_id, dto.professional_id, dto.appointment_id)
-        diagnosis = Diagnosis(patient_id=patient_id, diagnosed_at=self.clock(), **data)
-        return (await self._diagnosis_dtos([await self.records.save_diagnosis(diagnosis)]))[0]
+        diagnosis = await self.records.save_diagnosis(Diagnosis(patient_id=patient_id, diagnosed_at=self.clock(), **data))
+        await self.events.publish(DomainEvent(
+            event_type=EventType.DIAGNOSIS_RECORDED, occurred_at=diagnosis.diagnosed_at, entity_type="Diagnostico",
+            entity_id=diagnosis.id, patient_id=patient_id, professional_id=diagnosis.professional_id,
+            summary=f"Diagnóstico registrado ({diagnosis.certainty.value}): {diagnosis.description}."))
+        return (await self._diagnosis_dtos([diagnosis]))[0]
 
     async def confirm_diagnosis(self, patient_id: uuid.UUID, diagnosis_id: uuid.UUID) -> DiagnosisDTO:
         return await self._update_diagnosis(patient_id, diagnosis_id, Diagnosis.confirm)

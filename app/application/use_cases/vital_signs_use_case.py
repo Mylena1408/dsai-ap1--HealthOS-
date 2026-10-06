@@ -14,6 +14,8 @@ from app.domain.entities.vital_signs import (
     METRIC_LABELS, VITAL_RANGES, VitalMetric, VitalSigns, bmi_category,
 )
 from app.domain.exceptions.common import EntityNotFoundError
+from app.application.services.events import EventPublisher, NullPublisher
+from app.domain.events import DomainEvent, EventType
 
 SERIES_LENGTH = 30
 # Variação mínima (relativa) para considerar que a medida subiu ou desceu.
@@ -31,8 +33,10 @@ def trend(previous: Optional[float], latest: float) -> Optional[str]:
 class VitalSignsUseCase:
 
     def __init__(self, repo: VitalSignsRepository, directory: PatientDirectoryRepository,
-                 professional_repo: ProfessionalRepository, clock: Callable[[], datetime] = datetime.now):
+                 professional_repo: ProfessionalRepository, clock: Callable[[], datetime] = datetime.now,
+                 events: EventPublisher = NullPublisher()):
         self.repo = repo
+        self.events = events
         self.directory = directory
         self.professional_repo = professional_repo
         self.clock = clock
@@ -50,7 +54,15 @@ class VitalSignsUseCase:
         vitals = VitalSigns(patient_id=patient_id, recorded_at=recorded_at, **data)
         vitals.validate_date(now, patient.birth_date)
         saved = await self.repo.save(vitals)
-        return self._to_dto(saved, await self.repo.last_height(patient_id, saved.recorded_at))
+        response = self._to_dto(saved, await self.repo.last_height(patient_id, saved.recorded_at))
+        altered = [METRIC_LABELS[m] for m, flag in response.flags.items() if flag.is_abnormal]
+        await self.events.publish(DomainEvent(
+            event_type=EventType.VITAL_SIGNS_RECORDED, occurred_at=now, entity_type="SinaisVitais",
+            entity_id=saved.id, patient_id=patient_id, professional_id=dto.professional_id,
+            summary=f"Sinais vitais registrados para {patient.full_name}"
+                    + (f" (alterados: {', '.join(altered)})." if altered else " (dentro da referência)."),
+            data={"altered": altered}))
+        return response
 
     async def page(self, patient_id: uuid.UUID, date_from: Optional[datetime], date_to: Optional[datetime],
                    limit: int, offset: int) -> Page[VitalSignsDTO]:

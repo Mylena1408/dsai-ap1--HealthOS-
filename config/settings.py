@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     # Quando verdadeiro, o startup popula o banco com dados fictícios (idempotente).
     SEED_DEMO_DATA: bool = False
+    # Intervalo da avaliação automática de alertas (0 desliga; a rota /alerts/evaluate continua disponível).
+    ALERT_EVALUATION_INTERVAL_MINUTES: int = 15
 
     model_config = SettingsConfigDict(env_file=".env")
 

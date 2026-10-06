@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthOS | Auditoria</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <nav id="app-nav" class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50 h-[73px]"></nav>
+
+    <header class="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+        <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Auditoria</h1>
+        <p class="text-slate-600">Trilha didática dos eventos do sistema. É rastreabilidade para estudo — não um controle de segurança.</p>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 pb-20 space-y-6">
+        <section id="counts" class="flex flex-wrap gap-2" aria-label="Eventos por tipo"></section>
+        <form id="filters" class="glass-card rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <label class="text-sm text-slate-600 sm:col-span-2">Tipo de evento <select id="f-type" class="w-full p-2 border rounded-lg mt-1"></select></label>
+            <label class="text-sm text-slate-600">De <input id="f-from" type="date" class="w-full p-2 border rounded-lg mt-1"></label>
+            <label class="text-sm text-slate-600">Até <input id="f-to" type="date" class="w-full p-2 border rounded-lg mt-1"></label>
+        </form>
+        <section class="glass-card rounded-2xl p-5">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead><tr class="text-left text-slate-500 border-b">
+                        <th class="py-2 pr-3 font-medium">Quando</th><th class="py-2 pr-3 font-medium">Evento</th>
+                        <th class="py-2 pr-3 font-medium">Entidade</th><th class="py-2 font-medium">Resumo</th></tr></thead>
+                    <tbody id="rows" aria-live="polite"></tbody>
+                </table>
+            </div>
+            <div id="pagination"></div>
+        </section>
+    </main>
+
+    <script type="module" src="/static/js/pages/audit.js"></script>
+</body>
+</html>

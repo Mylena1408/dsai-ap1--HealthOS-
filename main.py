@@ -20,6 +20,8 @@ from app.presentation.api.v1.appointments.router import router as appointments_r
 from app.presentation.api.v1.medical_records.router import router as medical_records_router
 from app.presentation.api.v1.clinical_monitoring.router import router as clinical_monitoring_router
 from app.presentation.api.v1.pharmacy_v2.router import router as pharmacy_v2_router
+from app.presentation.api.v1.engagement.router import router as engagement_router
+from app.infrastructure.scheduler import AlertScheduler
 from app.infrastructure.seed.lab_catalog import ensure_lab_catalog
 from app.presentation.api.error_handlers import register_error_handlers
 from app.infrastructure.persistence.database import engine, AsyncSessionLocal
@@ -43,6 +45,7 @@ from app.infrastructure.persistence.models import (
     billing_model,
     clinical_model,
     clinical_monitoring_model,
+    engagement_model,
     medical_record_model,
     medication_model,
     notification_model,
@@ -56,6 +59,8 @@ from app.infrastructure.persistence.models import (
 
 # CPF fictício com dígitos verificadores válidos, usado apenas na demonstração.
 DEMO_DOCTOR_CPF = "11144477735"
+
+alert_scheduler = AlertScheduler(settings.ALERT_EVALUATION_INTERVAL_MINUTES)
 
 app = FastAPI(
     title="HealthOS - Sistema Integrado de Gestão Hospitalar",
@@ -128,6 +133,13 @@ async def initialize_database():
             report = await seed_demo_data(session)
         logging.getLogger("healthos.seed").info("Dados de demonstração: criados=%s", report.created)
 
+    alert_scheduler.start()
+
+
+@app.on_event("shutdown")
+async def stop_background_tasks():
+    await alert_scheduler.stop()
+
 # Configuração de CORS
 app.add_middleware(
     CORSMiddleware,
@@ -159,6 +171,7 @@ app.include_router(appointments_router, prefix="/api/v1")
 app.include_router(medical_records_router, prefix="/api/v1")
 app.include_router(clinical_monitoring_router, prefix="/api/v1")
 app.include_router(pharmacy_v2_router, prefix="/api/v1")
+app.include_router(engagement_router, prefix="/api/v1")
 
 BASE_DIR = os.path.dirname(__file__)
 

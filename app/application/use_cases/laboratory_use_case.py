@@ -14,7 +14,9 @@ from app.application.interfaces.clinical_monitoring_repository import (
 from app.application.interfaces.medical_record_repository import PatientDirectoryRepository
 from app.application.interfaces.professional_repository import ProfessionalRepository
 from app.application.services.clinical_links import resolve_professional
-from app.domain.entities.laboratory import ExamRequest, ExamType
+from app.application.services.events import EventPublisher, NullPublisher
+from app.domain.events import DomainEvent, EventType
+from app.domain.entities.laboratory import ExamPriority, ExamRequest, ExamType
 from app.domain.exceptions.common import BusinessRuleViolation, EntityNotFoundError
 
 
@@ -23,8 +25,9 @@ class LaboratoryUseCase:
 
     def __init__(self, repo: LaboratoryRepository, directory: PatientDirectoryRepository,
                  professional_repo: ProfessionalRepository, appointment_repo: AppointmentRepository,
-                 clock: Callable[[], datetime] = datetime.now):
+                 clock: Callable[[], datetime] = datetime.now, events: EventPublisher = NullPublisher()):
         self.repo = repo
+        self.events = events
         self.directory = directory
         self.professional_repo = professional_repo
         self.appointment_repo = appointment_repo
@@ -57,13 +60,15 @@ class LaboratoryUseCase:
             priority=dto.priority, clinical_indication=dto.clinical_indication,
         )
         exam.register_creation()
-        return await self._respond(await self.repo.save_request(exam))
+        response = await self._respond(await self.repo.save_request(exam))
+        await self._publish(EventType.EXAM_REQUESTED, response)
+        return response
 
     async def schedule(self, request_id: uuid.UUID, scheduled_for: datetime) -> ExamRequestDTO:
         return await self._apply(request_id, lambda e, now: e.schedule(scheduled_for.replace(tzinfo=None), now))
 
     async def collect(self, request_id: uuid.UUID) -> ExamRequestDTO:
-        return await self._apply(request_id, lambda e, now: e.collect(now))
+        return await self._apply(request_id, lambda e, now: e.collect(now), EventType.EXAM_COLLECTED)
 
     async def start_processing(self, request_id: uuid.UUID) -> ExamRequestDTO:
         return await self._apply(request_id, lambda e, now: e.start_processing(now))
@@ -73,7 +78,9 @@ class LaboratoryUseCase:
         exam = await self._get(request_id)
         exam_type = await self.repo.get_exam_type(exam.exam_type_id)
         exam.record_results(exam_type, values, self.clock(), notes)
-        return await self._respond(await self.repo.save_request(exam))
+        response = await self._respond(await self.repo.save_request(exam))
+        await self._publish(EventType.EXAM_RESULTED, response)
+        return response
 
     async def validate(self, request_id: uuid.UUID, professional_id: uuid.UUID) -> ExamRequestDTO:
         professional = await self.professional_repo.get_by_id(professional_id)
@@ -87,10 +94,10 @@ class LaboratoryUseCase:
         return await self._apply(request_id, lambda e, now: e.return_for_correction(reason, now))
 
     async def release(self, request_id: uuid.UUID) -> ExamRequestDTO:
-        return await self._apply(request_id, lambda e, now: e.release(now))
+        return await self._apply(request_id, lambda e, now: e.release(now), EventType.EXAM_RELEASED)
 
     async def cancel(self, request_id: uuid.UUID, reason: str) -> ExamRequestDTO:
-        return await self._apply(request_id, lambda e, now: e.cancel(reason, now))
+        return await self._apply(request_id, lambda e, now: e.cancel(reason, now), EventType.EXAM_CANCELLED)
 
     # ----------------------------------------------------------------- leitura
 
@@ -123,10 +130,26 @@ class LaboratoryUseCase:
             raise EntityNotFoundError("Solicitação de exame", request_id)
         return exam
 
-    async def _apply(self, request_id: uuid.UUID, action) -> ExamRequestDTO:
+    async def _apply(self, request_id: uuid.UUID, action, event_type: Optional[EventType] = None) -> ExamRequestDTO:
         exam = await self._get(request_id)
         action(exam, self.clock())
-        return await self._respond(await self.repo.save_request(exam))
+        response = await self._respond(await self.repo.save_request(exam))
+        if event_type:
+            await self._publish(event_type, response)
+        return response
+
+    async def _publish(self, event_type: EventType, e: ExamRequestDTO) -> None:
+        labels = {EventType.EXAM_REQUESTED: "Exame solicitado", EventType.EXAM_COLLECTED: "Amostra coletada",
+                  EventType.EXAM_RESULTED: "Resultado registrado", EventType.EXAM_RELEASED: "Resultado liberado",
+                  EventType.EXAM_CANCELLED: "Exame cancelado"}
+        abnormal = [f"{r.analyte_name} {r.value:g} {r.unit}" for r in e.results if r.flag.is_abnormal]
+        detail = f" Fora da referência: {'; '.join(abnormal)}." if event_type == EventType.EXAM_RELEASED and abnormal else ""
+        await self.events.publish(DomainEvent(
+            event_type=event_type, occurred_at=self.clock(), entity_type="Exame", entity_id=e.id,
+            summary=f"{labels[event_type]}: {e.exam_name} — {e.patient_name}.{detail}",
+            patient_id=e.patient_id, professional_id=e.requested_by,
+            data={"exam_code": e.exam_code, "status": e.status.value, "sample_code": e.sample_code,
+                  "urgent": e.priority == ExamPriority.URGENT, "abnormal": bool(abnormal)}))
 
     async def _respond(self, exam: ExamRequest) -> ExamRequestDTO:
         return self._to_dto(exam, await self.repo.names_for([exam]))

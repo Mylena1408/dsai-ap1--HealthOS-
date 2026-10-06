@@ -15,6 +15,8 @@ sys.path.insert(0, str(ROOT))
 _TEST_DB_DIR = tempfile.mkdtemp(prefix="healthos-tests-")
 os.environ["DATABASE_URL"] = "sqlite:///" + Path(_TEST_DB_DIR, "api.db").as_posix()
 os.environ.setdefault("SECRET_KEY", "test-only-secret")
+# Sem avaliação periódica nos testes: os alertas são avaliados explicitamente.
+os.environ["ALERT_EVALUATION_INTERVAL_MINUTES"] = "0"
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine

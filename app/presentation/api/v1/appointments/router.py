@@ -14,6 +14,7 @@ from app.application.interfaces.appointment_repository import AppointmentFilters
 from app.application.use_cases.appointment_use_case import AppointmentUseCase
 from app.domain.entities.appointment import AppointmentStatus
 from app.infrastructure.persistence.database import get_db
+from app.presentation.api.dependencies import get_events
 from app.infrastructure.persistence.repositories.sqlalchemy_appointment_repository import SQLAlchemyAppointmentRepository
 from app.infrastructure.persistence.repositories.sqlalchemy_patient_repository import SQLAlchemyPatientRepository
 from app.infrastructure.persistence.repositories.sqlalchemy_professional_repository import (
@@ -23,10 +24,10 @@ from app.infrastructure.persistence.repositories.sqlalchemy_professional_reposit
 router = APIRouter(tags=["Consultas"])
 
 
-async def get_use_case(session: AsyncSession = Depends(get_db)) -> AppointmentUseCase:
+async def get_use_case(session: AsyncSession = Depends(get_db), events=Depends(get_events)) -> AppointmentUseCase:
     return AppointmentUseCase(
         SQLAlchemyAppointmentRepository(session), SQLAlchemyProfessionalRepository(session),
-        SQLAlchemyCatalogRepository(session), SQLAlchemyPatientRepository(session),
+        SQLAlchemyCatalogRepository(session), SQLAlchemyPatientRepository(session), events=events,
     )
 
 

@@ -11,14 +11,17 @@ from app.application.interfaces.pharmacy_repository import LotFilters, MovementF
 from app.application.services.stock_service import StockService
 from app.domain.entities.pharmacy import CatalogStatus, MedicationCategory, MedicationDetails, StockLot
 from app.domain.exceptions.common import BusinessRuleViolation, ConflictError, EntityNotFoundError
+from app.application.services.events import EventPublisher, NullPublisher
+from app.domain.events import DomainEvent, EventType
 
 
 class PharmacyStockUseCase:
     """Catálogo complementar, lotes, validade e movimentações de estoque."""
 
     def __init__(self, repo: PharmacyRepository, stock: StockService, medication_repo: MedicationRepository,
-                 clock: Callable[[], datetime] = datetime.now):
+                 clock: Callable[[], datetime] = datetime.now, events: EventPublisher = NullPublisher()):
         self.repo = repo
+        self.events = events
         self.stock = stock
         self.medication_repo = medication_repo
         self.clock = clock
@@ -65,13 +68,19 @@ class PharmacyStockUseCase:
             raise BusinessRuleViolation("Medicamento descontinuado não pode receber novos lotes.")
         lot = await self.stock.receive(dto.medication_id, dto.location.strip().upper(), dto.lot_number,
                                        dto.expiration_date, dto.quantity, self.clock())
-        return (await self._lot_dtos([lot]))[0]
+        response = (await self._lot_dtos([lot]))[0]
+        await self._publish(EventType.STOCK_RECEIVED, response, f"Entrada do lote {response.lot_number}")
+        return response
 
     async def discard_lot(self, lot_id: uuid.UUID, reason: Optional[str]) -> LotDTO:
         lot = await self.repo.get_lot(lot_id)
         if not lot:
             raise EntityNotFoundError("Lote", lot_id)
-        return (await self._lot_dtos([await self.stock.discard(lot, reason, self.clock())]))[0]
+        quantity = lot.quantity
+        response = (await self._lot_dtos([await self.stock.discard(lot, reason, self.clock())]))[0]
+        await self._publish(EventType.STOCK_DISCARDED, response,
+                            f"Descarte do lote {response.lot_number} ({quantity:g} unidade(s))")
+        return response
 
     async def search_lots(self, filters: LotFilters) -> Page[LotDTO]:
         if filters.location:
@@ -89,6 +98,12 @@ class PharmacyStockUseCase:
         ) for m in movements], total=total, limit=filters.limit, offset=filters.offset)
 
     # ------------------------------------------------------------------ apoio
+
+    async def _publish(self, event_type: EventType, lot: LotDTO, label: str) -> None:
+        await self.events.publish(DomainEvent(
+            event_type=event_type, occurred_at=self.clock(), entity_type="Lote", entity_id=lot.id,
+            summary=f"{label}: {lot.medication_name} em {lot.location} (validade {lot.expiration_date:%d/%m/%Y}).",
+            data={"medication_id": lot.medication_id, "quantity": lot.quantity}))
 
     async def _medication(self, medication_id: uuid.UUID):
         medication = await self.medication_repo.get_by_id(medication_id)

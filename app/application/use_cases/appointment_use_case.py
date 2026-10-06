@@ -9,12 +9,19 @@ from app.application.dtos.common import Page
 from app.application.interfaces.appointment_repository import AppointmentFilters, AppointmentRepository
 from app.application.interfaces.patient_repository import PatientRepository
 from app.application.interfaces.professional_repository import CatalogRepository, ProfessionalRepository
+from app.application.services.events import EventPublisher, NullPublisher
+from app.domain.events import DomainEvent, EventType
 from app.domain.entities.appointment import ACTIVE_STATUSES, Appointment
 from app.domain.entities.professional import Professional
 from app.domain.exceptions.common import BusinessRuleViolation, ConflictError, EntityNotFoundError
 
 DEFAULT_DURATION = 30
 MAX_AVAILABILITY_DAYS = 31
+EVENT_LABELS = {
+    EventType.APPOINTMENT_BOOKED: "Consulta agendada", EventType.APPOINTMENT_RESCHEDULED: "Consulta remarcada",
+    EventType.APPOINTMENT_CONFIRMED: "Consulta confirmada", EventType.APPOINTMENT_CANCELLED: "Consulta cancelada",
+    EventType.APPOINTMENT_COMPLETED: "Consulta finalizada", EventType.APPOINTMENT_NO_SHOW: "Não comparecimento",
+}
 
 
 class AppointmentUseCase:
@@ -26,8 +33,9 @@ class AppointmentUseCase:
 
     def __init__(self, appointment_repo: AppointmentRepository, professional_repo: ProfessionalRepository,
                  catalog_repo: CatalogRepository, patient_repo: PatientRepository,
-                 clock: Callable[[], datetime] = datetime.now):
+                 clock: Callable[[], datetime] = datetime.now, events: EventPublisher = NullPublisher()):
         self.appointment_repo = appointment_repo
+        self.events = events
         self.professional_repo = professional_repo
         self.catalog_repo = catalog_repo
         self.patient_repo = patient_repo
@@ -57,7 +65,9 @@ class AppointmentUseCase:
         )
         await self._ensure_slot_is_free(appointment, professional)
         appointment.register_creation(now)
-        return await self._respond(await self.appointment_repo.save(appointment), now)
+        response = await self._respond(await self.appointment_repo.save(appointment), now)
+        await self._publish(EventType.APPOINTMENT_BOOKED, response, now)
+        return response
 
     async def reschedule(self, appointment_id: uuid.UUID, new_start: datetime,
                          duration_minutes: Optional[int] = None) -> AppointmentResponseDTO:
@@ -66,24 +76,28 @@ class AppointmentUseCase:
         professional = await self._get_professional(appointment.professional_id)
         appointment.reschedule(new_start.replace(second=0, microsecond=0, tzinfo=None), now, duration_minutes)
         await self._ensure_slot_is_free(appointment, professional)
-        return await self._respond(await self.appointment_repo.save(appointment), now)
+        response = await self._respond(await self.appointment_repo.save(appointment), now)
+        await self._publish(EventType.APPOINTMENT_RESCHEDULED, response, now)
+        return response
 
     # ------------------------------------------------------------ transições
 
     async def confirm(self, appointment_id: uuid.UUID) -> AppointmentResponseDTO:
-        return await self._apply(appointment_id, lambda a, now: a.confirm(now))
+        return await self._apply(appointment_id, lambda a, now: a.confirm(now), EventType.APPOINTMENT_CONFIRMED)
 
     async def start(self, appointment_id: uuid.UUID) -> AppointmentResponseDTO:
         return await self._apply(appointment_id, lambda a, now: a.start(now))
 
     async def complete(self, appointment_id: uuid.UUID, notes: Optional[str] = None) -> AppointmentResponseDTO:
-        return await self._apply(appointment_id, lambda a, now: a.complete(now, notes))
+        return await self._apply(appointment_id, lambda a, now: a.complete(now, notes),
+                                 EventType.APPOINTMENT_COMPLETED)
 
     async def cancel(self, appointment_id: uuid.UUID, reason: str) -> AppointmentResponseDTO:
-        return await self._apply(appointment_id, lambda a, now: a.cancel(now, reason))
+        return await self._apply(appointment_id, lambda a, now: a.cancel(now, reason),
+                                 EventType.APPOINTMENT_CANCELLED)
 
     async def mark_no_show(self, appointment_id: uuid.UUID) -> AppointmentResponseDTO:
-        return await self._apply(appointment_id, lambda a, now: a.mark_no_show(now))
+        return await self._apply(appointment_id, lambda a, now: a.mark_no_show(now), EventType.APPOINTMENT_NO_SHOW)
 
     # ---------------------------------------------------------------- leitura
 
@@ -136,11 +150,24 @@ class AppointmentUseCase:
 
     # ------------------------------------------------------------------ apoio
 
-    async def _apply(self, appointment_id: uuid.UUID, action) -> AppointmentResponseDTO:
+    async def _apply(self, appointment_id: uuid.UUID, action,
+                     event_type: Optional[EventType] = None) -> AppointmentResponseDTO:
         now = self.clock()
         appointment = await self._get(appointment_id)
         action(appointment, now)
-        return await self._respond(await self.appointment_repo.save(appointment), now)
+        response = await self._respond(await self.appointment_repo.save(appointment), now)
+        if event_type:
+            await self._publish(event_type, response, now)
+        return response
+
+    async def _publish(self, event_type: EventType, a: AppointmentResponseDTO, now: datetime) -> None:
+        await self.events.publish(DomainEvent(
+            event_type=event_type, occurred_at=now, entity_type="Consulta", entity_id=a.id,
+            summary=f"{EVENT_LABELS[event_type]}: {a.patient_name} com {a.professional_name} "
+                    f"em {a.start_time:%d/%m/%Y %H:%M}.",
+            patient_id=a.patient_id, professional_id=a.professional_id,
+            data={"status": a.status.value, "start_time": a.start_time,
+                  "reason": a.cancellation_reason}))
 
     async def _ensure_slot_is_free(self, appointment: Appointment, professional: Professional) -> None:
         start, end = appointment.start_time, appointment.end_time

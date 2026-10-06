@@ -21,16 +21,17 @@ from app.infrastructure.persistence.repositories.sqlalchemy_medical_record_repos
 )
 from app.infrastructure.persistence.repositories.sqlalchemy_timeline_repository import SQLAlchemyTimelineRepository
 from app.presentation.api.v1.appointments.router import get_use_case as get_appointment_use_case
+from app.presentation.api.dependencies import get_events
 
 router = APIRouter(prefix="/patients", tags=["Prontuário Eletrônico"])
 
 
-async def get_use_case(session: AsyncSession = Depends(get_db),
-                       appointments=Depends(get_appointment_use_case)) -> MedicalRecordUseCase:
+async def get_use_case(session: AsyncSession = Depends(get_db), appointments=Depends(get_appointment_use_case),
+                       events=Depends(get_events)) -> MedicalRecordUseCase:
     return MedicalRecordUseCase(
         SQLAlchemyMedicalRecordRepository(session), SQLAlchemyPatientDirectoryRepository(session),
         SQLAlchemyTimelineRepository(session), SQLAlchemyAppointmentRepository(session),
-        appointments.professional_repo, appointments,
+        appointments.professional_repo, appointments, events=events,
     )
 
 

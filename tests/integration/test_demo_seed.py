@@ -33,12 +33,12 @@ async def _count(session, model):
 
 
 async def test_seed_creates_fictitious_data_and_is_idempotent(db_session):
-    report = await seed_demo_data(db_session, patients=20, prescriptions=20)
+    report = await seed_demo_data(db_session, patients=20, prescriptions=20, exams=10)
     assert report.created["patients"] == 20
     assert report.created["medications"] == len(MEDICATIONS)
     assert await _count(db_session, InventoryItemModel) == len(MEDICATIONS) * len(STOCK_LOCATIONS)
 
-    again = await seed_demo_data(db_session, patients=20, prescriptions=20)
+    again = await seed_demo_data(db_session, patients=20, prescriptions=20, exams=10)
     assert again.created == {}
     assert again.skipped["patients"] == 20
     assert await _count(db_session, PatientModel) == 20
@@ -46,14 +46,14 @@ async def test_seed_creates_fictitious_data_and_is_idempotent(db_session):
 
 
 async def test_seed_produces_critical_stock_for_demonstration(db_session):
-    await seed_demo_data(db_session, patients=1, prescriptions=20)
+    await seed_demo_data(db_session, patients=1, prescriptions=20, exams=10)
     pharmacy = PharmacyUseCase(SQLAlchemyMedicationRepository(db_session), SQLAlchemyInventoryRepository(db_session))
     assert await pharmacy.get_critical_stock_report()
 
 
 async def test_seed_professionals_and_coherent_appointments(db_session):
     now = datetime(2026, 10, 6, 12, 0)
-    report = await seed_demo_data(db_session, patients=30, appointments=100, now=now, prescriptions=20)
+    report = await seed_demo_data(db_session, patients=30, appointments=100, now=now, prescriptions=20, exams=10)
     assert report.created["professionals"] == sum(amount for *_, amount in PROFESSIONAL_MIX) == 20
     assert report.created["appointments"] == 100
     assert await _count(db_session, ProfessionalModel) == 20
@@ -77,13 +77,13 @@ async def test_seed_professionals_and_coherent_appointments(db_session):
                 if getattr(a, owner) == getattr(b, owner):
                     assert not a.overlaps(b.start_time, b.end_time)
 
-    again = await seed_demo_data(db_session, patients=30, appointments=100, now=now, prescriptions=20)
+    again = await seed_demo_data(db_session, patients=30, appointments=100, now=now, prescriptions=20, exams=10)
     assert "appointments" not in again.created and "professionals" not in again.created
 
 
 async def test_seed_medical_records_are_coherent_and_idempotent(db_session):
     now = datetime(2026, 10, 6, 12, 0)
-    report = await seed_demo_data(db_session, patients=25, appointments=60, now=now, prescriptions=20)
+    report = await seed_demo_data(db_session, patients=25, appointments=60, now=now, prescriptions=20, exams=10)
     assert report.created["medical_records"] == 25
     assert await _count(db_session, PatientProfileModel) == 25
 
@@ -100,7 +100,7 @@ async def test_seed_medical_records_are_coherent_and_idempotent(db_session):
         assert appointment.patient_id == diagnosis.patient_id
         assert diagnosis.diagnosed_at == appointment.end_time
 
-    again = await seed_demo_data(db_session, patients=25, appointments=60, now=now, prescriptions=20)
+    again = await seed_demo_data(db_session, patients=25, appointments=60, now=now, prescriptions=20, exams=10)
     assert "medical_records" not in again.created
     assert again.skipped["medical_records"] == 25
 

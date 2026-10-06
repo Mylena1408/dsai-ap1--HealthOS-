@@ -15,6 +15,7 @@ from app.application.use_cases.laboratory_use_case import LaboratoryUseCase
 from app.application.use_cases.vital_signs_use_case import VitalSignsUseCase
 from app.domain.entities.laboratory import ExamPriority, ExamStatus
 from app.infrastructure.persistence.database import get_db
+from app.presentation.api.dependencies import get_events
 from app.infrastructure.persistence.repositories.sqlalchemy_appointment_repository import SQLAlchemyAppointmentRepository
 from app.infrastructure.persistence.repositories.sqlalchemy_clinical_monitoring_repository import (
     SQLAlchemyLaboratoryRepository, SQLAlchemyVitalSignsRepository,
@@ -29,14 +30,15 @@ from app.infrastructure.persistence.repositories.sqlalchemy_professional_reposit
 router = APIRouter()
 
 
-async def get_vitals(session: AsyncSession = Depends(get_db)) -> VitalSignsUseCase:
+async def get_vitals(session: AsyncSession = Depends(get_db), events=Depends(get_events)) -> VitalSignsUseCase:
     return VitalSignsUseCase(SQLAlchemyVitalSignsRepository(session), SQLAlchemyPatientDirectoryRepository(session),
-                             SQLAlchemyProfessionalRepository(session))
+                             SQLAlchemyProfessionalRepository(session), events=events)
 
 
-async def get_lab(session: AsyncSession = Depends(get_db)) -> LaboratoryUseCase:
+async def get_lab(session: AsyncSession = Depends(get_db), events=Depends(get_events)) -> LaboratoryUseCase:
     return LaboratoryUseCase(SQLAlchemyLaboratoryRepository(session), SQLAlchemyPatientDirectoryRepository(session),
-                             SQLAlchemyProfessionalRepository(session), SQLAlchemyAppointmentRepository(session))
+                             SQLAlchemyProfessionalRepository(session), SQLAlchemyAppointmentRepository(session),
+                             events=events)
 
 
 Vitals = Depends(get_vitals)
