@@ -4,9 +4,14 @@ from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from app.domain.entities.billing import Invoice, BillingItem, BillingStatus, BillingType
+from app.domain.entities.billing import (
+    Invoice, BillingItem, BillingStatus, BillingType, Payment, PaymentMethod, ServiceSource,
+)
 from app.application.interfaces.billing_repository import BillingRepository
 from app.infrastructure.persistence.models.billing_model import InvoiceModel, BillingItemModel
+from app.infrastructure.persistence.models.finance_model import (
+    BillingItemSourceModel, InvoiceCancellationModel, InvoicePaymentModel,
+)
 
 class SQLAlchemyBillingRepository(BillingRepository):
     """
@@ -40,6 +45,7 @@ class SQLAlchemyBillingRepository(BillingRepository):
         db_invoice.insurance_coverage_percentage = invoice.insurance_coverage_percentage
 
         existing_ids = {db_item.id for db_item in db_invoice.items}
+        new_sources = []
         for item in invoice.items:
             if item.id in existing_ids:
                 continue
@@ -52,6 +58,22 @@ class SQLAlchemyBillingRepository(BillingRepository):
                 unit_price=item.unit_price,
                 discount=item.discount
             ))
+            if item.source_type and item.source_id:
+                new_sources.append(BillingItemSourceModel(item_id=item.id, source_type=item.source_type.value,
+                                                          source_id=item.source_id))
+        await self.session.flush()  # os itens precisam existir antes das origens que os referenciam
+        self.session.add_all(new_sources)
+
+        # Pagamentos só por acréscimo: os que ainda não têm id são novos.
+        for payment in invoice.payments:
+            if payment.id is None:
+                payment.id = uuid.uuid4()
+                self.session.add(InvoicePaymentModel(id=payment.id, invoice_id=db_invoice.id, amount=payment.amount,
+                                                     method=payment.method.value, paid_at=payment.paid_at,
+                                                     note=payment.note))
+        if invoice.cancellation_reason and not await self.session.get(InvoiceCancellationModel, db_invoice.id):
+            self.session.add(InvoiceCancellationModel(invoice_id=db_invoice.id, reason=invoice.cancellation_reason,
+                                                      cancelled_at=invoice.cancelled_at))
 
         await self.session.flush()
 
@@ -67,13 +89,13 @@ class SQLAlchemyBillingRepository(BillingRepository):
         if not db_invoice:
             return None
 
-        return self._map_to_domain(db_invoice)
+        return (await self._map_all([db_invoice]))[0]
 
     async def get_invoices_by_patient(self, patient_id: uuid.UUID) -> List[Invoice]:
         stmt = (select(InvoiceModel).options(selectinload(InvoiceModel.items))
                 .where(InvoiceModel.patient_id == patient_id))
         result = await self.session.execute(stmt)
-        return [self._map_to_domain(i) for i in result.scalars().all()]
+        return await self._map_all(list(result.scalars().all()))
 
     async def update_invoice_status(self, invoice_id: uuid.UUID, status_value: str) -> bool:
         db_invoice = await self.session.get(InvoiceModel, invoice_id)
@@ -84,16 +106,35 @@ class SQLAlchemyBillingRepository(BillingRepository):
         await self.session.flush()
         return True
 
-    def _map_to_domain(self, db_invoice: InvoiceModel) -> Invoice:
+    async def _map_all(self, db_invoices: List[InvoiceModel]) -> List[Invoice]:
+        """Carrega pagamentos, cancelamentos e origens de todas as faturas em poucas consultas."""
+        ids = [i.id for i in db_invoices]
+        item_ids = [item.id for i in db_invoices for item in i.items]
+        payments: dict = {}
+        for p in await self.session.scalars(select(InvoicePaymentModel).where(InvoicePaymentModel.invoice_id.in_(ids))
+                                            .order_by(InvoicePaymentModel.paid_at)):
+            payments.setdefault(p.invoice_id, []).append(Payment(
+                id=p.id, amount=Decimal(str(p.amount)), method=PaymentMethod(p.method), paid_at=p.paid_at, note=p.note))
+        cancellations = {c.invoice_id: c for c in await self.session.scalars(
+            select(InvoiceCancellationModel).where(InvoiceCancellationModel.invoice_id.in_(ids)))}
+        sources = {s.item_id: s for s in await self.session.scalars(
+            select(BillingItemSourceModel).where(BillingItemSourceModel.item_id.in_(item_ids)))}
+        return [self._map_to_domain(i, payments.get(i.id, []), cancellations.get(i.id), sources) for i in db_invoices]
+
+    def _map_to_domain(self, db_invoice: InvoiceModel, payments=(), cancellation=None, sources=None) -> Invoice:
+        sources = sources or {}
         items = []
         for db_item in db_invoice.items:
+            source = sources.get(db_item.id)
             items.append(BillingItem(
                 id=db_item.id,
                 description=db_item.description,
                 billing_type=BillingType(db_item.billing_type),
                 quantity=Decimal(str(db_item.quantity)),
                 unit_price=Decimal(str(db_item.unit_price)),
-                discount=Decimal(str(db_item.discount))
+                discount=Decimal(str(db_item.discount)),
+                source_type=ServiceSource(source.source_type) if source else None,
+                source_id=source.source_id if source else None,
             ))
 
         return Invoice(
@@ -106,5 +147,8 @@ class SQLAlchemyBillingRepository(BillingRepository):
             items=items,
             insurance_provider=db_invoice.insurance_provider,
             insurance_policy_number=db_invoice.insurance_policy_number,
-            insurance_coverage_percentage=Decimal(str(db_invoice.insurance_coverage_percentage))
+            insurance_coverage_percentage=Decimal(str(db_invoice.insurance_coverage_percentage)),
+            payments=list(payments),
+            cancellation_reason=cancellation.reason if cancellation else None,
+            cancelled_at=cancellation.cancelled_at if cancellation else None,
         )

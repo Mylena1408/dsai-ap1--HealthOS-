@@ -52,6 +52,7 @@ const PAGES = [
     ["static/pages/consultas.html", "/app/consultas", "pages/appointments.js"],
     ["static/pages/laboratorio.html", "/app/laboratorio", "pages/laboratory.js"],
     ["static/pages/farmacia.html", "/app/farmacia", "pages/pharmacy.js"],
+    ["static/pages/financeiro.html", "/app/financeiro", "pages/finance.js"],
     ["static/pages/assistente.html", "/app/assistente", "pages/assistant.js"],
     ["static/pages/alertas.html", "/app/alertas", "pages/alerts.js"],
     ["static/pages/notificacoes.html", "/app/notificacoes", "pages/notifications.js"],
@@ -112,6 +113,33 @@ if (patient) {
     const summary = assistant.document.querySelector("#ai-result [data-ai-response]");
     check("assistente › resumo + chat", assistant, `resumo=${Boolean(summary)} bolhas=${bubbles}`);
     if (!summary || bubbles !== 2) failures++;
+
+    // Financeiro: detalhe de uma fatura no modal.
+    const finance = await openPage("static/pages/financeiro.html", "/app/financeiro");
+    await finance.load("pages/finance.js");
+    const firstInvoice = finance.document.querySelector("[data-invoice]");
+    if (firstInvoice) {
+        firstInvoice.click();
+        await sleep(1500);
+        const detail = finance.document.querySelector("#invoice-detail #invoice-title");
+        check("financeiro › detalhe da fatura", finance, detail ? detail.textContent : "SEM DETALHE");
+        if (!detail) failures++;
+    }
+    // Pagamento pelo formulário em uma fatura com saldo (quita o valor sugerido).
+    const pending = (await api("/billing/invoices?status=PENDENTE&limit=1")).items[0];
+    if (pending) {
+        finance.document.querySelector("[data-close-modal]")?.click();
+        finance.document.getElementById("invoices").insertAdjacentHTML("beforeend",
+            `<tr><td><button data-invoice="${pending.id}">abrir</button></td></tr>`);
+        finance.document.querySelector(`[data-invoice="${pending.id}"]`).click();
+        await sleep(1500);
+        const form = finance.document.getElementById("form-payment");
+        form?.dispatchEvent(new finance.window.Event("submit", { cancelable: true, bubbles: true }));
+        await sleep(2000);
+        const after = await api(`/billing/invoices/${pending.id}`);
+        check("financeiro › registrar pagamento", finance, `situação=${after.status}`);
+        if (after.status !== "PAGO") failures++;
+    }
 
     const doctor = (await api("/professionals?professional_type=MEDICO&limit=1")).items[0];
     const profiles = [

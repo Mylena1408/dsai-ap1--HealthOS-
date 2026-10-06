@@ -23,8 +23,10 @@ from app.presentation.api.v1.pharmacy_v2.router import router as pharmacy_v2_rou
 from app.presentation.api.v1.engagement.router import router as engagement_router
 from app.presentation.api.v1.dashboards.router import router as dashboards_router
 from app.presentation.api.v1.assistant.router import router as assistant_router
+from app.presentation.api.v1.finance.router import router as finance_router
 from app.infrastructure.scheduler import AlertScheduler
 from app.infrastructure.seed.lab_catalog import ensure_lab_catalog
+from app.infrastructure.seed.price_table import ensure_price_table
 from app.presentation.api.error_handlers import register_error_handlers
 from app.infrastructure.persistence.database import engine, AsyncSessionLocal
 from app.infrastructure.persistence.models.user_model import Base
@@ -49,6 +51,7 @@ from app.infrastructure.persistence.models import (
     clinical_model,
     clinical_monitoring_model,
     engagement_model,
+    finance_model,
     medical_record_model,
     medication_model,
     notification_model,
@@ -126,9 +129,10 @@ async def initialize_database():
 
         await session.commit()
 
-    # Catálogo de exames e laboratórios: dado de referência necessário ao módulo de laboratório.
+    # Dados de referência: catálogo de exames/laboratórios e tabela de preços fictícia.
     async with AsyncSessionLocal() as session:
         await ensure_lab_catalog(session)
+        await ensure_price_table(session)
         await session.commit()
 
     if settings.SEED_DEMO_DATA:
@@ -177,6 +181,7 @@ app.include_router(pharmacy_v2_router, prefix="/api/v1")
 app.include_router(engagement_router, prefix="/api/v1")
 app.include_router(dashboards_router, prefix="/api/v1")
 app.include_router(assistant_router, prefix="/api/v1")
+app.include_router(finance_router, prefix="/api/v1")
 
 BASE_DIR = os.path.dirname(__file__)
 

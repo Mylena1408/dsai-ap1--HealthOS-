@@ -293,3 +293,22 @@ conteúdo. O histórico do chat fica em tabelas novas, somente por acréscimo.
 **Consequência.** Trocar de provedor é configuração, não código; o modo demonstração não usa um
 modelo de linguagem, e a interface deixa isso visível com o selo "Modo demonstração".
 
+---
+
+## ADR-022 — Financeiro ampliado em tabelas novas, com "em atraso" derivado
+
+**Contexto.** O faturamento original não registrava pagamentos, não listava faturas e tinha um
+status `ATRASADO` que nada aplicava. O banco de produção não pode receber `ALTER TABLE`.
+
+**Decisão.**
+- Pagamentos, cancelamentos, origem dos itens e preços ficam em tabelas novas que apenas
+  referenciam `invoices`/`billing_items`. As rotas antigas continuam iguais e usam as mesmas regras.
+- "Em atraso" é calculado a partir do vencimento na leitura (inclusive no filtro SQL), em vez de
+  depender de um processo que atualize o status gravado.
+- Para não faturar duas vezes, cada item guarda o atendimento de origem. A restrição "no máximo uma
+  fatura não cancelada por atendimento" é verificada no caso de uso, e não por índice único,
+  porque o cancelamento deve devolver o atendimento para faturamento sem apagar o histórico.
+- Valores em `Decimal` com duas casas; a API serializa como texto ("15.00") para não perder precisão.
+
+**Limite.** Não há estorno nem conciliação bancária: são conceitos fora do escopo didático.
+

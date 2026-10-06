@@ -19,6 +19,7 @@ LOT_EXPIRY_WARNING_DAYS = 30
 ABNORMAL_EXAM_WINDOW_DAYS = 30
 CRITICAL_VITALS_WINDOW_DAYS = 7
 FOLLOW_UP_GAP_DAYS = 180
+INVOICE_OVERDUE_CRITICAL_DAYS = 30
 
 RULES: list[AlertRule] = [
     AlertRule("ESTOQUE_BAIXO", AlertCategory.STOCK,
@@ -41,6 +42,9 @@ RULES: list[AlertRule] = [
     AlertRule("PACIENTE_SEM_ACOMPANHAMENTO", AlertCategory.CLINICAL,
               f"Paciente com condição ativa sem consulta finalizada há mais de {FOLLOW_UP_GAP_DAYS} dias "
               "e sem consulta futura.", Sector.CLINICAL_COORDINATION),
+    AlertRule("FATURA_VENCIDA", AlertCategory.ADMINISTRATIVE,
+              f"Fatura vencida com saldo em aberto (crítico após {INVOICE_OVERDUE_CRITICAL_DAYS} dias).",
+              Sector.ADMINISTRATION),
 ]
 
 RULES_BY_CODE = {rule.code: rule for rule in RULES}

@@ -38,7 +38,7 @@ copy .env.example .env           # ajuste DATABASE_URL, ex.: sqlite:///./app.db
 uvicorn main:app --reload
 ```
 
-Acesse `http://127.0.0.1:8000/` (portal), `/app/painel`, `/app/prontuario`, `/app/consultas`, `/app/laboratorio`, `/app/farmacia`, `/app/alertas`,
+Acesse `http://127.0.0.1:8000/` (portal), `/app/painel`, `/app/prontuario`, `/app/consultas`, `/app/laboratorio`, `/app/farmacia`, `/app/financeiro`, `/app/alertas`,
 `/app/assistente`, `/app/notificacoes`, `/app/auditoria`, `/app/profissionais`, `/app/status` e `/docs` (Swagger).
 
 ### Dados de demonstração

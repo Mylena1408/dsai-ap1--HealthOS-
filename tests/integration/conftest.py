@@ -31,9 +31,6 @@ from app.infrastructure.persistence.repositories.sqlalchemy_professional_reposit
 )
 from app.infrastructure.seed.demo_seed import seed_demo_data
 
-
-
-
 SEED_NOW = datetime(2026, 10, 6, 12, 0)
 
 

@@ -21,6 +21,7 @@ from app.infrastructure.persistence.models.medication_model import InventoryItem
 from app.infrastructure.persistence.models.patient_model import PatientModel
 from app.infrastructure.persistence.models.pharmacy_model import StockLotModel
 from app.infrastructure.persistence.models.professional_model import ProfessionalModel
+from app.infrastructure.persistence.repositories.sqlalchemy_finance_queries import SQLAlchemyFinanceQueries
 
 CRITICAL_FLAGS = {ResultFlag.CRITICAL_LOW.value, ResultFlag.CRITICAL_HIGH.value}
 
@@ -182,3 +183,21 @@ class SQLAlchemyAlertDetector(AlertDetector):
                 subject_type="Paciente", subject_id=patient_id, patient_id=patient_id,
                 link=f"/app/prontuario?patient={patient_id}"))
         return candidates
+
+    # -------------------------------------------------------------- financeiro
+
+    async def _fatura_vencida(self, now):
+        candidates = []
+        for invoice in await SQLAlchemyFinanceQueries(self.session).open_invoices():
+            if invoice.due_date is None or invoice.due_date >= now:
+                continue
+            days = (now - invoice.due_date).days
+            balance = invoice.gross_total - invoice.amount_paid
+            candidates.append(AlertCandidate(
+                rule_code="FATURA_VENCIDA", dedup_key=f"FATURA_VENCIDA:{invoice.id}", category=Cat.ADMINISTRATIVE,
+                level=Lvl.CRITICAL if days > params.INVOICE_OVERDUE_CRITICAL_DAYS else Lvl.WARNING,
+                title=f"Fatura vencida: {invoice.number} — {invoice.patient_name}",
+                message=f"Saldo de R$ {balance:.2f} vencido em {invoice.due_date:%d/%m/%Y} ({days} dia(s)).",
+                subject_type="Fatura", subject_id=invoice.id, patient_id=invoice.patient_id, link="/app/financeiro"))
+        return candidates
+

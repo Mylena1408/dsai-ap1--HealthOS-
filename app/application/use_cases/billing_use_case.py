@@ -1,9 +1,11 @@
 from typing import List, Optional
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from app.application.interfaces.billing_repository import BillingRepository
-from app.domain.entities.billing import Invoice, BillingItem, BillingStatus, BillingType
+from app.domain.entities.billing import (
+    OPEN_STATUSES, Invoice, BillingItem, BillingStatus, BillingType, Payment, PaymentMethod,
+)
 from app.domain.exceptions.base import DomainException
 
 class BillingUseCase:
@@ -70,13 +72,8 @@ class BillingUseCase:
         if not invoice:
             raise DomainException(message="Fatura não encontrada.")
 
-        if not invoice.items:
-            raise DomainException(message="Não é possível finalizar uma fatura sem itens de cobrança.")
-
-        invoice.status = BillingStatus.PENDING
-        # Define a data de vencimento para 15 dias a partir de hoje
-        invoice.due_date = datetime.now() + timedelta(days=15)
-
+        # Regras de emissão no domínio: exige itens e define o vencimento (15 dias).
+        invoice.issue(datetime.now())
         return await self.billing_repository.save_invoice(invoice)
 
     async def record_payment(self, invoice_id: uuid.UUID) -> Invoice:
@@ -89,8 +86,15 @@ class BillingUseCase:
 
         if invoice.status == BillingStatus.PAID:
             raise DomainException(message="Esta fatura já está paga.")
+        if invoice.status == BillingStatus.CANCELLED:
+            raise DomainException(message="Fatura cancelada não pode ser paga.")
 
-        invoice.mark_as_paid()
+        if invoice.status in OPEN_STATUSES:
+            # Quita o saldo como um pagamento registrado (forma de pagamento não informada pela rota antiga).
+            invoice.register_payment(Payment(amount=invoice.balance(), method=PaymentMethod.UNSPECIFIED,
+                                             paid_at=datetime.now()))
+        else:
+            invoice.mark_as_paid()
         return await self.billing_repository.save_invoice(invoice)
 
     async def get_patient_financial_summary(self, patient_id: uuid.UUID) -> List[dict]:

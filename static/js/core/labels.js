@@ -145,3 +145,17 @@ export const MOVEMENT_TYPES = {
     AJUSTE: { label: 'Ajuste', color: 'bg-amber-100 text-amber-800' },
     DESCARTE: { label: 'Descarte', color: 'bg-red-100 text-red-700' },
 };
+
+// ------------------------------------------------------------- financeiro
+
+export const INVOICE_STATUS = {
+    RASCUNHO: { label: 'Rascunho', color: 'bg-slate-100 text-slate-700' },
+    PENDENTE: { label: 'Pendente', color: 'bg-blue-100 text-blue-700' },
+    PARCIALMENTE_PAGO: { label: 'Parcialmente paga', color: 'bg-amber-100 text-amber-800' },
+    ATRASADO: { label: 'Em atraso', color: 'bg-red-100 text-red-700' },
+    PAGO: { label: 'Paga', color: 'bg-emerald-100 text-emerald-700' },
+    CANCELADO: { label: 'Cancelada', color: 'bg-slate-200 text-slate-500' },
+};
+
+export const PAYMENT_METHODS = { PIX: 'Pix', CARTAO: 'Cartão', DINHEIRO: 'Dinheiro', CONVENIO: 'Repasse do convênio',
+                                 NAO_INFORMADO: 'Não informado' };

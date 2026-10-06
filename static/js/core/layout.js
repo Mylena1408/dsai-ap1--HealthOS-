@@ -9,6 +9,7 @@ const NAV_ITEMS = [
     { id: 'consultas', label: 'Consultas', href: '/app/consultas', icon: 'fa-calendar-days' },
     { id: 'laboratorio', label: 'Laboratório', href: '/app/laboratorio', icon: 'fa-flask' },
     { id: 'farmacia', label: 'Farmácia', href: '/app/farmacia', icon: 'fa-prescription-bottle-medical' },
+    { id: 'financeiro', label: 'Financeiro', href: '/app/financeiro', icon: 'fa-file-invoice-dollar' },
     { id: 'assistente', label: 'Assistente', href: '/app/assistente', icon: 'fa-robot' },
     { id: 'alertas', label: 'Alertas', href: '/app/alertas', icon: 'fa-triangle-exclamation' },
     { id: 'profissionais', label: 'Profissionais', href: '/app/profissionais', icon: 'fa-user-doctor' },

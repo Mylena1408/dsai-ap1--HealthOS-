@@ -61,6 +61,12 @@ class NotificationPolicy:
                     (P, event.patient_id, C.MEDICATION, "Nova prescrição emitida", None, normal)]
         if event.event_type == E.MEDICATION_DISPENSED:
             return [(P, event.patient_id, C.MEDICATION, "Medicamentos dispensados", None, normal)]
+        if event.event_type == E.INVOICE_ISSUED:
+            return [(P, event.patient_id, C.FINANCIAL, "Nova fatura emitida", None, normal)]
+        if event.event_type == E.PAYMENT_RECORDED:
+            return [(P, event.patient_id, C.FINANCIAL, "Pagamento registrado", None, normal)]
+        if event.event_type == E.INVOICE_CANCELLED:
+            return [(P, event.patient_id, C.FINANCIAL, "Fatura cancelada", None, normal)]
         if event.event_type == E.ALERT_RAISED:
             sector = Sector(data["sector"]) if data.get("sector") else Sector.ADMINISTRATION
             title = ("Alerta agravado: " if data.get("escalated") else "Novo alerta: ") + data.get("title", "")

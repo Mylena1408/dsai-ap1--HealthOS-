@@ -357,6 +357,45 @@ A página `/app/painel` abre na visão do perfil de demonstração escolhido no 
 
 ---
 
+## Financeiro
+
+Amplia o faturamento original sem alterar suas tabelas (`invoices`, `billing_items`) nem suas
+rotas: as novas informações ficam em tabelas próprias.
+
+| Tabela nova | Conteúdo |
+|---|---|
+| `invoice_payments` | pagamentos parciais ou totais (só por acréscimo) |
+| `invoice_cancellations` | motivo e data do cancelamento |
+| `billing_item_sources` | consulta/exame que originou cada item |
+| `service_prices` | tabela de preços fictícia (garantida no startup) |
+
+**Ciclo da fatura**: Rascunho → Pendente (emissão: exige itens e total > 0; vencimento em 15 dias)
+→ Parcialmente paga → Paga. **Em atraso** não é gravado: é derivado do vencimento (pendente ou
+parcial com vencimento passado), então nunca fica desatualizado. Pagamentos não podem exceder o
+saldo; a forma (Pix, cartão, dinheiro, repasse do convênio) é obrigatória. Só faturas sem
+pagamento podem ser canceladas (não há estorno), sempre com motivo.
+
+**Faturar atendimentos**: consultas finalizadas e exames liberados sem item em fatura não
+cancelada aparecem como "a faturar", ao preço da tabela; o mesmo atendimento nunca entra em duas
+faturas ativas, e volta a ficar disponível se a fatura for cancelada. A cobertura do convênio
+(percentual) divide o total entre convênio e paciente.
+
+**Indicadores** (`/billing/summary`): faturado e recebido no período, a receber, em atraso,
+recebido por forma de pagamento, faturado por pagador e série dos últimos 6 meses.
+A regra de alerta `FATURA_VENCIDA` avisa a Administração e se resolve sozinha quando a fatura é quitada.
+
+| Método | Endpoint |
+|---|---|
+| GET | `/billing/invoices` (filtros: `status`, `patient_id`, `start`, `end`, `number`) · `/billing/invoices/{id}` |
+| POST | `/billing/invoices/{id}/issue` · `/billing/invoices/{id}/payments` · `/billing/invoices/{id}/cancel` |
+| GET/POST | `/billing/patients/{id}/unbilled` · `/billing/patients/{id}/invoices` |
+| GET | `/billing/prices` · `/billing/summary?start=&end=` |
+
+As rotas originais (`POST /billing/invoices`, `/charges`, `/finalize`, `GET /billing/patients/{id}/summary`)
+continuam iguais e passam pelas mesmas regras de domínio. Página: `/app/financeiro`.
+
+---
+
 ## Assistente educacional (IA) e chat
 
 Organiza e explica os registros do prontuário fictício. **Não diagnostica, não prescreve e não
