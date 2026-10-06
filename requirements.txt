@@ -1,19 +1,31 @@
-# Dependências de execução da aplicação
-fastapi
-starlette
-uvicorn==0.54.0
-pydantic
-pydantic-settings
-email-validator
-anyio==4.9.0
+# Dependências de execução do HealthOS — versões exatas, testadas em Python 3.12
+# (Windows local e pacotes Linux manylinux conferidos). Ver .python-version.
+# Não atualize em bloco: troque uma versão por vez e rode a suíte de testes.
 
-# Persistência (SQLite local via aiosqlite; PostgreSQL via asyncpg)
-SQLAlchemy[asyncio]
-aiosqlite
-asyncpg==0.31.0
+# --- Diretas -------------------------------------------------------------
+fastapi==0.115.0            # API web
+starlette==0.38.6           # base do FastAPI (arquivos estáticos, respostas)
+uvicorn==0.54.0             # servidor ASGI (comando de start no Render)
+pydantic==2.8.2             # validação dos DTOs
+pydantic-settings==2.4.0    # configuração por variáveis de ambiente / .env
+email-validator==2.3.0      # campos EmailStr do cadastro de pacientes
+SQLAlchemy==2.0.32          # ORM assíncrono
+aiosqlite==0.22.1           # driver assíncrono do SQLite (banco local / Render sem PostgreSQL)
+asyncpg==0.31.0             # driver assíncrono do PostgreSQL (opcional, quando DATABASE_URL for postgres)
+fpdf2==2.8.9                # relatórios em PDF (Python puro; usa Pillow e fontTools)
+PyJWT==2.15.1               # mantido para o endpoint legado /api/v1/auth/login
 
-# Relatórios em PDF (puro Python)
-fpdf2==2.8.9
-
-# Mantido para o endpoint legado /api/v1/auth/login
-PyJWT
+# --- Transitivas (fixadas para o build ser reproduzível) -----------------
+annotated-types==0.8.0
+anyio==4.15.1
+click==8.5.0
+defusedxml==0.7.1
+dnspython==2.8.0
+fonttools==4.66.1
+greenlet==3.5.6
+h11==0.16.0
+idna==3.20
+pillow==12.3.0
+pydantic-core==2.20.1       # sem pacote para Python 3.14: por isso o Python fica em 3.12
+python-dotenv==1.2.3
+typing-extensions==4.16.0
