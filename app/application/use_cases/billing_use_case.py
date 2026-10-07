@@ -78,7 +78,8 @@ class BillingUseCase:
 
     async def record_payment(self, invoice_id: uuid.UUID) -> Invoice:
         """
-        Registra o pagamento total da fatura.
+        Quita o saldo em aberto da fatura (rota POST /billing/invoices/{id}/pay).
+        Ver o adendo de 2026-10-06 em SPEC/2026-10-01-faturamento.md.
         """
         invoice = await self.billing_repository.get_invoice_by_id(invoice_id)
         if not invoice:
@@ -88,13 +89,12 @@ class BillingUseCase:
             raise DomainException(message="Esta fatura já está paga.")
         if invoice.status == BillingStatus.CANCELLED:
             raise DomainException(message="Fatura cancelada não pode ser paga.")
+        if invoice.status not in OPEN_STATUSES:
+            raise DomainException(message="Fatura em rascunho: finalize antes de pagar.")
 
-        if invoice.status in OPEN_STATUSES:
-            # Quita o saldo como um pagamento registrado (forma de pagamento não informada pela rota antiga).
-            invoice.register_payment(Payment(amount=invoice.balance(), method=PaymentMethod.UNSPECIFIED,
-                                             paid_at=datetime.now()))
-        else:
-            invoice.mark_as_paid()
+        # Quita o saldo como um pagamento registrado (esta rota não informa a forma de pagamento).
+        invoice.register_payment(Payment(amount=invoice.balance(), method=PaymentMethod.UNSPECIFIED,
+                                         paid_at=datetime.now()))
         return await self.billing_repository.save_invoice(invoice)
 
     async def get_patient_financial_summary(self, patient_id: uuid.UUID) -> List[dict]:

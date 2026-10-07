@@ -38,7 +38,7 @@ class PaymentMethod(Enum):
     CARD = "CARTAO"
     CASH = "DINHEIRO"
     INSURANCE = "CONVENIO"  # repasse do convênio
-    UNSPECIFIED = "NAO_INFORMADO"  # pagamentos registrados pela rota antiga, sem forma de pagamento
+    UNSPECIFIED = "NAO_INFORMADO"  # rota original POST /billing/invoices/{id}/pay, que não informa a forma
 
 
 class ServiceSource(Enum):
@@ -131,10 +131,6 @@ class Invoice:
         gross = self.calculate_gross_total()
         coverage = Decimal(str(self.insurance_coverage_percentage)) / Decimal("100")
         return gross * (Decimal("1.00") - coverage)
-
-    def mark_as_paid(self):
-        """Transição de estado para Pago."""
-        self.status = BillingStatus.PAID
 
     # ------------------------------------------------------------------ ciclo de vida
 

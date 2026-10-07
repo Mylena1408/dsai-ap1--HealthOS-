@@ -439,7 +439,8 @@ A regra de alerta `FATURA_VENCIDA` avisa a Administração e se resolve sozinha 
 | GET | `/billing/prices` · `/billing/summary?start=&end=` |
 
 As rotas originais (`POST /billing/invoices`, `/charges`, `/finalize`, `GET /billing/patients/{id}/summary`)
-continuam iguais e passam pelas mesmas regras de domínio. Página: `/app/financeiro`.
+continuam iguais e passam pelas mesmas regras de domínio. `POST /billing/invoices/{id}/pay`, prevista na spec
+original e implementada em 2026-10-06, quita o saldo (forma `NAO_INFORMADO`) e recusa rascunho, paga e cancelada. Página: `/app/financeiro`.
 
 ---
 

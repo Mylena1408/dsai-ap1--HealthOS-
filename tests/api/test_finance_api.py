@@ -95,3 +95,33 @@ def test_summary_over_http(client):
     assert {"invoiced", "received", "receivable", "overdue", "monthly"} <= summary.keys()
     assert len(summary["monthly"]) == 6 and "fictícios" in summary["disclaimer"]
     assert client.get(f"{API}/billing/summary", params={"start": "2026-10-05", "end": "2026-10-01"}).status_code == 400
+
+
+def test_original_pay_route(client):
+    """Rota prevista na SPEC/2026-10-01-faturamento.md (adendo de 2026-10-06)."""
+    patient = client.post(f"{API}/admin/patients/", json={
+        "full_name": "Paciente Rota Pay (fictício)", "cpf": "90731584279", "birth_date": "1988-08-08",
+        "gender": "Outro"}).json()
+
+    def new_invoice(number):
+        invoice = client.post(f"{API}/billing/invoices", json={"patient_id": patient["id"], "invoice_number": number}).json()
+        client.post(f"{API}/billing/invoices/{invoice['id']}/charges", json={
+            "description": "Consulta", "billing_type": "CONSULTA", "quantity": "1", "unit_price": "120"})
+        return invoice["id"]
+
+    iid = new_invoice("INV-PAY-1")
+    draft = client.post(f"{API}/billing/invoices/{iid}/pay")
+    assert draft.status_code == 400 and "finalize" in draft.json()["detail"]
+    client.post(f"{API}/billing/invoices/{iid}/finalize")
+
+    paid = client.post(f"{API}/billing/invoices/{iid}/pay")
+    assert paid.status_code == 200 and paid.json()["status"] == "PAGO"
+    detail = client.get(f"{API}/billing/invoices/{iid}").json()
+    assert detail["balance"] == "0.00" and [p["method"] for p in detail["payments"]] == ["NAO_INFORMADO"]
+    assert detail["payments"][0]["amount"] == "120.00"
+    assert client.post(f"{API}/billing/invoices/{iid}/pay").status_code == 400  # já paga
+
+    cancelled = new_invoice("INV-PAY-2")
+    client.post(f"{API}/billing/invoices/{cancelled}/cancel", json={"reason": "Lançamento de teste"})
+    assert client.post(f"{API}/billing/invoices/{cancelled}/pay").status_code == 400
+    assert client.post(f"{API}/billing/invoices/{uuid.uuid4()}/pay").status_code == 400  # como as demais rotas originais

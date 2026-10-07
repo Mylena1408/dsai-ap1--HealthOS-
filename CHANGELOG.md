@@ -4,6 +4,13 @@ Expansão incremental do HealthOS, um ciclo por branch (cada branch parte da ant
 Detalhes de cada módulo em [`docs/MODULOS.md`](docs/MODULOS.md); decisões em [`docs/DECISOES.md`](docs/DECISOES.md).
 Em todas as versões: dados fictícios, sem autenticação real e sem diagnóstico médico.
 
+## 1.11.1 — Correções guiadas pelas specs
+- Assistente: sinais de alerta recebem a orientação de urgência (SAMU 192) em qualquer provedor,
+  sem chamar a IA (spec `2026-10-06-assistente-ia.md`, revisão).
+- Faturamento: rota `POST /billing/invoices/{id}/pay`, prevista na spec de 2026-10-01 e nunca
+  implementada; pagar fatura em rascunho passa a ser recusado (adendo em `2026-10-01-faturamento.md`).
+- A partir desta versão, cada spec entra em um commit anterior ao código que ela descreve.
+
 ## 1.11.0 — Histórico dos profissionais e dados de exemplo
 - Histórico de atividades no detalhe de cada profissional (consultas, sinais vitais, prescrições,
   dispensações, exames) e `GET /api/v1/professionals/{id}/activity`.

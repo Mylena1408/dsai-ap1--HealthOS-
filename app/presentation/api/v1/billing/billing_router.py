@@ -63,6 +63,15 @@ async def finalize_invoice(invoice_id: uuid.UUID, use_case: BillingUseCase = Dep
     except DomainException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
 
+@router.post("/invoices/{invoice_id}/pay",
+              dependencies=[Depends(PermissionChecker(["billing:write"]))],
+              summary="Quita o saldo de uma fatura emitida (pagamentos parciais: /payments)")
+async def pay_invoice(invoice_id: uuid.UUID, use_case: BillingUseCase = Depends(get_billing_use_case)):
+    try:
+        return await use_case.record_payment(invoice_id)
+    except DomainException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+
 @router.get("/patients/{patient_id}/summary")
 async def get_financial_summary(patient_id: uuid.UUID, use_case: BillingUseCase = Depends(get_billing_use_case)):
     return await use_case.get_patient_financial_summary(patient_id)
