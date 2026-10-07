@@ -4,12 +4,11 @@ Não usa rede nem modelo de linguagem. Serve para a demonstração funcionar sem
 para os testes serem reprodutíveis. Nunca diagnostica: organiza, explica e sugere
 perguntas para levar ao profissional.
 """
-import re
-import unicodedata
 from typing import Optional
 
 from app.application.interfaces.ai_service import AIService
 from app.domain.entities.assistant import AIFeature, AIResponse, ChatMessage, ContextFact, PatientContext
+from app.domain.services.red_flags import RED_FLAGS, URGENT_TEXT, normalize
 
 # O que cada analito mede (texto educacional genérico, sem interpretação individual).
 ANALYTE_NOTES = {
@@ -31,13 +30,6 @@ ANALYTE_NOTES = {
     "25-hidroxivitamina d": "a reserva de vitamina D do organismo",
 }
 
-# Sinais de alerta: a resposta passa a orientar atendimento imediato.
-RED_FLAGS = ["dor no peito", "falta de ar", "desmaio", "desmaiou", "convulsao", "sangramento intenso",
-             "fraqueza subita", "boca torta", "confusao mental", "dificuldade para respirar", "labios roxos",
-             "vomito com sangue", "pensamentos suicidas"]
-URGENT_TEXT = ("Os sintomas descritos incluem sinais de alerta. Procure atendimento de urgência agora "
-               "ou ligue para o SAMU (192). Esta orientação é educacional e não substitui avaliação profissional.")
-
 SYMPTOM_TOPICS = {
     "febre": "febre", "tosse": "tosse", "dor de cabeca": "dor de cabeça", "tontura": "tontura",
     "nausea": "náusea", "diarreia": "diarreia", "dor de garganta": "dor de garganta", "cansaco": "cansaço",
@@ -54,11 +46,6 @@ INTENTS = [
     (("score", "acompanhamento", "indicador"), "Health Score", "Health Score (indicador demonstrativo)"),
     (("condic", "doenca", "diagnost", "problema"), "Condição", "Condições e diagnósticos registrados"),
 ]
-
-
-def normalize(text: str) -> str:
-    plain = unicodedata.normalize("NFKD", text.lower()).encode("ascii", "ignore").decode()
-    return re.sub(r"\s+", " ", plain).strip()
 
 
 def _bullets(facts: list[ContextFact]) -> str:

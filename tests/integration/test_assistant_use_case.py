@@ -109,3 +109,36 @@ async def test_provider_failure_becomes_503_and_saves_nothing(assistant):
         await failing.send_message(conversation.id, "Olá")
     after = await session.scalar(select(func.count()).select_from(ConversationMessageModel))
     assert after == before
+
+
+class ExternalAI(DemoAIService):
+    """Simula um provedor externo (ex.: Claude): qualquer chamada falha o teste."""
+    provider = "anthropic"
+    model = "modelo-externo"
+
+    async def analyze_symptoms(self, description, context):
+        raise AssertionError("o provedor não deveria ser chamado diante de sinais de alerta")
+
+    async def answer_question(self, question, context, history):
+        raise AssertionError("o provedor não deveria ser chamado diante de sinais de alerta")
+
+
+async def test_red_flags_are_answered_without_calling_any_provider(assistant):
+    session = assistant["session"]
+    events = InProcessPublisher()
+    uc = AssistantUseCase(ExternalAI(), assistant["contexts"], SQLAlchemyConversationRepository(session), events)
+    patient_id = await a_patient_with_exams(session)
+
+    symptoms = await uc.symptoms("Estou com DOR NO PEITO e suando", patient_id)  # maiúsculas são ignoradas
+    assert symptoms.urgent and "SAMU (192)" in symptoms.text
+    assert (symptoms.provider, symptoms.model) == ("anthropic", "regra-de-seguranca")
+
+    conversation = await uc.start_conversation(patient_id, None)
+    exchange = await uc.send_message(conversation.id, "Minha mãe desmaiou agora")
+    assert exchange.assistant_message.urgent and "SAMU (192)" in exchange.assistant_message.content
+    stored = await uc.get_conversation(conversation.id)
+    assert [m.role for m in stored.messages] == [MessageRole.USER, MessageRole.ASSISTANT]  # troca gravada
+
+    audited = [e.data for e in events.published if e.event_type == EventType.AI_CONSULTED]
+    assert [(d["feature"], d["urgent"], d["model"]) for d in audited] == [
+        ("ORIENTACAO_SINTOMAS", True, "regra-de-seguranca"), ("CHAT", True, "regra-de-seguranca")]

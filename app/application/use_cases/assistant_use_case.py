@@ -17,8 +17,11 @@ from app.domain.entities.assistant import (
 from app.domain.entities.laboratory import ExamStatus
 from app.domain.events import DomainEvent, EventType
 from app.domain.exceptions.common import BusinessRuleViolation, EntityNotFoundError, ServiceUnavailableError
+from app.domain.services.red_flags import URGENT_TEXT, has_red_flags
 
 HISTORY_LIMIT = 20
+# Modelo informado nas respostas dadas pela regra de segurança (sem chamar a IA).
+SAFETY_MODEL = "regra-de-seguranca"
 
 
 def _ai_dto(r: AIResponse) -> AIResponseDTO:
@@ -68,6 +71,8 @@ class AssistantUseCase:
 
     async def symptoms(self, description: str, patient_id: Optional[uuid.UUID]) -> AIResponseDTO:
         context = await self.contexts.build(patient_id) if patient_id else None
+        if has_red_flags(description):
+            return await self._run(AIFeature.SYMPTOMS, patient_id, self._urgent(AIFeature.SYMPTOMS))
         return await self._run(AIFeature.SYMPTOMS, patient_id, self.ai.analyze_symptoms(description, context))
 
     # ------------------------------------------------------------------- chat
@@ -91,8 +96,11 @@ class AssistantUseCase:
         conversation = await self._conversation(conversation_id)
         history = conversation.recent_history(HISTORY_LIMIT)
         user_message = conversation.add_user_message(content, self.clock())
-        context = await self.contexts.build(conversation.patient_id) if conversation.patient_id else None
-        response = await self._call(self.ai.answer_question(user_message.content, context, history + [user_message]))
+        if has_red_flags(user_message.content):
+            response = await self._urgent(AIFeature.CHAT)
+        else:
+            context = await self.contexts.build(conversation.patient_id) if conversation.patient_id else None
+            response = await self._call(self.ai.answer_question(user_message.content, context, history + [user_message]))
         assistant_message = conversation.add_assistant_message(response, self.clock())
         await self.conversations.save(conversation)
         await self._audit(AIFeature.CHAT, conversation.patient_id, conversation.id, response)
@@ -111,6 +119,11 @@ class AssistantUseCase:
         if not conversation:
             raise EntityNotFoundError("Conversa", conversation_id)
         return conversation
+
+    async def _urgent(self, feature: AIFeature) -> AIResponse:
+        """Regra de segurança: sinais de alerta recebem a orientação de urgência sem chamar a IA,
+        qualquer que seja o provedor (nenhum dado do paciente sai do sistema)."""
+        return AIResponse(text=URGENT_TEXT, provider=self.ai.provider, model=SAFETY_MODEL, feature=feature, urgent=True)
 
     @staticmethod
     async def _call(awaitable) -> AIResponse:

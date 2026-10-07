@@ -286,11 +286,10 @@ pode transformar o sistema em ferramenta de diagnóstico.
 **Contexto mínimo.** `PatientContextBuilder` monta o contexto a partir dos casos de uso existentes
 e envia apenas primeiro nome, idade e fatos clínicos; nenhum identificador direto sai do sistema.
 
-**Segurança da resposta.** No provedor `demo`, sinais de alerta nos sintomas (dor no peito, desmaio,
-falta de ar...) geram a orientação de urgência (SAMU 192) e marcam a resposta como urgente. No
-provedor `anthropic`, essa orientação existe apenas como instrução no prompt de sistema: o caso de uso
-não detecta sinais de alerta por conta própria, e a resposta não é marcada como urgente (lacuna
-registrada em `SPEC/2026-10-06-assistente-ia.md`). Toda resposta carrega o aviso educacional. A auditoria registra o uso, não o
+**Segurança da resposta.** Sinais de alerta nos sintomas ou no chat (dor no peito, desmaio, falta de
+ar...) são detectados pelo caso de uso antes de chamar qualquer provedor (`app/domain/services/red_flags.py`):
+a resposta é sempre a orientação de urgência (SAMU 192), marcada como urgente, e a IA nem é chamada.
+O prompt do provedor `anthropic` repete a instrução como segunda camada. Toda resposta carrega o aviso educacional. A auditoria registra o uso, não o
 conteúdo. O histórico do chat fica em tabelas novas, somente por acréscimo.
 
 **Consequência.** Trocar de provedor é configuração, não código; o modo demonstração não usa um
