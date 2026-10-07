@@ -66,3 +66,22 @@ Cada atendimento gera uma cobrança. Quando o paciente tem convênio, o hospital
 - Integração com operadoras (autorização, glosa).
 - Parcelamento, juros, multa e os estados `PARTIALLY_PAID`, `OVERDUE` e `CANCELLED` como transições automáticas (existem no enum, mas não têm regra nesta versão).
 - Pagamento por meios reais.
+
+## Adendo de 2026-10-06 — rota `pay` e estados novos
+
+A rota `POST /invoices/{invoice_id}/pay` prevista acima não tinha sido implementada (o caso de uso
+tinha o método, mas nenhuma rota o expunha) e o caso de uso aceitava pagar fatura em `DRAFT`, contra
+o critério de ciclo de vida. Este adendo fixa o comportamento, considerando o financeiro ampliado
+(`SPEC/2026-10-06-financeiro.md`), que criou pagamentos parciais e o "em atraso" derivado:
+
+- `pay` **quita o saldo em aberto** da fatura, registrando um pagamento com forma `NAO_INFORMADO`
+  (esta rota não informa a forma de pagamento), e a fatura passa a `PAGO`.
+- É permitido para fatura `PENDENTE` (inclusive vencida, que aparece como `ATRASADO`) e para
+  `PARCIALMENTE_PAGO` (paga o restante).
+- É recusado, com **400** e mensagem clara, como nas demais rotas originais: fatura em `RASCUNHO`
+  ("finalize antes de pagar"), já `PAGO`, `CANCELADO` ou inexistente.
+- Pagamentos parciais e com forma de pagamento usam a rota nova `POST /invoices/{invoice_id}/payments`.
+
+Testes esperados (adendo): pagar fatura pendente pela rota (fica `PAGO`, saldo zero, um pagamento
+`NAO_INFORMADO`); pagar de novo, pagar rascunho e pagar fatura cancelada retornam 400; o pagamento
+aparece no detalhe do financeiro (`GET /invoices/{invoice_id}`).
