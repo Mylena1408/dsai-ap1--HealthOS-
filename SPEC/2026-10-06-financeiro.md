@@ -38,7 +38,7 @@ Novas:
 - `GET /billing/prices`
 - `GET /billing/summary` (filtros `start`, `end`)
 
-Originais, que continuam iguais: `POST /billing/invoices`, `POST /billing/invoices/{invoice_id}/charges`, `POST /billing/invoices/{invoice_id}/finalize`, `GET /billing/patients/{patient_id}/summary`.
+Originais, que continuam iguais: `POST /billing/invoices`, `POST /billing/invoices/{invoice_id}/charges`, `POST /billing/invoices/{invoice_id}/finalize`, `GET /billing/patients/{patient_id}/summary`. A rota original `POST /billing/invoices/{invoice_id}/pay` quita o saldo com forma `NAO_INFORMADO` (adendo de 2026-10-06 em `2026-10-01-faturamento.md`).
 
 Página da interface: `/app/financeiro`.
 
