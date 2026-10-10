@@ -28,6 +28,9 @@ class StockUpdateDTO(BaseModel):
 class DispenseDTO(BaseModel):
     quantity: float
 
+LEGACY = ("Legado: baixa estoque sem receita, paciente nem lote e sem auditoria. Para dispensar, use "
+          "POST /dispensations (ver docs/INTEGRACOES.md, L3).")
+
 router = APIRouter(prefix="/pharmacy", tags=["Farmácia e Suprimentos"])
 
 async def get_pharmacy_use_case(session: AsyncSession = Depends(get_db)):
@@ -62,7 +65,7 @@ async def add_stock(medication_id: uuid.UUID, location_id: str, request: StockUp
     except DomainException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
 
-@router.post("/dispense/{medication_id}/{location_id}",
+@router.post("/dispense/{medication_id}/{location_id}", description=LEGACY,
               dependencies=[Depends(PermissionChecker(["pharmacy:dispense"]))])
 async def dispense_medication(medication_id: uuid.UUID, location_id: str, request: DispenseDTO,
                              use_case: PharmacyUseCase = Depends(get_pharmacy_use_case)):

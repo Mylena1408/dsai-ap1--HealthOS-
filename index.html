@@ -146,11 +146,15 @@
             <button data-close-modal="modal-agenda" aria-label="Fechar" class="absolute top-4 right-4 text-slate-500 hover:text-slate-600"><i class="fas fa-times"></i></button>
             <h3 class="text-2xl font-bold text-slate-800 mb-6">Agendar Consulta</h3>
             <form id="form-agenda" class="space-y-4">
-                <button type="button" data-action="fetch-slots" class="w-full bg-slate-100 text-slate-700 py-2 rounded-lg">Carregar horários disponíveis</button>
-                <select id="p-slot-id" required class="w-full p-2 border rounded-lg outline-none focus:border-blue-500">
-                    <option value="">Selecione um horário</option>
-                </select>
+                <label class="text-sm text-slate-600 block">Médico(a)<select id="p-agenda-doctor" data-doctor-select required
+                    class="w-full p-2 border rounded-lg mt-1"><option value="">Carregando...</option></select></label>
+                <button type="button" data-action="fetch-slots" class="w-full bg-slate-100 text-slate-700 py-2 rounded-lg">Atualizar horários livres (7 dias)</button>
+                <label class="text-sm text-slate-600 block">Horário<select id="p-slot-id" required class="w-full p-2 border rounded-lg mt-1 outline-none focus:border-blue-500">
+                    <option value="">Escolha o médico para ver os horários</option>
+                </select></label>
                 <label class="text-sm text-slate-600 block">Paciente<span class="block"><input type="search" id="p-agenda-patient" data-portal-patient placeholder="Buscar por nome ou CPF" class="w-full p-2 border rounded-lg mt-1 outline-none focus:border-blue-500"></span></label>
+                <label class="text-sm text-slate-600 block">Motivo (opcional)<input type="text" id="p-agenda-reason" maxlength="500"
+                    class="w-full p-2 border rounded-lg mt-1 outline-none focus:border-blue-500"></label>
                 <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">Reservar</button>
             </form>
             <div id="res-agenda" class="mt-4 p-3 rounded-lg text-sm hidden"></div>
@@ -188,7 +192,7 @@
             <h3 class="text-2xl font-bold text-slate-800 mb-6">Nova Evolução Clínica</h3>
             <form id="form-doc-new" class="space-y-4">
                 <label class="text-sm text-slate-600 block">Paciente<span class="block"><input type="search" id="d-note-patient" data-portal-patient placeholder="Buscar por nome ou CPF" class="w-full p-2 border rounded-lg mt-1 outline-none focus:border-emerald-500"></span></label>
-                <label class="text-sm text-slate-600 block">Médico(a)<select id="d-note-doctor" required class="w-full p-2 border rounded-lg mt-1"><option value="">Carregando...</option></select></label>
+                <label class="text-sm text-slate-600 block">Médico(a)<select id="d-note-doctor" data-doctor-select required class="w-full p-2 border rounded-lg mt-1"><option value="">Carregando...</option></select></label>
                 <textarea id="d-note-content" placeholder="Descrição da evolução..." aria-label="Descrição da evolução" required minlength="10" class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500 h-32"></textarea>
                 <button type="submit" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">Salvar Nota</button>
             </form>

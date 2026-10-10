@@ -7,7 +7,7 @@ import { renderMedicationsTab } from './record-medications.js';
 import { renderEvolutionTab } from './record-evolution.js';
 import {
     ALLERGY_CATEGORIES, ALLERGY_SEVERITY, APPOINTMENT_TYPES, BLOOD_TYPES, CONDITION_STATUS, DIAGNOSIS_CERTAINTY,
-    TIMELINE_TYPES, badge, fillSelect, statusBadge,
+    TIMELINE_TYPES, badge, fillSelect, patientAlertList, statusBadge,
 } from '../core/labels.js';
 
 const PAGE_SIZE = 20;
@@ -140,11 +140,15 @@ function bindForm(formId, buildRequest, successMessage) {
 const TABS = {
     async resumo(container) {
         const r = state.record;
+        // Alertas criados pelo portal (/admin/alerts): só apareciam na linha do tempo (L5).
+        const patientAlerts = await apiCall(`/admin/alerts/patient/${state.patientId}/active`).catch(() => null);
         const appointment = a => `<li class="py-2 flex flex-wrap justify-between gap-2 text-sm">
             <span>${formatDateTime(a.start_time)} · ${escapeHtml(a.professional_name || '')} · ${escapeHtml(APPOINTMENT_TYPES[a.appointment_type] || '')}</span>
             ${statusBadge(a.status)}</li>`;
         container.innerHTML = `
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                ${card('Alertas do paciente', patientAlerts === null ? empty('Não foi possível carregar os alertas.')
+                    : patientAlerts.length ? patientAlertList(patientAlerts) : empty('Nenhum alerta ativo.'))}
                 ${card('Próximas consultas', r.upcoming_appointments.length
                     ? `<ul class="divide-y">${r.upcoming_appointments.map(appointment).join('')}</ul>` : empty('Nenhuma consulta futura.'))}
                 ${card('Última consulta realizada', r.last_appointment

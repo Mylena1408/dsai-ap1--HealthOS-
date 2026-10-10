@@ -19,13 +19,16 @@ class NotificationRequestDTO(BaseModel):
     priority: int = 1
     metadata: Optional[dict] = None
 
+LEGACY = ("Legado: notificações separadas da caixa de entrada usada pelas telas. Use GET /inbox "
+          "(ver docs/INTEGRACOES.md, L4).")
+
 router = APIRouter(prefix="/notifications", tags=["Notificações"])
 
 async def get_notification_use_case(session: AsyncSession = Depends(get_db)):
     repo = SQLAlchemyNotificationRepository(session)
     return NotificationUseCase(repo)
 
-@router.post("/send", status_code=status.HTTP_201_CREATED,
+@router.post("/send", description=LEGACY, status_code=status.HTTP_201_CREATED,
               dependencies=[Depends(PermissionChecker(["notification:write"]))])
 async def send_notification(request: NotificationRequestDTO, use_case: NotificationUseCase = Depends(get_notification_use_case)):
     try:
@@ -43,7 +46,7 @@ async def send_notification(request: NotificationRequestDTO, use_case: Notificat
     except DomainException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
 
-@router.get("/me", dependencies=[Depends(PermissionChecker(["notification:read"]))])
+@router.get("/me", description=LEGACY, dependencies=[Depends(PermissionChecker(["notification:read"]))])
 async def get_my_notifications(user_id: Optional[uuid.UUID] = None,
                               patient_id: Optional[uuid.UUID] = None,
                               use_case: NotificationUseCase = Depends(get_notification_use_case)):
@@ -52,7 +55,7 @@ async def get_my_notifications(user_id: Optional[uuid.UUID] = None,
     except DomainException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
 
-@router.patch("/{notification_id}/read",
+@router.patch("/{notification_id}/read", description=LEGACY,
               dependencies=[Depends(PermissionChecker(["notification:write"]))])
 async def mark_as_read(notification_id: uuid.UUID, use_case: NotificationUseCase = Depends(get_notification_use_case)):
     success = await use_case.mark_as_read(notification_id)

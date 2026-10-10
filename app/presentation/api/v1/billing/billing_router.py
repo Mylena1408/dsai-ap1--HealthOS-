@@ -26,13 +26,16 @@ class ChargeItemDTO(BaseModel):
     unit_price: Decimal
     discount: Decimal = Decimal("0.00")
 
+LEGACY = ("Legado: fatura manual sem evento de auditoria. Para faturar consultas e exames, use "
+          "POST /billing/patients/{patient_id}/invoices (ver docs/INTEGRACOES.md, L2).")
+
 router = APIRouter(prefix="/billing", tags=["Faturamento e Convênios"])
 
 async def get_billing_use_case(session: AsyncSession = Depends(get_db)):
     repo = SQLAlchemyBillingRepository(session)
     return BillingUseCase(repo)
 
-@router.post("/invoices", status_code=status.HTTP_201_CREATED,
+@router.post("/invoices", description=LEGACY, status_code=status.HTTP_201_CREATED,
               dependencies=[Depends(PermissionChecker(["billing:write"]))])
 async def create_invoice(request: InvoiceCreateDTO, use_case: BillingUseCase = Depends(get_billing_use_case)):
     try:
@@ -43,7 +46,7 @@ async def create_invoice(request: InvoiceCreateDTO, use_case: BillingUseCase = D
     except DomainException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
 
-@router.post("/invoices/{invoice_id}/charges",
+@router.post("/invoices/{invoice_id}/charges", description=LEGACY,
               dependencies=[Depends(PermissionChecker(["billing:write"]))])
 async def add_charge(invoice_id: uuid.UUID, request: ChargeItemDTO, use_case: BillingUseCase = Depends(get_billing_use_case)):
     try:
@@ -55,7 +58,7 @@ async def add_charge(invoice_id: uuid.UUID, request: ChargeItemDTO, use_case: Bi
     except DomainException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
 
-@router.post("/invoices/{invoice_id}/finalize",
+@router.post("/invoices/{invoice_id}/finalize", description=LEGACY,
               dependencies=[Depends(PermissionChecker(["billing:write"]))])
 async def finalize_invoice(invoice_id: uuid.UUID, use_case: BillingUseCase = Depends(get_billing_use_case)):
     try:
@@ -63,7 +66,7 @@ async def finalize_invoice(invoice_id: uuid.UUID, use_case: BillingUseCase = Dep
     except DomainException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
 
-@router.post("/invoices/{invoice_id}/pay",
+@router.post("/invoices/{invoice_id}/pay", description=LEGACY,
               dependencies=[Depends(PermissionChecker(["billing:write"]))],
               summary="Quita o saldo de uma fatura emitida (pagamentos parciais: /payments)")
 async def pay_invoice(invoice_id: uuid.UUID, use_case: BillingUseCase = Depends(get_billing_use_case)):

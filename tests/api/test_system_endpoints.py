@@ -33,3 +33,17 @@ def test_portal_has_no_inline_handlers(client):
     html = client.get("/").text
     assert "onclick=" not in html
     assert '/static/js/pages/portal.js' in html
+
+
+def test_legacy_routes_are_marked_in_swagger(client):
+    paths = client.get("/openapi.json").json()["paths"]
+    legacy = [
+        ("/api/v1/billing/invoices", "post"), ("/api/v1/billing/invoices/{invoice_id}/charges", "post"),
+        ("/api/v1/billing/invoices/{invoice_id}/finalize", "post"), ("/api/v1/billing/invoices/{invoice_id}/pay", "post"),
+        ("/api/v1/pharmacy/dispense/{medication_id}/{location_id}", "post"), ("/api/v1/notifications/send", "post"),
+        ("/api/v1/notifications/me", "get"), ("/api/v1/notifications/{notification_id}/read", "patch"),
+    ]
+    for path, method in legacy:
+        assert paths[path][method]["description"].startswith("Legado:"), (path, method)
+    # A listagem nova do Financeiro, no mesmo caminho, não é legado.
+    assert not paths["/api/v1/billing/invoices"]["get"].get("description", "").startswith("Legado:")

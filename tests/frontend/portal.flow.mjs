@@ -1,5 +1,6 @@
-// Fluxo de interface da Fase 6 em DOM simulado contra a API real: portal sem IDs digitados
-// (paciente por nome, médico na lista), sem alert(), e visão Administração financeira.
+// Fluxo de interface da Fase 6 e das correções L1/L5 em DOM simulado contra a API real: portal sem
+// IDs digitados, agenda nas consultas novas, alertas do portal visíveis no prontuário e no painel,
+// sem alert(), e visão Administração financeira.
 //
 // Pré-requisitos: servidor com dados de demonstração em banco descartável (o teste grava um
 // agendamento, uma nota/evolução e um alerta). Uso: npm run flow   (HEALTHOS_URL altera o endereço)
@@ -109,17 +110,36 @@ const billing = await waitFor(() => {
 });
 check("portal › Minhas faturas", Boolean(billing));
 
-doc.querySelector('[data-action="fetch-slots"]').click();
-const slot = await waitFor(() => doc.querySelector("#p-slot-id option[value]:not([value=''])"));
+const auditTotal = async () => (await api(`/audit-events?patient_id=${patient.id}&event_type=CONSULTA_AGENDADA&limit=1`)).total;
+const bookedBefore = await auditTotal();
+const agendaDoctor = doc.getElementById("p-agenda-doctor");
+let slotDoctor = null;
+let slot = null;
+for (const option of await waitFor(() => {
+    const options = [...agendaDoctor.querySelectorAll("option[value]:not([value=''])")];
+    return options.length && options;
+})) {
+    agendaDoctor.value = option.value;
+    agendaDoctor.dispatchEvent(new portal.window.Event("change", { bubbles: true }));
+    slot = await waitFor(() => doc.querySelector("#p-slot-id option[value]:not([value=''])"), 5000);
+    if (slot) { slotDoctor = option.value; break; }
+}
 if (slot) {
     doc.getElementById("p-slot-id").value = slot.value;
+    doc.getElementById("p-agenda-reason").value = "Retorno pelo portal";
     doc.getElementById("form-agenda").requestSubmit();
     const booked = await waitFor(() => message(portal, "res-agenda").includes("Sucesso"));
-    const appointments = await api(`/clinical/patients/${patient.id}/appointments`);
-    check("portal › agendar com o paciente escolhido", Boolean(booked) && appointments.some(a => a.id === slot.value),
-          message(portal, "res-agenda"));
+    const created = (await api(`/appointments?patient_id=${patient.id}&limit=100`)).items
+        .find(a => a.professional_id === slotDoctor && new Date(a.start_time).getTime() === new Date(slot.value).getTime());
+    check("agenda › reserva vira consulta nova (/appointments)", Boolean(booked) && Boolean(created), message(portal, "res-agenda"));
+    check("agenda › auditoria CONSULTA_AGENDADA", await auditTotal() === bookedBefore + 1);
+    const upcoming = (await api(`/dashboards/patient/${patient.id}`)).upcoming_appointments;
+    check("agenda › aparece no painel do paciente", Boolean(created) && upcoming.some(a => a.id === created.id));
+    doc.querySelector('[data-action="fetch-consultations"]').click();
+    const listed = await waitFor(() => doc.getElementById("res-consultas").textContent.includes("Retorno pelo portal"));
+    check("Minhas consultas › mostra a consulta nova", Boolean(listed));
 } else {
-    console.log("PULADO portal › agendar: nenhum horário legado disponível");
+    console.log("PULADO agenda: nenhum médico com horário livre em 7 dias");
 }
 
 // ------------------------------------------------------ visão Médico (nota)
@@ -146,6 +166,19 @@ await waitFor(() => message(portal, "res-doc-alerts").includes("Sucesso"));
 const alerts = await api(`/admin/alerts/patient/${patient.id}/active`);
 check("portal › alerta criado para o paciente escolhido", alerts.some(a => a.description === description),
       message(portal, "res-doc-alerts"));
+// L5: o alerta do portal aparece no resumo do prontuário e no painel do paciente.
+const record = await openPage("static/pages/prontuario.html", `/app/prontuario?patient=${patient.id}`,
+                              { audience: "SETOR", sector: "ADMINISTRACAO", label: "Administração" });
+await record.load("pages/medical-record.js");
+const inSummary = await waitFor(() => record.text().includes("Alertas do paciente") && record.text().includes(description));
+check("alertas › alerta do portal no resumo do prontuário", Boolean(inSummary));
+const patientBoard = await openPage("static/pages/painel.html", "/app/painel",
+                                    { audience: "PACIENTE", recipient_id: patient.id, label: patient.full_name });
+await patientBoard.load("pages/dashboard.js");
+const inBoard = await waitFor(() => patientBoard.text().includes(description));
+check("alertas › alerta do portal no painel do paciente", Boolean(inBoard));
+check("alertas › prontuário e painel sem erros", !record.errors.length && !patientBoard.errors.length,
+      [...record.errors, ...patientBoard.errors].join(" | "));
 check("portal › sem alert() nem erros de execução", !portal.errors.length && !empty.errors.length,
       [...portal.errors, ...empty.errors].join(" | "));
 

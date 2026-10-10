@@ -2,7 +2,7 @@
 import { apiCall } from '../core/api.js';
 import { escapeHtml, formatDate, formatDateTime, formatMoney, renderEmpty, renderLoading, toast } from '../core/dom.js';
 import { renderNav, renderDemoBanner } from '../core/layout.js';
-import { APPOINTMENT_STATUS, EXAM_STATUS, INVOICE_STATUS, flagBadge, statusBadge } from '../core/labels.js';
+import { APPOINTMENT_STATUS, EXAM_STATUS, INVOICE_STATUS, flagBadge, patientAlertList, statusBadge } from '../core/labels.js';
 import { renderBarChart } from '../components/bar-chart.js';
 import { renderLineChart } from '../components/line-chart.js';
 import { createPatientPicker } from '../components/patient-picker.js';
@@ -60,7 +60,11 @@ function healthScoreCard(hs) {
 const RENDER = {
     async patient(board) {
         if (!state.patientId) return renderEmpty(board, 'Escolha um paciente para ver o painel.');
-        const d = await apiCall(`/dashboards/patient/${state.patientId}`);
+        const [d, patientAlerts] = await Promise.all([
+            apiCall(`/dashboards/patient/${state.patientId}`),
+            // Alertas criados pelo portal (/admin/alerts), fora dos alertas por regra (L5).
+            apiCall(`/admin/alerts/patient/${state.patientId}/active`).catch(() => []),
+        ]);
         board.innerHTML = `
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                 ${tile('Paciente', d.patient_name, `${d.age} anos`)}
@@ -77,9 +81,10 @@ const RENDER = {
                     ${card('Medicamentos em uso', d.medications_in_use.length ? `<ul class="space-y-1 text-sm">${d.medications_in_use.map(m => `
                         <li>${escapeHtml(m.medication_name || '')} — ${escapeHtml(m.dose)}, ${escapeHtml(m.frequency)}</li>`).join('')}</ul>`
                         : '<p class="text-sm text-slate-500">Nenhum.</p>')}
-                    ${card('Alertas abertos', d.open_alerts.length ? `<ul class="space-y-1 text-sm">${d.open_alerts.map(a => `
+                    ${card('Alertas abertos', (d.open_alerts.length ? `<ul class="space-y-1 text-sm">${d.open_alerts.map(a => `
                         <li><i class="fas fa-triangle-exclamation text-slate-500" aria-hidden="true"></i> ${escapeHtml(a.title)}</li>`).join('')}</ul>`
-                        : '<p class="text-sm text-slate-500">Nenhum alerta aberto.</p>')}
+                        : '<p class="text-sm text-slate-500">Nenhum alerta por regra aberto.</p>')
+                        + (patientAlerts.length ? `<p class="text-xs font-semibold text-slate-600 mt-3 mb-1">Alertas do paciente</p>${patientAlertList(patientAlerts)}` : ''))}
                 </div>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">

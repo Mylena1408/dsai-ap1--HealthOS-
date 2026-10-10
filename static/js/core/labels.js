@@ -165,3 +165,26 @@ export const EVOLUTION_STATUS = {
     RASCUNHO: { label: 'Rascunho', color: 'bg-amber-100 text-amber-800' },
     ASSINADA: { label: 'Assinada', color: 'bg-emerald-100 text-emerald-700' },
 };
+
+// Alertas legados de paciente (/admin/alerts): gravidade sempre em texto e ícone.
+export const PATIENT_ALERT_TYPES = {
+    ALLERGY: 'Alergia', CHRONIC_CONDITION: 'Condição crônica', RISK_FACTOR: 'Fator de risco', OTHER: 'Outro',
+};
+
+export const PATIENT_ALERT_SEVERITY = {
+    LOW: { label: 'Baixa', flag: 'flag-normal', icon: 'fa-circle-info' },
+    MEDIUM: { label: 'Média', flag: 'flag-attention', icon: 'fa-circle-exclamation' },
+    HIGH: { label: 'Alta', flag: 'flag-critical', icon: 'fa-triangle-exclamation' },
+    CRITICAL: { label: 'Crítica', flag: 'flag-critical', icon: 'fa-triangle-exclamation' },
+};
+
+/** Lista de alertas legados ativos do paciente (prontuário e painel). */
+export function patientAlertList(alerts) {
+    return `<ul class="space-y-2 text-sm">${alerts.map(a => {
+        const severity = PATIENT_ALERT_SEVERITY[a.severity] || { label: a.severity, flag: 'flag-attention', icon: 'fa-circle-exclamation' };
+        return `<li class="flex flex-wrap items-center gap-2">
+            <span class="flag ${severity.flag}"><i class="fas ${severity.icon}" aria-hidden="true"></i>${escapeHtml(severity.label)}</span>
+            <span class="text-slate-500">${escapeHtml(PATIENT_ALERT_TYPES[a.alert_type] || a.alert_type)}</span>
+            <span class="text-slate-800">${escapeHtml(a.description)}</span></li>`;
+    }).join('')}</ul>`;
+}
