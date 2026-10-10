@@ -125,6 +125,7 @@ const first = async query => (await api(query)).items[0];
 const patient = await first("/patients?limit=1");
 const doctor = await first("/professionals?professional_type=MEDICO&status=ATIVO&limit=1");
 const nurse = await first("/professionals?professional_type=ENFERMEIRO&status=ATIVO&limit=1");
+const psychologist = await first("/professionals?professional_type=PSICOLOGO&status=ATIVO&limit=1");
 const asProfessional = p => ({ audience: "PROFISSIONAL", recipient_id: p.id, label: p.full_name, professional_type: p.professional_type });
 // Rascunho para auditar o editor da aba Evolução (grava no banco em uso: use um banco descartável).
 const draft = await api(`/patients/${patient.id}/evolutions`, {
@@ -165,6 +166,14 @@ const STATES = [
         await page.waitForSelector("[data-dispense]", { timeout: 10000 });
         await page.click("[data-dispense]");
         await page.waitForSelector("#modal-dispense.active", { timeout: 5000 });
+    }],
+    ["portal › visão Enfermagem", asProfessional(nurse), async () => {
+        await page.goto(`${BASE}/`, { waitUntil: "networkidle0" });
+        await page.waitForSelector("#grid-nursing:not(.hidden) #n-day li", { timeout: 10000 });
+    }],
+    ["portal › visão Psicologia", asProfessional(psychologist), async () => {
+        await page.goto(`${BASE}/`, { waitUntil: "networkidle0" });
+        await page.waitForSelector("#grid-psychology:not(.hidden) #ps-agenda li", { timeout: 10000 });
     }],
     ["portal › seletor de paciente aberto no modal", null, async () => {
         await page.goto(`${BASE}/`, { waitUntil: "networkidle0" });

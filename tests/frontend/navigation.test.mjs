@@ -27,9 +27,10 @@ const forYouHrefs = (index = 0) => [...env.document.querySelectorAll("[data-for-
 
 test("sugestões por perfil cobrem todos os tipos, setores e o paciente", () => {
     assert.deepEqual(pagesForProfile(doctor), ["painel", "prontuario", "consultas", "laboratorio", "alertas", "assistente"]);
-    assert.deepEqual(pagesForProfile(nurse), ["painel", "prontuario", "consultas", "alertas", "laboratorio"]);
+    assert.deepEqual(pagesForProfile(nurse), ["portal", "painel", "prontuario", "consultas", "alertas", "laboratorio"]);
+    assert.deepEqual(pagesForProfile({ ...doctor, professional_type: "PSICOLOGO" }), ["portal", "consultas", "prontuario", "painel", "alertas"]);
     assert.deepEqual(pagesForProfile({ ...doctor, professional_type: "FARMACEUTICO" }), ["painel", "farmacia", "prontuario", "alertas"]);
-    for (const type of ["PSICOLOGO", "NUTRICIONISTA", "FISIOTERAPEUTA", "OUTRO", undefined, "DESCONHECIDO"]) {
+    for (const type of ["NUTRICIONISTA", "FISIOTERAPEUTA", "OUTRO", undefined, "DESCONHECIDO"]) {
         assert.deepEqual(pagesForProfile({ ...doctor, professional_type: type }), ["painel", "prontuario", "consultas", "alertas"]);
     }
     const sector = key => pagesForProfile({ audience: "SETOR", sector: key });
@@ -74,7 +75,7 @@ test("trocar de perfil refaz as sugestões sem recarregar", () => {
     save(doctor);
     renderNav("painel");
     setProfile(nurse);
-    assert.deepEqual(forYouHrefs(0), ["/app/painel", "/app/prontuario", "/app/consultas", "/app/alertas", "/app/laboratorio"]);
+    assert.deepEqual(forYouHrefs(0), ["/", "/app/painel", "/app/prontuario", "/app/consultas", "/app/alertas", "/app/laboratorio"]);
     assert.equal(env.document.querySelector("[data-for-you-label]").textContent, "Perfil: Rui Costa");
     const button = env.document.querySelector("[data-profile]");
     assert.equal(button.getAttribute("aria-label"), "Perfil de demonstração: Rui Costa, Enfermeiro(a) (trocar)");

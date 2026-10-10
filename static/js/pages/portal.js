@@ -8,6 +8,7 @@ import { renderNav, renderDemoBanner } from '../core/layout.js';
 import { createPatientPicker } from '../components/patient-picker.js';
 import { getProfile } from '../components/profile.js';
 import { statusBadge } from '../core/labels.js';
+import { freeSlotsForPatient, initCareViews, onCareViewShown } from './portal-care.js';
 
 const ACTIVE_TAB = 'px-4 py-2 rounded-lg text-sm font-bold transition-all bg-blue-600 text-white';
 const INACTIVE_TAB = 'px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:bg-slate-100';
@@ -20,6 +21,7 @@ const state = { patient: null };
 function setPatient(patient) {
     state.patient = patient;
     document.querySelectorAll('[data-portal-patient]').forEach(input => { input.value = patient?.full_name || ''; });
+    document.dispatchEvent(new CustomEvent('portal:patient'));
 }
 
 function requirePatient() {
@@ -48,22 +50,39 @@ function listReady(element, base) {
     element.innerHTML = '';
 }
 
+const VIEWS = {
+    patient: ['Portal do Paciente', 'Demonstração de serviços integrados para o usuário final.'],
+    doctor: ['Portal do Médico', 'Gestão clínica e acompanhamento de pacientes.'],
+    nursing: ['Portal da Enfermagem', 'Pacientes do dia, sinais vitais, procedimentos e evoluções da equipe de enfermagem.'],
+    psychology: ['Portal da Psicologia', 'Agenda de sessões, evoluções e acompanhamento psicológico.'],
+};
+
 function switchView(view) {
-    const isPatient = view === 'patient';
-    $('grid-patient').classList.toggle('hidden', !isPatient);
-    $('grid-doctor').classList.toggle('hidden', isPatient);
-    $('btn-view-patient').className = isPatient ? ACTIVE_TAB : INACTIVE_TAB;
-    $('btn-view-doctor').className = isPatient ? INACTIVE_TAB : ACTIVE_TAB;
-    $('page-title').innerText = isPatient ? 'Portal do Paciente' : 'Portal do Médico';
-    $('page-subtitle').innerText = isPatient
-        ? 'Demonstração de serviços integrados para o usuário final.'
-        : 'Gestão clínica e acompanhamento de pacientes.';
+    Object.keys(VIEWS).forEach(key => {
+        $(`grid-${key}`).classList.toggle('hidden', key !== view);
+        const button = $(`btn-view-${key}`);
+        button.className = key === view ? ACTIVE_TAB : INACTIVE_TAB;
+        button.setAttribute('aria-pressed', String(key === view));
+    });
+    const [title, subtitle] = VIEWS[view];
+    $('page-title').innerText = title;
+    $('page-subtitle').innerText = subtitle;
+    onCareViewShown(view);
+}
+
+/** Visão inicial pelo perfil: enfermagem e psicologia têm visão própria (spec 2026-10-10-portal-enfermagem-psicologia). */
+function viewForProfile(profile) {
+    if (profile.audience === 'PACIENTE') return 'patient';
+    if (profile.audience === 'PROFISSIONAL') {
+        return { ENFERMEIRO: 'nursing', PSICOLOGO: 'psychology' }[profile.professional_type] || 'doctor';
+    }
+    return profile.sector === 'ENFERMAGEM' ? 'nursing' : 'patient';
 }
 
 /** Visão e paciente iniciais acompanham o perfil de demonstração. */
 function applyProfile() {
     const profile = getProfile();
-    switchView(profile.audience === 'PROFISSIONAL' ? 'doctor' : 'patient');
+    switchView(viewForProfile(profile));
     // Outro perfil não herda o paciente do anterior (evita gravar no paciente errado).
     setPatient(profile.audience === 'PACIENTE' ? { id: profile.recipient_id, full_name: profile.label } : null);
     document.querySelectorAll('[data-doctor-select]').forEach(doctors => {
@@ -138,9 +157,12 @@ async function fetchAvailableSlots() {
     }
     select.innerHTML = '<option value="">Carregando horários...</option>';
     try {
-        const slots = await apiCall(`/professionals/${encodeURIComponent(doctorId)}/availability?days=7`);
+        const all = await apiCall(`/professionals/${encodeURIComponent(doctorId)}/availability?days=7`);
+        // Horários em que o paciente escolhido já tem consulta não são oferecidos (D14 = a).
+        const slots = await freeSlotsForPatient(all, state.patient?.id);
         if (!slots.length) {
-            select.innerHTML = '<option value="">Sem horários livres nos próximos 7 dias</option>';
+            select.innerHTML = `<option value="">${all.length ? 'Sem horários livres para este paciente nos próximos 7 dias'
+                : 'Sem horários livres nos próximos 7 dias'}</option>`;
             return;
         }
         const time = value => new Date(value).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -283,4 +305,5 @@ renderDemoBanner();
 enablePatientFields();
 window.addEventListener('healthos:profile', applyProfile);
 $('p-agenda-doctor').addEventListener('change', fetchAvailableSlots);
-loadDoctors().then(applyProfile);
+document.addEventListener('portal:patient', () => { if ($('p-agenda-doctor').value) fetchAvailableSlots(); });
+Promise.all([loadDoctors(), initCareViews({ requirePatient, getPatient: () => state.patient })]).then(applyProfile);

@@ -5,14 +5,14 @@ const GENERIC_PROFESSIONAL = ['painel', 'prontuario', 'consultas', 'alertas'];
 
 export const PROFILE_PAGES = {
     MEDICO: ['painel', 'prontuario', 'consultas', 'laboratorio', 'alertas', 'assistente'],
-    ENFERMEIRO: ['painel', 'prontuario', 'consultas', 'alertas', 'laboratorio'],
+    ENFERMEIRO: ['portal', 'painel', 'prontuario', 'consultas', 'alertas', 'laboratorio'],
     FARMACEUTICO: ['painel', 'farmacia', 'prontuario', 'alertas'],
-    PSICOLOGO: GENERIC_PROFESSIONAL,
+    PSICOLOGO: ['portal', 'consultas', 'prontuario', 'painel', 'alertas'],
     NUTRICIONISTA: GENERIC_PROFESSIONAL,
     FISIOTERAPEUTA: GENERIC_PROFESSIONAL,
     OUTRO: GENERIC_PROFESSIONAL,
     'SETOR:FARMACIA': ['painel', 'farmacia', 'prontuario', 'alertas'],
-    'SETOR:ENFERMAGEM': ['painel', 'prontuario', 'consultas', 'alertas', 'laboratorio'],
+    'SETOR:ENFERMAGEM': ['portal', 'painel', 'prontuario', 'consultas', 'alertas', 'laboratorio'],
     'SETOR:LABORATORIO': ['laboratorio', 'painel', 'alertas'],
     'SETOR:RECEPCAO': ['consultas', 'busca', 'profissionais'],
     'SETOR:COORDENACAO_CLINICA': ['painel', 'alertas', 'profissionais', 'relatorios', 'auditoria'],

@@ -29,8 +29,9 @@ const NAV_GROUPS = [
     ] },
 ];
 
-// Páginas fora dos menus (sino e busca no topo) que o menu "Para você" pode sugerir.
+// Páginas fora dos menus (portal, sino e busca) que o menu "Para você" pode sugerir.
 const EXTRA_PAGES = [
+    { id: 'portal', label: 'Portal (visão do seu perfil)', href: '/', icon: 'fa-house-medical' },
     { id: 'notificacoes', label: 'Notificações', href: '/app/notificacoes', icon: 'fa-bell' },
     { id: 'busca', label: 'Busca', href: '/app/busca', icon: 'fa-magnifying-glass' },
 ];

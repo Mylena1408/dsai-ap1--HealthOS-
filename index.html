@@ -19,9 +19,11 @@
     </header>
 
     <div class="max-w-4xl mx-auto px-6 mb-6 flex justify-center">
-        <div class="bg-white p-1 rounded-xl border border-slate-200 flex gap-2">
+        <div class="bg-white p-1 rounded-xl border border-slate-200 flex flex-wrap justify-center gap-2">
             <button data-view="patient" id="btn-view-patient" class="px-4 py-2 rounded-lg text-sm font-bold transition-all bg-blue-600 text-white">Visão Paciente</button>
             <button data-view="doctor" id="btn-view-doctor" class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:bg-slate-100">Visão Médico</button>
+            <button data-view="nursing" id="btn-view-nursing" class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:bg-slate-100">Visão Enfermagem</button>
+            <button data-view="psychology" id="btn-view-psychology" class="px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:bg-slate-100">Visão Psicologia</button>
         </div>
     </div>
 
@@ -102,6 +104,140 @@
                     <p class="text-slate-500 text-sm">No prontuário do paciente, aba Medicamentos. A prescrição vai para a fila da farmácia.</p>
                 </a>
                 <a href="/app/farmacia" class="inline-block mt-3 text-sm font-semibold text-emerald-700 hover:underline">Dispensar na Farmácia <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+            </div>
+        </div>
+
+        <!-- Visão Enfermagem: equipe de enfermagem, ligada às rotas existentes (spec 2026-10-10-portal-enfermagem-psicologia). -->
+        <div id="grid-nursing" class="hidden space-y-6">
+            <section class="glass-card rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-2 gap-4" aria-labelledby="n-context-title">
+                <h2 id="n-context-title" class="sm:col-span-2 text-lg font-bold text-slate-800">Atendimento de enfermagem</h2>
+                <label class="text-sm text-slate-600 block">Paciente<span class="block"><input type="search" id="n-patient" data-portal-patient placeholder="Buscar por nome ou CPF" class="w-full p-2 border rounded-lg mt-1"></span></label>
+                <label class="text-sm text-slate-600 block">Profissional de enfermagem<select id="n-author" data-care-type="ENFERMEIRO" class="w-full p-2 border rounded-lg mt-1"><option value="">Carregando...</option></select></label>
+            </section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <section class="glass-card rounded-2xl p-5" aria-labelledby="n-day-title">
+                    <div class="flex justify-between items-center gap-2 mb-3">
+                        <h2 id="n-day-title" class="font-bold text-slate-800">Pacientes do dia</h2>
+                        <button type="button" data-care-action="nursing-day" class="text-sm font-semibold text-blue-700 hover:underline">Atualizar</button>
+                    </div>
+                    <ul id="n-day" class="divide-y text-sm"></ul>
+                </section>
+                <section class="glass-card rounded-2xl p-5" aria-labelledby="n-alerts-title">
+                    <div class="flex justify-between items-center gap-2 mb-3">
+                        <h2 id="n-alerts-title" class="font-bold text-slate-800">Sinais vitais críticos em aberto</h2>
+                        <button type="button" data-care-action="nursing-alerts" class="text-sm font-semibold text-blue-700 hover:underline">Atualizar</button>
+                    </div>
+                    <ul id="n-alerts" class="divide-y text-sm"></ul>
+                </section>
+            </div>
+
+            <section class="glass-card rounded-2xl p-5" aria-labelledby="n-vitals-title">
+                <h2 id="n-vitals-title" class="font-bold text-slate-800 mb-3">Registrar sinais vitais</h2>
+                <form id="form-n-vitals" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <label class="text-xs text-slate-600">Sistólica (mmHg)<input id="n-sys" type="number" class="w-full p-2 border rounded-lg mt-1"></label>
+                    <label class="text-xs text-slate-600">Diastólica (mmHg)<input id="n-dia" type="number" class="w-full p-2 border rounded-lg mt-1"></label>
+                    <label class="text-xs text-slate-600">FC (bpm)<input id="n-hr" type="number" class="w-full p-2 border rounded-lg mt-1"></label>
+                    <label class="text-xs text-slate-600">FR (irpm)<input id="n-rr" type="number" class="w-full p-2 border rounded-lg mt-1"></label>
+                    <label class="text-xs text-slate-600">Temperatura (°C)<input id="n-temp" type="number" step="0.1" class="w-full p-2 border rounded-lg mt-1"></label>
+                    <label class="text-xs text-slate-600">SpO₂ (%)<input id="n-spo2" type="number" class="w-full p-2 border rounded-lg mt-1"></label>
+                    <label class="text-xs text-slate-600">Glicemia (mg/dL)<input id="n-glucose" type="number" class="w-full p-2 border rounded-lg mt-1"></label>
+                    <div class="col-span-2 sm:col-span-4"><button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700">Registrar medição</button></div>
+                </form>
+                <div id="res-n-vitals" class="mt-3 p-3 rounded-lg text-sm hidden"></div>
+            </section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <section class="glass-card rounded-2xl p-5" aria-labelledby="n-procedure-title">
+                    <h2 id="n-procedure-title" class="font-bold text-slate-800 mb-3">Registrar procedimento</h2>
+                    <form id="form-n-procedure" class="space-y-3">
+                        <label class="text-sm text-slate-600 block">Procedimento<input id="n-procedure-name" required minlength="3" placeholder="Ex.: curativo simples" class="w-full p-2 border rounded-lg mt-1"></label>
+                        <label class="text-sm text-slate-600 block">Data e hora<input id="n-procedure-date" type="datetime-local" required class="w-full p-2 border rounded-lg mt-1"></label>
+                        <label class="text-sm text-slate-600 block">Observações (opcional)<input id="n-procedure-notes" maxlength="1000" class="w-full p-2 border rounded-lg mt-1"></label>
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700">Registrar procedimento</button>
+                    </form>
+                    <div id="res-n-procedure" class="mt-3 p-3 rounded-lg text-sm hidden"></div>
+                </section>
+                <section class="glass-card rounded-2xl p-5" aria-labelledby="n-evolution-title">
+                    <h2 id="n-evolution-title" class="font-bold text-slate-800 mb-3">Evolução de enfermagem</h2>
+                    <form id="form-n-evolution" class="space-y-3">
+                        <label class="text-sm text-slate-600 block">Texto (mínimo de 10 caracteres)<textarea id="n-evolution-content" required minlength="10" maxlength="10000" rows="4" class="w-full p-2 border rounded-lg mt-1"></textarea></label>
+                        <p class="text-xs text-slate-600">Fica como rascunho; a assinatura é feita no prontuário, aba Evolução.</p>
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700">Salvar rascunho</button>
+                    </form>
+                    <div id="res-n-evolution" class="mt-3 p-3 rounded-lg text-sm hidden"></div>
+                </section>
+            </div>
+
+            <section class="glass-card rounded-2xl p-5" aria-labelledby="n-meds-title">
+                <div class="flex justify-between items-center gap-2 mb-3">
+                    <h2 id="n-meds-title" class="font-bold text-slate-800">Medicamentos em uso do paciente</h2>
+                    <button type="button" data-care-action="nursing-meds" class="text-sm font-semibold text-blue-700 hover:underline">Consultar</button>
+                </div>
+                <ul id="n-meds" class="divide-y text-sm"></ul>
+                <p class="text-xs text-slate-600 mt-2">Somente consulta: a administração de medicamentos não é registrada neste sistema.</p>
+            </section>
+        </div>
+
+        <!-- Visão Psicologia (spec 2026-10-10-portal-enfermagem-psicologia). -->
+        <div id="grid-psychology" class="hidden space-y-6">
+            <p class="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3" role="note">
+                <i class="fas fa-user-shield" aria-hidden="true"></i>
+                Registro didático: em um sistema real o prontuário psicológico tem acesso restrito; aqui todos os dados são fictícios e visíveis a qualquer perfil.
+            </p>
+            <section class="glass-card rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-2 gap-4" aria-labelledby="ps-context-title">
+                <h2 id="ps-context-title" class="sm:col-span-2 text-lg font-bold text-slate-800">Atendimento psicológico</h2>
+                <label class="text-sm text-slate-600 block">Psicólogo(a)<select id="ps-professional" data-care-type="PSICOLOGO" class="w-full p-2 border rounded-lg mt-1"><option value="">Carregando...</option></select></label>
+                <label class="text-sm text-slate-600 block">Paciente<span class="block"><input type="search" id="ps-patient" data-portal-patient placeholder="Buscar por nome ou CPF" class="w-full p-2 border rounded-lg mt-1"></span></label>
+            </section>
+
+            <section class="glass-card rounded-2xl p-5" aria-labelledby="ps-agenda-title">
+                <div class="flex justify-between items-center gap-2 mb-3">
+                    <h2 id="ps-agenda-title" class="font-bold text-slate-800">Minha agenda (hoje e próximos 7 dias)</h2>
+                    <button type="button" data-care-action="psy-agenda" class="text-sm font-semibold text-blue-700 hover:underline">Atualizar</button>
+                </div>
+                <ul id="ps-agenda" class="divide-y text-sm"></ul>
+            </section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <section class="glass-card rounded-2xl p-5" aria-labelledby="ps-schedule-title">
+                    <h2 id="ps-schedule-title" class="font-bold text-slate-800 mb-3">Agendar sessão</h2>
+                    <form id="form-ps-schedule" class="space-y-3">
+                        <label class="text-sm text-slate-600 block">Horário livre<select id="ps-slot" required class="w-full p-2 border rounded-lg mt-1"><option value="">Escolha o(a) psicólogo(a)</option></select></label>
+                        <label class="text-sm text-slate-600 block">Tipo<select id="ps-type" class="w-full p-2 border rounded-lg mt-1">
+                            <option value="PRIMEIRA_CONSULTA">Primeira consulta</option><option value="RETORNO">Retorno</option><option value="TELECONSULTA">Teleconsulta</option></select></label>
+                        <label class="text-sm text-slate-600 block">Motivo (opcional)<input id="ps-reason" maxlength="500" class="w-full p-2 border rounded-lg mt-1"></label>
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700">Agendar sessão</button>
+                    </form>
+                    <div id="res-ps-schedule" class="mt-3 p-3 rounded-lg text-sm hidden"></div>
+                </section>
+                <section class="glass-card rounded-2xl p-5" aria-labelledby="ps-evolution-title">
+                    <h2 id="ps-evolution-title" class="font-bold text-slate-800 mb-3">Evolução da sessão</h2>
+                    <form id="form-ps-evolution" class="space-y-3">
+                        <label class="text-sm text-slate-600 block">Texto (mínimo de 10 caracteres)<textarea id="ps-evolution-content" required minlength="10" maxlength="10000" rows="4" class="w-full p-2 border rounded-lg mt-1"></textarea></label>
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700">Salvar rascunho</button>
+                    </form>
+                    <div id="res-ps-evolution" class="mt-3 p-3 rounded-lg text-sm hidden"></div>
+                </section>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <section class="glass-card rounded-2xl p-5" aria-labelledby="ps-history-title">
+                    <div class="flex justify-between items-center gap-2 mb-3">
+                        <h2 id="ps-history-title" class="font-bold text-slate-800">Histórico do paciente</h2>
+                        <button type="button" data-care-action="psy-history" class="text-sm font-semibold text-blue-700 hover:underline">Atualizar</button>
+                    </div>
+                    <div id="ps-history" class="space-y-3 text-sm"></div>
+                </section>
+                <section class="glass-card rounded-2xl p-5" aria-labelledby="ps-condition-title">
+                    <h2 id="ps-condition-title" class="font-bold text-slate-800 mb-3">Registrar queixa ou condição</h2>
+                    <form id="form-ps-condition" class="space-y-3">
+                        <label class="text-sm text-slate-600 block">Descrição<input id="ps-condition-name" required minlength="3" maxlength="200" placeholder="Ex.: ansiedade (fictícia)" class="w-full p-2 border rounded-lg mt-1"></label>
+                        <label class="text-sm text-slate-600 block">Início (opcional)<input id="ps-condition-onset" type="date" class="w-full p-2 border rounded-lg mt-1"></label>
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700">Registrar</button>
+                    </form>
+                    <div id="res-ps-condition" class="mt-3 p-3 rounded-lg text-sm hidden"></div>
+                </section>
             </div>
         </div>
     </main>

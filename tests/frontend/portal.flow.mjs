@@ -86,7 +86,7 @@ empty.document.querySelector('[data-action="fetch-consultations"]').click();
 const warned = await waitFor(() => message(empty, "res-consultas").includes("Escolha o paciente"));
 check("portal › sem paciente, aviso no formulário", Boolean(warned));
 check("portal › nenhum campo pede ID digitado",
-      !empty.document.querySelector('input[placeholder*="ID"]') && empty.document.querySelectorAll("[data-portal-patient]").length === 6);
+      !empty.document.querySelector('input[placeholder*="ID"]') && empty.document.querySelectorAll("[data-portal-patient]").length === 8);
 
 // ---------------------------------------------------- visão Paciente (busca)
 const portal = await openPage("index.html", "/", { audience: "SETOR", sector: "RECEPCAO", label: "Recepção" });
