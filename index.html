@@ -180,7 +180,7 @@
             <h3 class="text-2xl font-bold text-slate-800 mb-6">Histórico Clínico</h3>
             <div class="space-y-4">
                 <label class="text-sm text-slate-600 block">Paciente<span class="block"><input type="search" id="d-history-patient" data-portal-patient placeholder="Buscar por nome ou CPF" class="w-full p-2 border rounded-lg mt-1 outline-none focus:border-emerald-500"></span></label>
-                <button data-action="fetch-history" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">Buscar Prontuário</button>
+                <button data-action="fetch-history" class="w-full bg-emerald-700 text-white py-3 rounded-xl font-bold hover:bg-emerald-800">Buscar Prontuário</button>
             </div>
             <div id="res-doc-history" class="mt-6 space-y-3 hidden"></div>
         </div>
@@ -194,7 +194,7 @@
                 <label class="text-sm text-slate-600 block">Paciente<span class="block"><input type="search" id="d-note-patient" data-portal-patient placeholder="Buscar por nome ou CPF" class="w-full p-2 border rounded-lg mt-1 outline-none focus:border-emerald-500"></span></label>
                 <label class="text-sm text-slate-600 block">Médico(a)<select id="d-note-doctor" data-doctor-select required class="w-full p-2 border rounded-lg mt-1"><option value="">Carregando...</option></select></label>
                 <textarea id="d-note-content" placeholder="Descrição da evolução..." aria-label="Descrição da evolução" required minlength="10" class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500 h-32"></textarea>
-                <button type="submit" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">Salvar Nota</button>
+                <button type="submit" class="w-full bg-emerald-700 text-white py-3 rounded-xl font-bold hover:bg-emerald-800">Salvar Nota</button>
             </form>
             <div id="res-doc-new" class="mt-4 p-3 rounded-lg text-sm hidden"></div>
         </div>
@@ -209,7 +209,7 @@
                 <select id="d-alert-type" required class="w-full p-2 border rounded-lg"><option value="ALLERGY">Alergia</option><option value="CHRONIC_CONDITION">Condição crônica</option><option value="RISK_FACTOR">Fator de risco</option><option value="OTHER">Outro</option></select>
                 <select id="d-alert-severity" required class="w-full p-2 border rounded-lg"><option value="LOW">Baixa</option><option value="MEDIUM">Média</option><option value="HIGH">Alta</option><option value="CRITICAL">Crítica</option></select>
                 <input type="text" id="d-alert-msg" placeholder="Descrição do alerta" required class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500">
-                <button type="submit" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">Criar Alerta</button>
+                <button type="submit" class="w-full bg-emerald-700 text-white py-3 rounded-xl font-bold hover:bg-emerald-800">Criar Alerta</button>
             </form>
             <div id="res-doc-alerts" class="mt-4 p-3 rounded-lg text-sm hidden"></div>
         </div>

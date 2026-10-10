@@ -14,7 +14,8 @@ const state = {
 };
 const fmt = value => Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
 const card = (title, body) => `<div class="glass-card rounded-2xl p-5"><h3 class="font-bold text-slate-800 mb-3">${title}</h3>${body}</div>`;
-const table = (headers, rows) => `<div class="overflow-x-auto"><table class="w-full text-sm">
+const table = (headers, rows) => `<div class="relative overflow-x-auto" tabindex="0" role="region"
+    aria-label="Tabela: ${headers.filter(Boolean).join(', ')}"><table class="w-full text-sm">
     <thead><tr class="text-left text-slate-500 border-b">${headers.map(h => `<th class="py-2 pr-3 font-medium">${h}</th>`).join('')}</tr></thead>
     <tbody>${rows}</tbody></table></div>`;
 const PAGE_SIZE = 15;

@@ -70,7 +70,7 @@ async function preview() {
                 <span class="text-slate-600">${escapeHtml(scope)} · <strong>${report.total_rows}</strong> linha(s) · gerado em ${formatDateTime(report.generated_at)}</span>
                 ${report.truncated ? '<span class="flag flag-attention"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i>Limite de linhas atingido: reduza o período</span>' : ''}
             </div>
-            ${rows.length ? `<div class="overflow-x-auto"><table class="w-full text-sm">
+            ${rows.length ? `<div class="relative overflow-x-auto" tabindex="0" role="region" aria-label="Prévia do relatório (tabela)"><table class="w-full text-sm">
                 <thead><tr class="text-left text-slate-500 border-b">${report.columns.map(c =>
                     `<th class="py-2 pr-3 font-medium ${numeric(c.kind) ? 'text-right' : ''}">${escapeHtml(c.label)}</th>`).join('')}</tr></thead>
                 <tbody>${rows.map(row => `<tr class="border-b last:border-0">${report.columns.map(c =>

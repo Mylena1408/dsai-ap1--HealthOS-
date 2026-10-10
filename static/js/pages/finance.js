@@ -124,7 +124,7 @@ function renderInvoice() {
                 value="${escapeHtml(i.balance)}" required class="w-full p-2 border rounded-lg mt-1"></label>
             <label class="text-sm text-slate-600">Forma<select id="pay-method" class="w-full p-2 border rounded-lg mt-1"></select></label>
             <label class="text-sm text-slate-600">Observação<input id="pay-note" maxlength="255" class="w-full p-2 border rounded-lg mt-1"></label>
-            <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700">Registrar pagamento</button>
+            <button type="submit" class="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-800">Registrar pagamento</button>
         </form>` : ''}
         ${can('cancelar') ? `<form id="form-cancel" class="mt-3 flex flex-wrap gap-2 items-end">
             <label class="text-sm text-slate-600 flex-1 min-w-[12rem]">Motivo do cancelamento<input id="cancel-reason" required minlength="3" maxlength="500" class="w-full p-2 border rounded-lg mt-1"></label>

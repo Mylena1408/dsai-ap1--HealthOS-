@@ -29,6 +29,7 @@ const tile = (label, value, hint = '') => `<div class="glass-card rounded-2xl p-
     ${hint ? `<div class="text-xs text-slate-500 mt-1">${hint}</div>` : ''}</div>`;
 const bandOf = score => score == null ? 'SEM_DADOS' : score >= 80 ? 'BOM' : score >= 60 ? 'ATENCAO' : 'INSUFICIENTE';
 const meter = score => `<div class="meter ${BANDS[bandOf(score)].meter}" role="meter" aria-valuemin="0" aria-valuemax="100"
+    aria-label="Health Score: ${score == null ? 'sem dados' : `${score} de 100`}"
     aria-valuenow="${score ?? 0}"><span style="width:${score ?? 0}%"></span></div>`;
 const toItems = counts => Object.entries(counts).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
 const labelOf = (dictionary, key) => dictionary[key]?.label || key;
@@ -198,7 +199,7 @@ function doctorsCard(professionals) {
     const doctors = professionals.filter(p => p.professional_type === 'MEDICO');
     return card(`Médicos disponíveis <span class="text-sm font-normal text-slate-500">(${doctors.length} ativos)</span>`, `
         <p class="text-xs text-slate-600 mb-3">IDs para formulários que pedem o médico, como a evolução do portal. Dados fictícios.</p>
-        <div class="overflow-x-auto"><table class="w-full text-sm">
+        <div class="relative overflow-x-auto" tabindex="0" role="region" aria-label="Médicos disponíveis (tabela)"><table class="w-full text-sm">
             <thead><tr class="text-left text-slate-500 border-b">
                 <th class="py-2 pr-3 font-medium">Médico(a)</th><th class="py-2 pr-3 font-medium">Especialidade</th>
                 <th class="py-2 pr-3 font-medium">Registro</th><th class="py-2 pr-3 font-medium">ID</th>
@@ -228,9 +229,9 @@ function dailyCard(title, points) {
         <td class="py-1 pr-3">${formatDate(`${p.day}T12:00`)}</td>${DAILY_SERIES.map(([key]) => `<td class="py-1 pr-3 text-right tabular-nums">${p.values[key] || 0}</td>`).join('')}</tr>`).join('');
     return card(title, `<div id="chart-daily"></div>
         <details class="mt-3"><summary class="text-sm text-blue-700 cursor-pointer">Ver como tabela</summary>
-            <table class="w-full text-sm mt-2"><thead><tr class="text-left text-slate-500 border-b"><th class="py-1 pr-3 font-medium">Dia</th>
+            <div class="relative overflow-x-auto mt-2" tabindex="0" role="region" aria-label="Consultas por dia (tabela)"><table class="w-full text-sm"><thead><tr class="text-left text-slate-500 border-b"><th class="py-1 pr-3 font-medium">Dia</th>
                 ${DAILY_SERIES.map(([key]) => `<th class="py-1 pr-3 font-medium text-right">${labelOf(APPOINTMENT_STATUS, key)}</th>`).join('')}</tr></thead>
-            <tbody>${rows || '<tr><td colspan="4" class="py-2 text-slate-500">Sem consultas no período.</td></tr>'}</tbody></table></details>`);
+            <tbody>${rows || '<tr><td colspan="4" class="py-2 text-slate-500">Sem consultas no período.</td></tr>'}</tbody></table></div></details>`);
 }
 
 function renderDaily(points) {

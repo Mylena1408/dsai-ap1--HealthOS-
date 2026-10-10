@@ -41,7 +41,7 @@ async function loadPatients(append = false) {
         const html = page.items.map(p => `
             <li><button data-patient="${escapeHtml(p.id)}" class="w-full text-left px-2 py-3 hover:bg-blue-50 rounded-lg ${p.id === state.patientId ? 'bg-blue-50' : ''}">
                 <div class="font-medium text-slate-800">${escapeHtml(p.full_name)}</div>
-                <div class="text-xs text-slate-500">${p.age} anos · ${escapeHtml(p.gender)}${p.insurance_provider ? ` · ${escapeHtml(p.insurance_provider)}` : ''}</div>
+                <div class="text-xs text-slate-600">${p.age} anos · ${escapeHtml(p.gender)}${p.insurance_provider ? ` · ${escapeHtml(p.insurance_provider)}` : ''}</div>
             </button></li>`).join('');
         if (append) list.insertAdjacentHTML('beforeend', html);
         else if (!page.items.length) renderEmpty(list, 'Nenhum paciente encontrado.');

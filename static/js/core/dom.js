@@ -38,7 +38,10 @@ export function enableModalDismiss() {
         else if (event.target.classList.contains('modal')) event.target.classList.remove('active');
     });
     document.addEventListener('keydown', event => {
-        if (event.key === 'Escape') document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+        // A tecla já tratada por um componente (ex.: Esc fechando a lista do seletor) não fecha o modal.
+        if (event.key === 'Escape' && !event.defaultPrevented) {
+            document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+        }
     });
 }
 
@@ -58,7 +61,7 @@ export function toast(message, type = 'info') {
         container.className = 'fixed bottom-4 right-4 z-[200] flex flex-col gap-2 max-w-sm';
         document.body.appendChild(container);
     }
-    const colors = { info: 'bg-slate-800', success: 'bg-emerald-600', error: 'bg-red-600' };
+    const colors = { info: 'bg-slate-800', success: 'bg-emerald-700', error: 'bg-red-600' };
     const item = document.createElement('div');
     item.className = `${colors[type] || colors.info} text-white text-sm px-4 py-3 rounded-lg shadow-lg`;
     item.setAttribute('role', 'status');
@@ -73,5 +76,7 @@ export function renderLoading(element, label = 'Carregando...') {
 }
 
 export function renderEmpty(element, label) {
-    element.innerHTML = `<p class="text-slate-500 text-center text-sm py-4">${escapeHtml(label)}</p>`;
+    // Em listas, a mensagem precisa ser um item (<li>) para a marcação continuar válida.
+    const tag = ['UL', 'OL'].includes(element.tagName) ? 'li' : 'p';
+    element.innerHTML = `<${tag} class="text-slate-500 text-center text-sm py-4">${escapeHtml(label)}</${tag}>`;
 }

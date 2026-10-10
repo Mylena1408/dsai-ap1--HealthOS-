@@ -34,7 +34,7 @@
                     <button id="toggle-table" class="text-xs font-semibold text-blue-700 hover:underline" aria-pressed="false">Ver tabela</button>
                 </div>
                 <div id="chart-monthly"></div>
-                <div id="table-monthly" class="hidden overflow-x-auto"></div>
+                <div id="table-monthly" class="hidden relative overflow-x-auto" tabindex="0" role="region" aria-label="Resumo mensal (tabela)"></div>
             </div>
             <div class="space-y-6">
                 <div class="glass-card rounded-2xl p-5"><h2 class="font-bold text-slate-800 mb-3">Recebido por forma de pagamento</h2><div id="chart-methods"></div></div>
@@ -50,7 +50,7 @@
                     <input id="f-number" type="search" maxlength="50" placeholder="Número da fatura" aria-label="Número da fatura" class="p-2 border rounded-lg text-sm">
                 </div>
             </div>
-            <div class="overflow-x-auto">
+            <div class="relative overflow-x-auto" tabindex="0" role="region" aria-label="Faturas (tabela)">
                 <table class="w-full text-sm">
                     <thead><tr class="text-left text-slate-500 border-b">
                         <th class="py-2 pr-3 font-medium">Número</th><th class="py-2 pr-3 font-medium">Paciente</th>

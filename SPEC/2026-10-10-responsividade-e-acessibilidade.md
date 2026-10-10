@@ -47,8 +47,10 @@ A revisão ampliada encontrou 18 falhas, em 7 problemas; todos são corrigidos s
 
 - **P1** Esc no seletor de paciente fechava também o modal: o fechamento de modais ignora a tecla
   já tratada pelo seletor (`event.defaultPrevented`).
-- **P2** rolagem horizontal de 69 px no Painel › Profissional (médico) em 360 px: causa confirmada
-  por medição antes da correção.
+- **P2** rolagem horizontal de 69 px no Painel › Profissional (médico) em 360 px. Causa medida: o
+  `<span class="sr-only">` (posição absoluta) do cabeçalho "Ações" da tabela "Médicos disponíveis"
+  escapava do contêiner rolável, que não era `relative`; a tabela de "Consultas por dia" também
+  passava 25 px por não ter contêiner. Correção: contêineres de tabela `relative overflow-x-auto`.
 - **P3** medidores do Health Score sem nome acessível: `aria-label` com o valor.
 - **P4** mensagem de lista vazia como `<p>` dentro de `<ul>`: `renderEmpty` usa `<li>` quando o
   destino é lista.

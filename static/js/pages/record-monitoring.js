@@ -79,7 +79,7 @@ export async function renderVitalsTab(container, { patientId, onChange }) {
                 <div class="col-span-2 sm:col-span-4"><button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700">Registrar</button></div>
             </form>`)}
         ${card(`Histórico <span class="text-sm font-normal text-slate-500">(${page.total} registros)</span>`, page.items.length ? `
-            <div class="overflow-x-auto"><table class="w-full text-sm">
+            <div class="relative overflow-x-auto" tabindex="0" role="region" aria-label="Histórico de sinais vitais (tabela)"><table class="w-full text-sm">
                 <thead><tr class="text-left text-slate-500 border-b">
                     <th class="py-2 pr-3 font-medium">Data</th><th class="py-2 pr-3 font-medium">PA</th><th class="py-2 pr-3 font-medium">FC</th>
                     <th class="py-2 pr-3 font-medium">Temp</th><th class="py-2 pr-3 font-medium">SpO₂</th><th class="py-2 pr-3 font-medium">Peso</th>

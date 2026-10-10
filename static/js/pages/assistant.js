@@ -70,7 +70,7 @@ async function loadConversations() {
             <li><button data-conversation="${escapeHtml(c.id)}"
                 class="w-full text-left px-2 py-2 rounded-lg hover:bg-blue-50 ${c.id === state.conversation?.id ? 'bg-blue-50' : ''}">
                 <div class="text-sm font-medium text-slate-800 truncate">${escapeHtml(c.title)}</div>
-                <div class="text-xs text-slate-500">${formatDateTime(c.updated_at || c.created_at)}</div>
+                <div class="text-xs text-slate-600">${formatDateTime(c.updated_at || c.created_at)}</div>
             </button></li>`).join('');
         renderPagination($('conv-pagination'), page, offset => { state.convOffset = offset; loadConversations(); });
     } catch (err) {
