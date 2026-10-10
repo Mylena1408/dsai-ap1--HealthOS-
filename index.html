@@ -92,14 +92,17 @@
                 <p class="text-slate-500 text-sm">Configure alertas de risco para o paciente.</p>
             </button>
 
-            <!-- Botão 4: Prescrever Medicamento -->
-            <button data-open-modal="modal-doc-pharmacy" class="glass-card p-6 rounded-2xl text-left hover:border-emerald-500 transition-all group">
-                <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                    <i class="fas fa-pills"></i>
-                </div>
-                <h3 class="text-lg font-bold text-slate-800">Prescrever Medicação</h3>
-                <p class="text-slate-500 text-sm">Envie a prescrição para a farmácia.</p>
-            </button>
+            <!-- Card 4: Prescrever Medicamento (prontuário) e dispensar (Farmácia, com receita e lote) -->
+            <div class="glass-card p-6 rounded-2xl text-left hover:border-emerald-500 transition-all group">
+                <a href="/app/prontuario" class="block">
+                    <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                        <i class="fas fa-pills" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Prescrever Medicação</h3>
+                    <p class="text-slate-500 text-sm">No prontuário do paciente, aba Medicamentos. A prescrição vai para a fila da farmácia.</p>
+                </a>
+                <a href="/app/farmacia" class="inline-block mt-3 text-sm font-semibold text-emerald-700 hover:underline">Dispensar na Farmácia <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+            </div>
         </div>
     </main>
 
@@ -205,20 +208,6 @@
                 <button type="submit" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">Criar Alerta</button>
             </form>
             <div id="res-doc-alerts" class="mt-4 p-3 rounded-lg text-sm hidden"></div>
-        </div>
-    </div>
-
-    <div id="modal-doc-pharmacy" class="modal">
-        <div class="bg-white p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
-            <button data-close-modal="modal-doc-pharmacy" aria-label="Fechar" class="absolute top-4 right-4 text-slate-500 hover:text-slate-600"><i class="fas fa-times"></i></button>
-            <h3 class="text-2xl font-bold text-slate-800 mb-6">Dispensar Medicação</h3>
-            <form id="form-doc-pharmacy" class="space-y-4">
-                <input type="text" id="d-pharm-med-id" placeholder="ID do Medicamento" required class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500">
-                <input type="text" id="d-pharm-location-id" placeholder="ID da localização do estoque" required class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500">
-                <input type="number" id="d-pharm-qty" placeholder="Quantidade" required class="w-full p-2 border rounded-lg outline-none focus:border-emerald-500">
-                <button type="submit" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">Registrar Dispensação</button>
-            </form>
-            <div id="res-doc-pharmacy" class="mt-4 p-3 rounded-lg text-sm hidden"></div>
         </div>
     </div>
 

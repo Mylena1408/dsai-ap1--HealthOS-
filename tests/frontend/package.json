@@ -6,7 +6,7 @@
   "scripts": {
     "test": "node --test components.test.mjs navigation.test.mjs",
     "smoke": "node pages.smoke.mjs",
-    "flow": "node evolution.flow.mjs",
+    "flow": "node evolution.flow.mjs && node pharmacy.flow.mjs",
     "a11y": "node a11y.review.mjs"
   },
   "devDependencies": {

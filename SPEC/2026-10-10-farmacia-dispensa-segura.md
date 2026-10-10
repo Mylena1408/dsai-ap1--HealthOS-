@@ -28,8 +28,9 @@ disponível (Swagger e testes legados), mas nenhuma tela a usa.
 
 ### Dispensar (`/app/farmacia`)
 - O farmacêutico vem escolhido quando o perfil é de um farmacêutico ativo.
-- Antes de enviar: pelo menos um item com quantidade maior que 0 e nenhum acima do saldo; senão,
-  mensagem no formulário e nada é enviado.
+- Quantidade acima do saldo: o navegador barra o envio pela validação nativa do campo (`max` =
+  saldo) e mostra a mensagem junto ao campo; a checagem no código é a segunda barreira.
+- Nenhum item com quantidade maior que 0: mensagem no formulário e nada é enviado.
 - Confirmação com o resumo (itens e quantidades, farmacêutico, local). Cancelar não envia nada.
 - Durante o envio, o botão fica desativado. Depois do sucesso, quantidades, farmacêutico, local e
   botão ficam bloqueados, o botão passa a "Dispensado" e a fila é atualizada; para outra

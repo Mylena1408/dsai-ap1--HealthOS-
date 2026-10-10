@@ -6,9 +6,12 @@ import {
 import { renderNav, renderDemoBanner } from '../core/layout.js';
 import { MOVEMENT_TYPES, PRESCRIPTION_STATUS, badge, fillSelect } from '../core/labels.js';
 import { renderPagination } from '../components/pagination.js';
+import { profileProfessionalId, whileBusy } from '../components/author-select.js';
 
 const $ = id => document.getElementById(id);
-const state = { tab: 'queue', offset: 0, prescriptions: {}, pharmacists: {}, medications: [], current: null };
+const state = {
+    tab: 'queue', offset: 0, prescriptions: {}, pharmacists: {}, medications: [], current: null, dispensing: false,
+};
 const fmt = value => Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
 const card = (title, body) => `<div class="glass-card rounded-2xl p-5"><h3 class="font-bold text-slate-800 mb-3">${title}</h3>${body}</div>`;
 const table = (headers, rows) => `<div class="overflow-x-auto"><table class="w-full text-sm">
@@ -64,16 +67,18 @@ const TABS = {
         fillSelect($('l-medication'), Object.fromEntries(rows.map(r => [r.medication_id, `${r.name} ${r.dosage}`])), 'Medicamento');
         $('form-lot').addEventListener('submit', async event => {
             event.preventDefault();
-            try {
-                await apiCall('/stock/lots', 'POST', {
-                    medication_id: $('l-medication').value, lot_number: $('l-number').value, location: $('l-location').value,
-                    expiration_date: $('l-expiration').value, quantity: Number($('l-quantity').value),
-                });
-                toast('Lote recebido.', 'success');
-                render();
-            } catch (err) {
-                toast(err.message, 'error');
-            }
+            await whileBusy(event.target.querySelector('[type="submit"]'), async () => {
+                try {
+                    await apiCall('/stock/lots', 'POST', {
+                        medication_id: $('l-medication').value, lot_number: $('l-number').value, location: $('l-location').value,
+                        expiration_date: $('l-expiration').value, quantity: Number($('l-quantity').value),
+                    });
+                    toast('Lote recebido.', 'success');
+                    render();
+                } catch (err) {
+                    toast(err.message, 'error');
+                }
+            });
         });
         $('pagination').innerHTML = '';
     },
@@ -90,7 +95,7 @@ const TABS = {
                         ${l.is_expired ? '<span class="flag flag-critical ml-1"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i>Vencido</span>'
                             : `<span class="flag flag-attention ml-1"><i class="fas fa-hourglass-half" aria-hidden="true"></i>${l.days_to_expire} dia(s)</span>`}</td>
                     <td class="py-2 pr-3 tabular-nums">${fmt(l.quantity)}</td>
-                    <td class="py-2">${l.is_expired ? `<button data-discard="${escapeHtml(l.id)}" class="px-2 py-1 rounded-lg border text-xs font-semibold hover:bg-slate-100">Descartar</button>` : ''}</td>
+                    <td class="py-2">${l.is_expired ? `<button data-discard="${escapeHtml(l.id)}" data-lot-number="${escapeHtml(l.lot_number)}" class="px-2 py-1 rounded-lg border text-xs font-semibold hover:bg-slate-100">Descartar</button>` : ''}</td>
                 </tr>`).join('')) : '<p class="text-sm text-slate-500">Nenhum lote nesta situação.</p>');
         $('pagination').innerHTML = '';
     },
@@ -141,28 +146,58 @@ function openDispense(prescriptionId) {
     $('d-items').innerHTML = p.items.filter(i => i.status === 'EM_USO' && i.remaining_quantity > 0).map(i => `
         <label class="text-sm text-slate-600 flex items-center justify-between gap-3 border rounded-lg p-2">
             <span>${escapeHtml(i.medication_name || '')} <span class="text-slate-500">(saldo ${fmt(i.remaining_quantity)})</span></span>
-            <input data-item="${escapeHtml(i.id)}" type="number" min="0" max="${i.remaining_quantity}" step="any" value="${i.remaining_quantity}" class="w-24 p-2 border rounded-lg text-right"></label>`).join('');
+            <input data-item="${escapeHtml(i.id)}" data-name="${escapeHtml(i.medication_name || '')}" type="number" min="0"
+                max="${i.remaining_quantity}" step="any" value="${i.remaining_quantity}" class="w-24 p-2 border rounded-lg text-right"></label>`).join('');
+    setDispenseLocked(false);
     openModal('modal-dispense');
+}
+
+/** Depois do sucesso o formulário fica travado: outra dispensação exige fechar e abrir de novo. */
+function setDispenseLocked(locked) {
+    const form = $('form-dispense');
+    form.dataset.done = locked ? 'true' : '';
+    form.querySelectorAll('input, select').forEach(field => { field.disabled = locked; });
+    const button = form.querySelector('[type="submit"]');
+    button.disabled = locked;
+    button.textContent = locked ? 'Dispensado' : 'Dispensar';
+}
+
+function showDispenseResult(ok, html) {
+    const result = $('d-result');
+    result.className = `mt-4 text-sm rounded-lg p-3 ${ok ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-700'}`;
+    result.innerHTML = html;
 }
 
 async function submitDispense(event) {
     event.preventDefault();
-    const items = [...document.querySelectorAll('#d-items [data-item]')]
-        .map(input => ({ prescription_item_id: input.dataset.item, quantity: Number(input.value) }))
-        .filter(item => item.quantity > 0);
-    const result = $('d-result');
+    const form = $('form-dispense');
+    if (state.dispensing || form.dataset.done) return;  // envio em andamento ou já concluído
+    const inputs = [...document.querySelectorAll('#d-items [data-item]')];
+    const over = inputs.find(input => Number(input.value) > Number(input.max));
+    const items = inputs.filter(input => Number(input.value) > 0)
+        .map(input => ({ prescription_item_id: input.dataset.item, quantity: Number(input.value), name: input.dataset.name }));
+    if (over) return showDispenseResult(false, `Erro: a quantidade de ${escapeHtml(over.dataset.name)} passa do saldo (${fmt(over.max)}).`);
+    if (!items.length) return showDispenseResult(false, 'Erro: informe a quantidade de pelo menos um item.');
+
+    const pharmacist = $('d-pharmacist').selectedOptions[0]?.textContent || '';
+    const summary = items.map(i => `• ${i.name}: ${fmt(i.quantity)}`).join('\n');
+    if (!window.confirm(`Confirmar a dispensação?\n\n${summary}\n\nFarmacêutico(a): ${pharmacist}\nLocal: ${$('d-location').value}`)) return;
+
+    state.dispensing = true;
     try {
-        const dispensation = await apiCall('/dispensations', 'POST', {
-            prescription_id: state.current.id, pharmacist_id: $('d-pharmacist').value,
-            location: $('d-location').value, items,
-        });
-        result.className = 'mt-4 text-sm bg-green-50 text-green-800 rounded-lg p-3';
-        result.innerHTML = `<strong>Dispensado.</strong> Lotes utilizados (FEFO):<ul class="mt-1">${dispensation.lines.map(l =>
-            `<li>${escapeHtml(l.medication_name || '')}: ${fmt(l.quantity)} — ${l.lot_number ? `lote ${escapeHtml(l.lot_number)}` : 'estoque sem lote'}</li>`).join('')}</ul>`;
+        const dispensation = await whileBusy(form.querySelector('[type="submit"]'), () => apiCall('/dispensations', 'POST', {
+            prescription_id: state.current.id, pharmacist_id: $('d-pharmacist').value, location: $('d-location').value,
+            items: items.map(({ prescription_item_id, quantity }) => ({ prescription_item_id, quantity })),
+        }));
+        setDispenseLocked(true);
+        showDispenseResult(true, `<strong>Dispensado.</strong> Lotes utilizados (FEFO):<ul class="mt-1">${dispensation.lines.map(l =>
+            `<li>${escapeHtml(l.medication_name || '')}: ${fmt(l.quantity)} — ${l.lot_number ? `lote ${escapeHtml(l.lot_number)}` : 'estoque sem lote'}</li>`).join('')}</ul>
+            <p class="mt-1">Para outra dispensação, feche e abra a prescrição novamente.</p>`);
         render();
     } catch (err) {
-        result.className = 'mt-4 text-sm bg-red-50 text-red-700 rounded-lg p-3';
-        result.innerText = `Erro: ${err.message}`;
+        showDispenseResult(false, `Erro: ${escapeHtml(err.message)}`);
+    } finally {
+        state.dispensing = false;
     }
 }
 
@@ -172,6 +207,8 @@ async function init() {
     enableModalDismiss();
     const pharmacists = await apiCall('/professionals?professional_type=FARMACEUTICO&status=ATIVO&limit=100');
     fillSelect($('d-pharmacist'), Object.fromEntries(pharmacists.items.map(p => [p.id, p.full_name])), 'Selecione');
+    const mine = profileProfessionalId();
+    if (mine && pharmacists.items.some(p => p.id === mine)) $('d-pharmacist').value = mine;
     $('form-dispense').addEventListener('submit', submitDispense);
     document.addEventListener('click', async event => {
         const tab = event.target.closest('[data-tab]');
@@ -179,14 +216,18 @@ async function init() {
         const dispense = event.target.closest('[data-dispense]');
         if (dispense) return openDispense(dispense.dataset.dispense);
         const discard = event.target.closest('[data-discard]');
-        if (discard) {
-            try {
-                await apiCall(`/stock/lots/${discard.dataset.discard}/discard`, 'POST', {});
-                toast('Lote vencido descartado.', 'success');
-                render();
-            } catch (err) {
-                toast(err.message, 'error');
-            }
+        if (discard && !discard.disabled) {
+            const lot = discard.dataset.lotNumber;
+            if (!window.confirm(`Descartar o lote ${lot}? O saldo sai do estoque e a ação não pode ser desfeita.`)) return;
+            await whileBusy(discard, async () => {
+                try {
+                    await apiCall(`/stock/lots/${discard.dataset.discard}/discard`, 'POST', {});
+                    toast('Lote vencido descartado.', 'success');
+                    render();
+                } catch (err) {
+                    toast(err.message, 'error');
+                }
+            });
         }
     });
     switchTab('queue');

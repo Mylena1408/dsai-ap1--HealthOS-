@@ -209,12 +209,7 @@ bindForm('form-doc-alerts', 'res-doc-alerts', async () => {
     return 'Sucesso! Alerta criado.';
 });
 
-bindForm('form-doc-pharmacy', 'res-doc-pharmacy', async () => {
-    const medicationId = encodeURIComponent($('d-pharm-med-id').value.trim());
-    const locationId = encodeURIComponent($('d-pharm-location-id').value.trim());
-    await apiCall(`/pharmacy/dispense/${medicationId}/${locationId}`, 'POST', { quantity: Number($('d-pharm-qty').value) });
-    return 'Sucesso! Dispensação registrada.';
-});
+// A dispensa é feita em /app/farmacia, com receita e lote (Fase 5); a rota legada segue só na API.
 
 // --------------------------------------------------- Ligação dos controles
 
