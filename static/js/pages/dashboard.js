@@ -1,8 +1,8 @@
 // Painéis por perfil: paciente, profissional, enfermagem, farmácia e administração.
 import { apiCall } from '../core/api.js';
-import { escapeHtml, formatDate, formatDateTime, renderEmpty, renderLoading, toast } from '../core/dom.js';
+import { escapeHtml, formatDate, formatDateTime, formatMoney, renderEmpty, renderLoading, toast } from '../core/dom.js';
 import { renderNav, renderDemoBanner } from '../core/layout.js';
-import { APPOINTMENT_STATUS, EXAM_STATUS, flagBadge, statusBadge } from '../core/labels.js';
+import { APPOINTMENT_STATUS, EXAM_STATUS, INVOICE_STATUS, flagBadge, statusBadge } from '../core/labels.js';
 import { renderBarChart } from '../components/bar-chart.js';
 import { renderLineChart } from '../components/line-chart.js';
 import { createPatientPicker } from '../components/patient-picker.js';
@@ -152,29 +152,34 @@ const RENDER = {
         renderBarChart($('chart-top'), d.top_medications_30d, { unit: 'un.', ariaLabel: 'Medicamentos mais dispensados' });
     },
 
+    // Visão operacional e financeira (D6 = a): sem indicadores clínicos, mesmo agregados.
     async admin(board) {
-        const d = await apiCall('/dashboards/admin');
-        const distribution = d.health_score_distribution;
+        const [d, finance] = await Promise.all([apiCall('/dashboards/admin'), apiCall('/billing/summary')]);
+        const shortcut = (href, icon, label) => `<a href="${href}" class="glass-card rounded-2xl p-4 flex items-center gap-3
+            text-sm font-semibold text-slate-700 hover:border-blue-500"><i class="fas ${icon} text-blue-600" aria-hidden="true"></i>${label}</a>`;
         board.innerHTML = `
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                 ${tile('Pacientes', String(d.counts.patients))}
-                ${tile('Profissionais ativos', String(d.counts.professionals_active))}
                 ${tile('Consultas (30 dias)', String(Object.values(d.appointments_30d).reduce((a, b) => a + b, 0)))}
-                ${tile('Health Score médio', d.health_score_average == null ? '—' : fmt(d.health_score_average), 'indicador demonstrativo')}
+                ${tile('A receber', formatMoney(finance.receivable), `${finance.open_count} fatura(s) em aberto`)}
+                ${tile('Vencido', formatMoney(finance.overdue), `${finance.overdue_count} fatura(s) em atraso`)}
             </div>
+            <nav aria-label="Atalhos administrativos" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                ${shortcut('/app/consultas', 'fa-calendar-days', 'Consultas')}
+                ${shortcut('/app/financeiro', 'fa-file-invoice-dollar', 'Financeiro')}
+                ${shortcut('/app/relatorios', 'fa-file-lines', 'Relatórios')}
+                ${shortcut('/app/profissionais', 'fa-user-doctor', 'Profissionais')}
+            </nav>
             ${dailyCard('Consultas por dia (últimos 30 dias)', d.daily_appointments_30d)}
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                ${card('Health Score dos pacientes', '<div id="chart-score"></div><p class="text-xs text-slate-500 mt-2">Faixas: bom ≥ 80, atenção 60–79, insuficiente &lt; 60.</p>')}
-                ${card('Exames por situação (90 dias)', '<div id="chart-exams"></div>')}
                 ${card('Novos pacientes por mês', '<div id="chart-patients"></div>')}
+                ${card('Faturas por situação', '<div id="chart-invoices"></div>')}
                 ${card('Alertas abertos por categoria', '<div id="chart-alerts"></div>')}
             </div>`;
         renderDaily(d.daily_appointments_30d);
-        renderBarChart($('chart-score'), Object.entries(distribution).map(([key, value]) => ({ label: BANDS[key].label, value })),
-                       { ariaLabel: 'Distribuição do Health Score' });
-        renderBarChart($('chart-exams'), toItems(d.exams_90d).map(i => ({ ...i, label: labelOf(EXAM_STATUS, i.label) })),
-                       { ariaLabel: 'Exames por situação' });
         renderBarChart($('chart-patients'), d.new_patients_monthly, { ariaLabel: 'Novos pacientes por mês' });
+        renderBarChart($('chart-invoices'), toItems(finance.invoices_by_status).map(i => ({ ...i, label: labelOf(INVOICE_STATUS, i.label) })),
+                       { ariaLabel: 'Faturas por situação' });
         renderBarChart($('chart-alerts'), toItems(d.alerts_open.by_category), { ariaLabel: 'Alertas abertos por categoria' });
     },
 };

@@ -1,29 +1,50 @@
-// Portal do Paciente / Médico (página inicial).
+// Portal do Paciente / Médico (página inicial). Usa as rotas legadas; o paciente é escolhido
+// por nome ou CPF e o médico numa lista, sem IDs digitados (Fase 6).
 import { apiCall } from '../core/api.js';
 import {
-    escapeHtml, isValidUuid, formatMoney, openModal, enableModalDismiss, showResult, renderEmpty,
+    escapeHtml, formatMoney, openModal, enableModalDismiss, showResult, renderEmpty,
 } from '../core/dom.js';
 import { renderNav, renderDemoBanner } from '../core/layout.js';
+import { createPatientPicker } from '../components/patient-picker.js';
+import { getProfile } from '../components/profile.js';
 
-const PATIENT_ID_KEY = 'healthos.patientId';
 const ACTIVE_TAB = 'px-4 py-2 rounded-lg text-sm font-bold transition-all bg-blue-600 text-white';
 const INACTIVE_TAB = 'px-4 py-2 rounded-lg text-sm font-bold transition-all text-slate-600 hover:bg-slate-100';
+const NO_PATIENT = 'Escolha o paciente pelo nome ou CPF.';
 
 const $ = id => document.getElementById(id);
+// O paciente escolhido vale para todos os formulários e fica só na memória da página (R6).
+const state = { patient: null };
 
-function rememberPatientId(patientId) {
-    try { localStorage.setItem(PATIENT_ID_KEY, patientId); } catch { /* armazenamento indisponível */ }
-    ['p-id-agenda', 'p-consult-id', 'p-bill-id'].forEach(id => {
-        const input = $(id);
-        if (input) input.value = patientId;
+function setPatient(patient) {
+    state.patient = patient;
+    document.querySelectorAll('[data-portal-patient]').forEach(input => { input.value = patient?.full_name || ''; });
+}
+
+function requirePatient() {
+    if (!state.patient) throw new Error(NO_PATIENT);
+    return state.patient.id;
+}
+
+function enablePatientFields() {
+    document.querySelectorAll('[data-portal-patient]').forEach(input => {
+        createPatientPicker(input, { onSelect: patient => setPatient(patient) });
+        // Texto alterado sem escolher na lista: a escolha anterior deixa de valer.
+        input.addEventListener('input', () => {
+            if (state.patient && input.value !== state.patient.full_name) state.patient = null;
+        });
     });
 }
 
-function restorePatientId() {
-    try {
-        const saved = localStorage.getItem(PATIENT_ID_KEY);
-        if (saved) rememberPatientId(saved);
-    } catch { /* armazenamento indisponível */ }
+/** Lista de resultados: mensagem de erro no lugar da lista (sem alert()). */
+function listError(element, message) {
+    element.className = 'mt-6 text-sm p-3 rounded-lg bg-red-100 text-red-700';
+    element.textContent = message;
+}
+
+function listReady(element, base) {
+    element.className = base;
+    element.innerHTML = '';
 }
 
 function switchView(view) {
@@ -36,6 +57,17 @@ function switchView(view) {
     $('page-subtitle').innerText = isPatient
         ? 'Demonstração de serviços integrados para o usuário final.'
         : 'Gestão clínica e acompanhamento de pacientes.';
+}
+
+/** Visão e paciente iniciais acompanham o perfil de demonstração. */
+function applyProfile() {
+    const profile = getProfile();
+    switchView(profile.audience === 'PROFISSIONAL' ? 'doctor' : 'patient');
+    if (profile.audience === 'PACIENTE') setPatient({ id: profile.recipient_id, full_name: profile.label });
+    const doctors = $('d-note-doctor');
+    if (profile.audience === 'PROFISSIONAL' && [...doctors.options].some(o => o.value === profile.recipient_id)) {
+        doctors.value = profile.recipient_id;
+    }
 }
 
 /** Envia um formulário e mostra o resultado no elemento de feedback. */
@@ -61,18 +93,15 @@ bindForm('form-cadastro', 'res-cadastro', async () => {
         gender: $('p-gender').value,
     };
     const res = await apiCall('/admin/patients', 'POST', data);
-    rememberPatientId(res.id);
-    return `Sucesso! Seu ID de Paciente é: ${res.id}`;
+    setPatient({ id: res.id, full_name: res.full_name || data.full_name });
+    return `Sucesso! Paciente cadastrado e já escolhido nos formulários do portal. ID: ${res.id}`;
 });
 
 async function fetchConsultations() {
-    const pid = $('p-consult-id').value.trim();
     const resDiv = $('res-consultas');
-    resDiv.innerHTML = '';
-    if (!isValidUuid(pid)) return alert('Informe o ID UUID recebido ao cadastrar o paciente.');
+    listReady(resDiv, 'mt-6 space-y-3');
     try {
-        const res = await apiCall(`/clinical/patients/${pid}/appointments`);
-        resDiv.classList.remove('hidden');
+        const res = await apiCall(`/clinical/patients/${requirePatient()}/appointments`);
         if (res.length === 0) return renderEmpty(resDiv, 'Nenhuma consulta agendada.');
         res.forEach(app => {
             const item = document.createElement('div');
@@ -83,18 +112,19 @@ async function fetchConsultations() {
                     <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">${escapeHtml(app.status)}</span>
                 </div>
                 <div class="text-sm text-slate-600">
-                    <i class="fas fa-calendar"></i> ${new Date(app.start_time).toLocaleString()}
+                    <i class="fas fa-calendar" aria-hidden="true"></i> ${new Date(app.start_time).toLocaleString('pt-BR')}
                 </div>`;
             resDiv.appendChild(item);
         });
     } catch (err) {
-        alert(`Erro: ${err.message}`);
+        listError(resDiv, `Erro: ${err.message}`);
     }
 }
 
 async function fetchAvailableSlots() {
     const select = $('p-slot-id');
     select.innerHTML = '<option value="">Carregando horários...</option>';
+    $('res-agenda').classList.add('hidden');
     try {
         const slots = await apiCall('/clinical/availability');
         select.innerHTML = '<option value="">Selecione um horário</option>';
@@ -120,25 +150,20 @@ async function fetchAvailableSlots() {
         if (!slots.length) select.innerHTML = '<option value="">Sem horários futuros disponíveis</option>';
     } catch (err) {
         select.innerHTML = '<option value="">Erro ao carregar horários</option>';
-        alert(`Erro: ${err.message}`);
+        showResult($('res-agenda'), `Erro: ${err.message}`, false);
     }
 }
 
 bindForm('form-agenda', 'res-agenda', async () => {
-    const patientId = $('p-id-agenda').value.trim();
-    if (!isValidUuid(patientId)) throw new Error('Cadastre o paciente e use o ID UUID retornado para reservar a consulta.');
-    await apiCall('/clinical/schedule', 'POST', { slot_id: $('p-slot-id').value, patient_id: patientId });
+    await apiCall('/clinical/schedule', 'POST', { slot_id: $('p-slot-id').value, patient_id: requirePatient() });
     return 'Sucesso! Consulta agendada.';
 });
 
 async function fetchBilling() {
-    const pid = $('p-bill-id').value.trim();
     const resDiv = $('res-fatura');
-    resDiv.innerHTML = '';
-    if (!isValidUuid(pid)) return alert('Informe o ID UUID recebido ao cadastrar o paciente.');
+    listReady(resDiv, 'mt-6 space-y-2');
     try {
-        const res = await apiCall(`/billing/patients/${pid}/summary`);
-        resDiv.classList.remove('hidden');
+        const res = await apiCall(`/billing/patients/${requirePatient()}/summary`);
         if (res.length === 0) return renderEmpty(resDiv, 'Nenhum débito pendente encontrado.');
         res.forEach(inv => {
             const card = document.createElement('article');
@@ -158,19 +183,17 @@ async function fetchBilling() {
             resDiv.appendChild(card);
         });
     } catch (err) {
-        alert(`Erro: ${err.message}`);
+        listError(resDiv, `Erro: ${err.message}`);
     }
 }
 
 // ------------------------------------------------------------------ Médico
 
 async function fetchClinicalHistory() {
-    const pid = $('d-patient-id').value.trim();
     const resDiv = $('res-doc-history');
-    resDiv.innerHTML = '';
+    listReady(resDiv, 'mt-6 space-y-3');
     try {
-        const res = await apiCall(`/clinical/patients/${pid}/history`);
-        resDiv.classList.remove('hidden');
+        const res = await apiCall(`/clinical/patients/${requirePatient()}/history`);
         if (res.length === 0) return renderEmpty(resDiv, 'Sem histórico clínico disponível.');
         res.forEach(note => {
             const item = document.createElement('div');
@@ -186,22 +209,33 @@ async function fetchClinicalHistory() {
             resDiv.appendChild(item);
         });
     } catch (err) {
-        alert(`Erro: ${err.message}`);
+        listError(resDiv, `Erro: ${err.message}`);
+    }
+}
+
+async function loadDoctors() {
+    const select = $('d-note-doctor');
+    try {
+        const page = await apiCall('/professionals?professional_type=MEDICO&status=ATIVO&limit=100');
+        select.innerHTML = '<option value="">Selecione</option>' + page.items.map(d =>
+            `<option value="${escapeHtml(d.id)}">${escapeHtml(d.full_name)}</option>`).join('');
+    } catch {
+        select.innerHTML = '<option value="">Lista de médicos indisponível</option>';
     }
 }
 
 bindForm('form-doc-new', 'res-doc-new', async () => {
     await apiCall('/clinical/notes', 'POST', {
-        patient_id: $('d-note-patient-id').value,
-        doctor_id: $('d-note-doctor-id').value,
+        patient_id: requirePatient(),
+        doctor_id: $('d-note-doctor').value,
         content: $('d-note-content').value,
     });
-    return 'Sucesso! Nota salva.';
+    return 'Sucesso! Nota salva como evolução em rascunho (assine no prontuário).';
 });
 
 bindForm('form-doc-alerts', 'res-doc-alerts', async () => {
     await apiCall('/admin/alerts', 'POST', {
-        patient_id: $('d-alert-patient-id').value,
+        patient_id: requirePatient(),
         alert_type: $('d-alert-type').value,
         severity: $('d-alert-severity').value,
         description: $('d-alert-msg').value,
@@ -228,7 +262,12 @@ document.addEventListener('click', event => {
     if (target.dataset.action) ACTIONS[target.dataset.action]?.();
 });
 
+// Versões anteriores guardavam o ID do paciente no navegador; agora só o perfil fica salvo (R6).
+try { localStorage.removeItem('healthos.patientId'); } catch { /* armazenamento indisponível */ }
+
 enableModalDismiss();
 renderNav('portal');
 renderDemoBanner();
-restorePatientId();
+enablePatientFields();
+window.addEventListener('healthos:profile', applyProfile);
+loadDoctors().then(applyProfile);
