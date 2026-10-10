@@ -160,15 +160,16 @@ const RENDER = {
 
     // Visão operacional e financeira (D6 = a): sem indicadores clínicos, mesmo agregados.
     async admin(board) {
-        const [d, finance] = await Promise.all([apiCall('/dashboards/admin'), apiCall('/billing/summary')]);
+        const [d, finance] = await Promise.all([apiCall('/dashboards/admin'), apiCall('/billing/summary').catch(() => null)]);
+        const money = value => (finance ? formatMoney(value) : '—');
         const shortcut = (href, icon, label) => `<a href="${href}" class="glass-card rounded-2xl p-4 flex items-center gap-3
             text-sm font-semibold text-slate-700 hover:border-blue-500"><i class="fas ${icon} text-blue-600" aria-hidden="true"></i>${label}</a>`;
         board.innerHTML = `
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                 ${tile('Pacientes', String(d.counts.patients))}
                 ${tile('Consultas (30 dias)', String(Object.values(d.appointments_30d).reduce((a, b) => a + b, 0)))}
-                ${tile('A receber', formatMoney(finance.receivable), `${finance.open_count} fatura(s) em aberto`)}
-                ${tile('Vencido', formatMoney(finance.overdue), `${finance.overdue_count} fatura(s) em atraso`)}
+                ${tile('A receber', money(finance?.receivable), finance ? `${finance.open_count} fatura(s) em aberto` : 'resumo financeiro indisponível')}
+                ${tile('Vencido', money(finance?.overdue), finance ? `${finance.overdue_count} fatura(s) em atraso` : 'resumo financeiro indisponível')}
             </div>
             <nav aria-label="Atalhos administrativos" class="grid grid-cols-2 md:grid-cols-4 gap-3">
                 ${shortcut('/app/consultas', 'fa-calendar-days', 'Consultas')}
@@ -184,8 +185,12 @@ const RENDER = {
             </div>`;
         renderDaily(d.daily_appointments_30d);
         renderBarChart($('chart-patients'), d.new_patients_monthly, { ariaLabel: 'Novos pacientes por mês' });
-        renderBarChart($('chart-invoices'), toItems(finance.invoices_by_status).map(i => ({ ...i, label: labelOf(INVOICE_STATUS, i.label) })),
-                       { ariaLabel: 'Faturas por situação' });
+        if (finance) {
+            renderBarChart($('chart-invoices'), toItems(finance.invoices_by_status).map(i => ({ ...i, label: labelOf(INVOICE_STATUS, i.label) })),
+                           { ariaLabel: 'Faturas por situação' });
+        } else {
+            renderEmpty($('chart-invoices'), 'Resumo financeiro indisponível.');
+        }
         renderBarChart($('chart-alerts'), toItems(d.alerts_open.by_category), { ariaLabel: 'Alertas abertos por categoria' });
     },
 };

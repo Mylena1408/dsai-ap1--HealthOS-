@@ -6,6 +6,7 @@ CODE_LABELS = {
     "PARCIALMENTE_PAGO": "Parcialmente paga", "PAGO": "Paga", "CANCELADO": "Cancelado",
     "PRESCRICAO_EMITIDA": "Prescrição emitida", "PRESCRICAO_CANCELADA": "Prescrição cancelada",
     "DIAGNOSTICO_REGISTRADO": "Diagnóstico registrado", "RELATORIO_EXPORTADO": "Relatório exportado",
+    "EVOLUCAO_ASSINADA": "Evolução assinada",
     "FARMACIA_CENTRAL": "Farmácia central", "ALA_A": "Ala A",
     "MEDICO": "Médico(a)", "ENFERMEIRO": "Enfermeiro(a)", "FARMACEUTICO": "Farmacêutico(a)",
     "PSICOLOGO": "Psicólogo(a)",

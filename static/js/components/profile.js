@@ -4,6 +4,7 @@
 import { apiCall } from '../core/api.js';
 import { escapeHtml } from '../core/dom.js';
 import { PROFESSIONAL_TYPES } from '../core/labels.js';
+import { activeProfessionals, groupedProfessionalOptions } from '../core/professionals.js';
 
 const STORAGE_KEY = 'healthos.profile';
 export const SECTORS = {
@@ -77,13 +78,8 @@ function openPicker() {
             if (patient) choose({ audience: 'PACIENTE', recipient_id: patient.dataset.patientId, label: patient.dataset.label });
         });
         const select = dialog.querySelector('[data-professional]');
-        apiCall('/professionals?status=ATIVO&limit=100').then(page => {
-            const groups = Object.entries(PROFESSIONAL_TYPES).map(([type, typeLabel]) => {
-                const options = page.items.filter(p => p.professional_type === type).map(p =>
-                    `<option value="${escapeHtml(p.id)}" data-type="${type}">${escapeHtml(p.full_name)}</option>`).join('');
-                return options && `<optgroup label="${escapeHtml(typeLabel)}">${options}</optgroup>`;
-            });
-            select.innerHTML = '<option value="">Selecione</option>' + groups.join('');
+        activeProfessionals().then(professionals => {
+            select.innerHTML = '<option value="">Selecione</option>' + groupedProfessionalOptions(professionals, { withType: true });
         }).catch(() => { select.innerHTML = '<option value="">Indisponível</option>'; });
         select.addEventListener('change', () => select.value && choose({
             audience: 'PROFISSIONAL', recipient_id: select.value, label: select.selectedOptions[0].textContent,

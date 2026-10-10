@@ -13,6 +13,7 @@ from app.application.use_cases.clinical_evolution_use_case import ClinicalEvolut
 from app.application.use_cases.medical_record_use_case import MedicalRecordUseCase
 from app.domain.entities.medical_record import EvolutionStatus
 from app.domain.exceptions.clinical_exceptions import NoteNotFoundError
+from app.domain.exceptions.common import EntityNotFoundError
 
 LEGACY_STATUS = {EvolutionStatus.DRAFT: "DRAFT", EvolutionStatus.SIGNED: "FINALIZED"}
 
@@ -32,9 +33,10 @@ class ClinicalNotesBridgeUseCase:
         self.records = records
 
     async def create(self, dto: ClinicalNoteCreateDTO) -> ClinicalNoteResponseDTO:
-        if await self.records.professional_repo.get_by_id(dto.doctor_id):
+        professional = await self.records.professional_repo.get_by_id(dto.doctor_id)
+        if professional:
             return as_note(await self.records.add_evolution(
-                dto.patient_id, EvolutionCreateDTO(professional_id=dto.doctor_id, content=dto.content)))
+                dto.patient_id, EvolutionCreateDTO(professional_id=dto.doctor_id, content=dto.content), professional))
         return await self.legacy.create_note(dto)
 
     async def update(self, note_id: uuid.UUID, dto: ClinicalNoteUpdateDTO) -> ClinicalNoteResponseDTO:
@@ -52,8 +54,10 @@ class ClinicalNotesBridgeUseCase:
 
     async def history(self, patient_id: uuid.UUID) -> list[ClinicalNoteResponseDTO]:
         notes = await self.legacy.get_patient_history(patient_id)
-        if await self.records.directory.get(patient_id):
+        try:
             notes += [as_note(e) for e in await self.records.list_evolutions(patient_id)]
+        except EntityNotFoundError:
+            pass  # paciente inexistente: o legado responde só com as notas antigas (lista vazia)
         return sorted(notes, key=lambda n: n.timestamp, reverse=True)
 
     async def _is_legacy(self, note_id: uuid.UUID) -> bool:

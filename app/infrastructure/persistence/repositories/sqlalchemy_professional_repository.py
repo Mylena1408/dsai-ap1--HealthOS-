@@ -147,6 +147,14 @@ class SQLAlchemyProfessionalRepository(ProfessionalRepository):
             .where(ProfessionalModel.id.in_(professional_ids)))
         return dict(rows.all())
 
+    async def get_names_and_types(self, professional_ids: set[uuid.UUID]) -> dict[uuid.UUID, tuple[str, ProfessionalType]]:
+        if not professional_ids:
+            return {}
+        rows = await self.session.execute(
+            select(ProfessionalModel.id, ProfessionalModel.full_name, ProfessionalModel.professional_type)
+            .where(ProfessionalModel.id.in_(professional_ids)))
+        return {pid: (name, ProfessionalType(kind)) for pid, name, kind in rows.all()}
+
     @staticmethod
     def _to_domain(m: ProfessionalModel) -> Professional:
         return Professional(

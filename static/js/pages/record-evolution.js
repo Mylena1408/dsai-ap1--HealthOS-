@@ -1,9 +1,9 @@
 // Aba "Evolução" do prontuário: rascunho, edição e assinatura. Assinar é só mudar a situação
 // do registro (sem senha — ADR-002); depois disso, a evolução não pode ser alterada.
 import { apiCall } from '../core/api.js';
-import { escapeHtml, formatDateTime, toast } from '../core/dom.js';
+import { escapeHtml, formatDateTime, toast, whileBusy } from '../core/dom.js';
 import { EVOLUTION_STATUS, PROFESSIONAL_TYPES, badge } from '../core/labels.js';
-import { activeProfessionals, fillAuthorSelect, whileBusy } from '../components/author-select.js';
+import { activeProfessionals, fillAuthorSelect } from '../components/author-select.js';
 
 const $ = id => document.getElementById(id);
 const card = (title, body) => `<div class="glass-card rounded-2xl p-5"><h3 class="font-bold text-slate-800 mb-3">${title}</h3>${body}</div>`;

@@ -65,3 +65,6 @@ class ProfessionalRepository(ABC):
 
     @abstractmethod
     async def get_names(self, professional_ids: set[uuid.UUID]) -> dict[uuid.UUID, str]: ...
+
+    @abstractmethod
+    async def get_names_and_types(self, professional_ids: set[uuid.UUID]) -> dict[uuid.UUID, tuple[str, ProfessionalType]]: ...

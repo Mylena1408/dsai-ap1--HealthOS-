@@ -1,16 +1,16 @@
 // Farmácia: fila de dispensação, estoque, validade e movimentações.
 import { apiCall } from '../core/api.js';
 import {
-    enableModalDismiss, escapeHtml, formatDate, formatDateTime, openModal, renderEmpty, renderLoading, toast,
+    enableModalDismiss, escapeHtml, formatDate, formatDateTime, openModal, renderEmpty, renderLoading, toast, whileBusy,
 } from '../core/dom.js';
 import { renderNav, renderDemoBanner } from '../core/layout.js';
 import { MOVEMENT_TYPES, PRESCRIPTION_STATUS, badge, fillSelect } from '../core/labels.js';
 import { renderPagination } from '../components/pagination.js';
-import { profileProfessionalId, whileBusy } from '../components/author-select.js';
+import { profileProfessionalId } from '../components/author-select.js';
 
 const $ = id => document.getElementById(id);
 const state = {
-    tab: 'queue', offset: 0, prescriptions: {}, pharmacists: {}, medications: [], current: null, dispensing: false,
+    tab: 'queue', offset: 0, prescriptions: {}, pharmacists: {}, medications: [], current: null,
 };
 const fmt = value => Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
 const card = (title, body) => `<div class="glass-card rounded-2xl p-5"><h3 class="font-bold text-slate-800 mb-3">${title}</h3>${body}</div>`;
@@ -172,7 +172,8 @@ function showDispenseResult(ok, html) {
 async function submitDispense(event) {
     event.preventDefault();
     const form = $('form-dispense');
-    if (state.dispensing || form.dataset.done) return;  // envio em andamento ou já concluído
+    const submit = form.querySelector('[type="submit"]');
+    if (form.dataset.done || submit.disabled) return;  // já concluído ou envio em andamento
     const inputs = [...document.querySelectorAll('#d-items [data-item]')];
     const over = inputs.find(input => Number(input.value) > Number(input.max));
     const items = inputs.filter(input => Number(input.value) > 0)
@@ -184,9 +185,8 @@ async function submitDispense(event) {
     const summary = items.map(i => `• ${i.name}: ${fmt(i.quantity)}`).join('\n');
     if (!window.confirm(`Confirmar a dispensação?\n\n${summary}\n\nFarmacêutico(a): ${pharmacist}\nLocal: ${$('d-location').value}`)) return;
 
-    state.dispensing = true;
     try {
-        const dispensation = await whileBusy(form.querySelector('[type="submit"]'), () => apiCall('/dispensations', 'POST', {
+        const dispensation = await whileBusy(submit, () => apiCall('/dispensations', 'POST', {
             prescription_id: state.current.id, pharmacist_id: $('d-pharmacist').value, location: $('d-location').value,
             items: items.map(({ prescription_item_id, quantity }) => ({ prescription_item_id, quantity })),
         }));
@@ -197,8 +197,6 @@ async function submitDispense(event) {
         render();
     } catch (err) {
         showDispenseResult(false, `Erro: ${escapeHtml(err.message)}`);
-    } finally {
-        state.dispensing = false;
     }
 }
 

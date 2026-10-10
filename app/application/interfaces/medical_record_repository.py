@@ -5,7 +5,7 @@ from typing import Optional
 import uuid
 
 from app.domain.entities.medical_record import (
-    Allergy, ClinicalEvolution, Condition, Diagnosis, PatientProfile, Procedure,
+    Allergy, ClinicalEvolution, Condition, Diagnosis, EvolutionStatus, PatientProfile, Procedure,
 )
 from app.domain.entities.patient import Patient
 from app.domain.entities.timeline import TimelineEvent, TimelineEventType
@@ -78,7 +78,10 @@ class MedicalRecordRepository(ABC):
     async def get_evolution(self, evolution_id: uuid.UUID) -> Optional[ClinicalEvolution]: ...
 
     @abstractmethod
-    async def save_evolution(self, evolution: ClinicalEvolution) -> ClinicalEvolution: ...
+    async def save_evolution(self, evolution: ClinicalEvolution,
+                             expected_status: Optional[EvolutionStatus] = None) -> ClinicalEvolution:
+        """Com `expected_status`, só grava se o registro ainda estiver nessa situação no banco
+        (senão ConflictError): uma edição antiga não desfaz uma assinatura feita no meio tempo."""
 
 
 @dataclass

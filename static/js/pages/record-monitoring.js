@@ -1,11 +1,11 @@
 // Abas de sinais vitais e exames do prontuário.
 import { apiCall } from '../core/api.js';
-import { escapeHtml, formatDateTime, toast } from '../core/dom.js';
+import { escapeHtml, formatDateTime, toast, whileBusy } from '../core/dom.js';
 import {
     BMI_CATEGORIES, EXAM_PRIORITY, EXAM_STATUS, RESULT_FLAGS, badge, fillSelect, flagBadge,
 } from '../core/labels.js';
 import { aiResponseCard } from '../components/ai-response.js';
-import { activeProfessionals, fillAuthorSelect, whileBusy } from '../components/author-select.js';
+import { activeProfessionals, fillAuthorSelect } from '../components/author-select.js';
 import { renderLineChart } from '../components/line-chart.js';
 
 const $ = id => document.getElementById(id);

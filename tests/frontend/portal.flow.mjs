@@ -189,6 +189,12 @@ const prefilled = await waitFor(() => asPatient.document.getElementById("p-bill-
 check("perfil paciente › paciente já vem escolhido", Boolean(prefilled)
       && !asPatient.document.getElementById("grid-patient").classList.contains("hidden"));
 check("perfil paciente › nada salvo além do perfil", asPatient.window.localStorage.getItem("healthos.patientId") === null);
+// Trocar para um perfil que não é de paciente limpa a escolha (revisão de código, R2).
+asPatient.window.localStorage.setItem("healthos.profile", JSON.stringify({
+    audience: "PROFISSIONAL", recipient_id: doctor.id, label: doctor.full_name, professional_type: "MEDICO" }));
+asPatient.window.dispatchEvent(new asPatient.window.CustomEvent("healthos:profile"));
+const cleared = await waitFor(() => [...asPatient.document.querySelectorAll("[data-portal-patient]")].every(input => input.value === ""));
+check("troca de perfil › paciente anterior deixa de estar escolhido", Boolean(cleared));
 
 const asDoctor = await openPage("index.html", "/", {
     audience: "PROFISSIONAL", recipient_id: doctor.id, label: doctor.full_name, professional_type: "MEDICO" });

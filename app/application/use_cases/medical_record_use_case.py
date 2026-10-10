@@ -19,10 +19,11 @@ from app.application.services.clinical_links import resolve_professional
 from app.application.use_cases.appointment_use_case import AppointmentUseCase
 from app.domain.entities.appointment import ACTIVE_STATUSES, AppointmentStatus
 from app.domain.entities.medical_record import (
-    Allergy, AllergyStatus, ClinicalEvolution, Condition, ConditionStatus, Diagnosis, EmergencyContact, PatientProfile,
-    Procedure,
+    Allergy, AllergyStatus, ClinicalEvolution, Condition, ConditionStatus, Diagnosis, EmergencyContact, EvolutionStatus,
+    PatientProfile, Procedure,
 )
 from app.domain.entities.patient import Patient
+from app.domain.entities.professional import Professional
 from app.application.services.events import EventPublisher, NullPublisher
 from app.domain.events import DomainEvent, EventType
 from app.domain.exceptions.common import BusinessRuleViolation, ConflictError, EntityNotFoundError
@@ -200,23 +201,30 @@ class MedicalRecordUseCase:
         await self._patient(patient_id)
         return await self._evolution_dtos(await self.records.list_evolutions(patient_id))
 
-    async def add_evolution(self, patient_id: uuid.UUID, dto: EvolutionCreateDTO) -> EvolutionDTO:
+    async def add_evolution(self, patient_id: uuid.UUID, dto: EvolutionCreateDTO,
+                            professional: Optional[Professional] = None) -> EvolutionDTO:
+        """`professional`: já carregado por quem chama (ponte de /clinical/notes), evita buscá-lo de novo."""
         await self._patient(patient_id)
-        professional_id = await self._resolve_professional(patient_id, dto.professional_id, dto.appointment_id)
+        if professional is not None and professional.id == dto.professional_id and not dto.appointment_id:
+            professional_id = professional.id
+        else:
+            professional_id = await self._resolve_professional(patient_id, dto.professional_id, dto.appointment_id)
         evolution = ClinicalEvolution(patient_id=patient_id, professional_id=professional_id, content=dto.content,
                                       appointment_id=dto.appointment_id, created_at=self.clock())
-        return (await self._evolution_dtos([await self.records.save_evolution(evolution)]))[0]
+        known = {professional.id: (professional.full_name, professional.professional_type)} if professional else None
+        return (await self._evolution_dtos([await self.records.save_evolution(evolution)], known))[0]
 
     async def update_evolution(self, patient_id: uuid.UUID, evolution_id: uuid.UUID,
                                dto: EvolutionUpdateDTO) -> EvolutionDTO:
         evolution = await self._evolution(patient_id, evolution_id)
         evolution.update_content(dto.content, self.clock())
-        return (await self._evolution_dtos([await self.records.save_evolution(evolution)]))[0]
+        await self.records.save_evolution(evolution, expected_status=EvolutionStatus.DRAFT)
+        return (await self._evolution_dtos([evolution]))[0]
 
     async def sign_evolution(self, patient_id: uuid.UUID, evolution_id: uuid.UUID) -> EvolutionDTO:
         evolution = await self._evolution(patient_id, evolution_id)
         evolution.sign(self.clock())
-        await self.records.save_evolution(evolution)
+        await self.records.save_evolution(evolution, expected_status=EvolutionStatus.DRAFT)
         await self.events.publish(DomainEvent(
             event_type=EventType.EVOLUTION_SIGNED, occurred_at=evolution.signed_at, entity_type="Evolucao",
             entity_id=evolution.id, patient_id=patient_id, professional_id=evolution.professional_id,
@@ -264,14 +272,15 @@ class MedicalRecordUseCase:
             raise EntityNotFoundError("Evolução", evolution_id)
         return evolution
 
-    async def _evolution_dtos(self, evolutions: list[ClinicalEvolution]) -> list[EvolutionDTO]:
-        professionals = {pid: await self.professional_repo.get_by_id(pid)
-                         for pid in {e.professional_id for e in evolutions}}
+    async def _evolution_dtos(self, evolutions: list[ClinicalEvolution],
+                              known: Optional[dict] = None) -> list[EvolutionDTO]:
+        known = dict(known or {})
+        missing = {e.professional_id for e in evolutions} - known.keys()
+        known.update(await self.professional_repo.get_names_and_types(missing))
         return [EvolutionDTO(
             id=e.id, patient_id=e.patient_id, professional_id=e.professional_id,
-            professional_name=professionals[e.professional_id].full_name if professionals[e.professional_id] else None,
-            professional_type=(professionals[e.professional_id].professional_type.value
-                               if professionals[e.professional_id] else None),
+            professional_name=known[e.professional_id][0] if e.professional_id in known else None,
+            professional_type=known[e.professional_id][1].value if e.professional_id in known else None,
             appointment_id=e.appointment_id, content=e.content, status=e.status, version=e.version,
             created_at=e.created_at, updated_at=e.updated_at, signed_at=e.signed_at,
         ) for e in evolutions]

@@ -80,3 +80,15 @@ export function renderEmpty(element, label) {
     const tag = ['UL', 'OL'].includes(element.tagName) ? 'li' : 'p';
     element.innerHTML = `<${tag} class="text-slate-500 text-center text-sm py-4">${escapeHtml(label)}</${tag}>`;
 }
+
+/** Desativa o botão enquanto a ação corre, evitando envios duplicados. */
+export async function whileBusy(button, action) {
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    try {
+        return await action();
+    } finally {
+        button.disabled = false;
+        button.removeAttribute('aria-busy');
+    }
+}

@@ -202,3 +202,19 @@ async def test_evolution_draft_edit_sign_and_timeline(ctx):
     event = timeline.items[0]
     assert event.title == "Evolução clínica — Dr. João (fictício)"
     assert event.status == "ASSINADA" and event.occurred_at == NOW and "sem febre" in event.description
+
+
+async def test_stale_draft_save_does_not_undo_a_signature(ctx):
+    uc, maria, doctor = ctx["records"], ctx["maria"], ctx["doctor"]
+    draft = await uc.add_evolution(maria.id, EvolutionCreateDTO(
+        professional_id=doctor.id, content="Rascunho fictício que será assinado."))
+    stale = await uc.records.get_evolution(draft.id)  # cópia lida enquanto ainda era rascunho
+    await uc.sign_evolution(maria.id, draft.id)
+
+    stale.update_content("Edição concorrente que chegou depois da assinatura.", NOW)
+    with pytest.raises(ConflictError):
+        await uc.records.save_evolution(stale, expected_status=EvolutionStatus.DRAFT)
+
+    current = await uc.records.get_evolution(draft.id)
+    assert current.status == EvolutionStatus.SIGNED and current.signed_at == NOW
+    assert current.content == "Rascunho fictício que será assinado." and current.version == 1

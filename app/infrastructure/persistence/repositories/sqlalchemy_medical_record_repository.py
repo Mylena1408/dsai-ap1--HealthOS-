@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Optional, TypeVar
 import uuid
 
-from sqlalchemy import desc, func, or_, select
+from sqlalchemy import desc, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.interfaces.medical_record_repository import (
@@ -14,6 +14,7 @@ from app.domain.entities.medical_record import (
     Procedure,
 )
 from app.domain.entities.patient import Patient
+from app.domain.exceptions.common import ConflictError
 from app.infrastructure.persistence.models.medical_record_model import (
     AllergyModel, ClinicalEvolutionModel, ConditionModel, DiagnosisModel, EmergencyContactModel, PatientProfileModel,
     ProcedureModel,
@@ -146,8 +147,20 @@ class SQLAlchemyMedicalRecordRepository(MedicalRecordRepository):
     async def get_evolution(self, evolution_id):
         return await self._get(ClinicalEvolutionModel, ClinicalEvolution, _EVOLUTION, evolution_id)
 
-    async def save_evolution(self, evolution):
-        return await self._upsert(ClinicalEvolutionModel, evolution, _EVOLUTION)
+    async def save_evolution(self, evolution, expected_status=None):
+        if expected_status is None or evolution.id is None:
+            return await self._upsert(ClinicalEvolutionModel, evolution, _EVOLUTION)
+        fields, _ = _EVOLUTION
+        values = {name: (value.value if isinstance(value, Enum) else value)
+                  for name in fields for value in [getattr(evolution, name)]}
+        # Gravação condicional: o identity map é sincronizado pelo SQLAlchemy (synchronize_session padrão).
+        result = await self.session.execute(
+            update(ClinicalEvolutionModel)
+            .where(ClinicalEvolutionModel.id == evolution.id, ClinicalEvolutionModel.status == expected_status.value)
+            .values(**values))
+        if result.rowcount != 1:
+            raise ConflictError("A evolução foi alterada ou assinada por outra operação. Recarregue e tente de novo.")
+        return evolution
 
     # ------------------------------------------------------- mapeamento genérico
 

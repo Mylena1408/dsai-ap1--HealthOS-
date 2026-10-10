@@ -64,7 +64,8 @@ function switchView(view) {
 function applyProfile() {
     const profile = getProfile();
     switchView(profile.audience === 'PROFISSIONAL' ? 'doctor' : 'patient');
-    if (profile.audience === 'PACIENTE') setPatient({ id: profile.recipient_id, full_name: profile.label });
+    // Outro perfil não herda o paciente do anterior (evita gravar no paciente errado).
+    setPatient(profile.audience === 'PACIENTE' ? { id: profile.recipient_id, full_name: profile.label } : null);
     document.querySelectorAll('[data-doctor-select]').forEach(doctors => {
         if (profile.audience === 'PROFISSIONAL' && [...doctors.options].some(o => o.value === profile.recipient_id)) {
             doctors.value = profile.recipient_id;

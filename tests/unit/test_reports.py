@@ -100,3 +100,8 @@ async def test_pdf_is_generated_with_unicode_text():
     assert pdf.startswith(b"%PDF") and len(pdf) > 1000
     empty = to_pdf(await use_case()[0].generate("estoque", None, None, None, "pdf"))
     assert empty.startswith(b"%PDF")
+
+
+def test_new_event_codes_have_accented_labels():
+    from app.application.services.code_labels import code_label
+    assert code_label("EVOLUCAO_ASSINADA") == "Evolução assinada"
