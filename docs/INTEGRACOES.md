@@ -39,6 +39,17 @@ exames (`ServiceSource`: CONSULTA, EXAME), como definido no ADR-022.
 | L4 | Notificações legadas (`/notifications`, tabela `notifications`) separadas da caixa de entrada (`inbox_notifications`) | ❌ | Notificação legada criada não aparece em `/inbox` | Não (o sino e a página Notificações usam `/inbox`) |
 | L5 | **Alertas legados de paciente** (`/admin/alerts`, tabela `patient_alerts`) separados dos alertas por regra (`system_alerts`) | ⚠️ | Aparecem na linha do tempo do prontuário, mas **não** em `/alerts` (tela Alertas, painéis da Enfermagem e da Coordenação) nem no painel do paciente | **Sim:** "Alertas Críticos" do portal |
 
+**Situação após as correções de 2026-10-10** (`SPEC/2026-10-10-portal-agenda-e-alertas.md`, commit
+`8ba928f`):
+
+- **L1 — corrigida nas telas:** o portal agenda e lista pelas consultas novas; a reserva aparece em
+  Consultas, no painel, na linha do tempo e na auditoria (fluxo `portal.flow.mjs`). A rota legada
+  `/clinical/schedule` continua na API, isolada como antes; reservas antigas ficam visíveis só para
+  consulta no portal.
+- **L5 — corrigida nas telas:** os alertas do portal aparecem no resumo do prontuário e no painel do
+  paciente. Continuam fora de `/alerts` (alertas por regra).
+- **L2 a L4:** rotas identificadas como "Legado" na descrição do Swagger; comportamento igual.
+
 ## Propostas mínimas (cada uma depende de aprovação)
 
 | # | Proposta | Muda | Contratos |
