@@ -4,6 +4,17 @@ Expansão incremental do HealthOS, um ciclo por branch (cada branch parte da ant
 Detalhes de cada módulo em [`docs/MODULOS.md`](docs/MODULOS.md); decisões em [`docs/DECISOES.md`](docs/DECISOES.md).
 Em todas as versões: dados fictícios, sem autenticação real e sem diagnóstico médico.
 
+## 1.13.0 — Portal com visões de Enfermagem e Psicologia
+Spec `SPEC/2026-10-10-portal-enfermagem-psicologia.md`. Só frontend, com rotas existentes; sem senha.
+- Portal com 4 visões (Paciente, Médico, **Enfermagem**, **Psicologia**); a visão inicial segue o perfil
+  e o paciente escolhido vale para todas.
+- **Enfermagem:** pacientes do dia, sinais vitais críticos, registro de sinais vitais e procedimento com
+  autor, evolução de enfermagem e medicamentos em uso (só consulta).
+- **Psicologia:** aviso didático de sigilo (sem bloqueio), agenda com confirmar/iniciar/finalizar,
+  agendar sessão (inclui teleconsulta), evolução com assinatura, histórico e registro de queixa.
+- Agendamento sem conflito: horários em que o paciente já tem consulta não são oferecidos.
+- "Para você" sugere o portal para enfermagem e psicologia. Teste `care.flow.mjs`.
+
 ## 1.12.0 — Modernização da interface por perfil (`feature/modernizacao-interface`)
 Trabalho em fases com aprovação a cada etapa; specs `SPEC/2026-10-10-*.md`. Sem senha nem login
 (ADR-002 reafirmado; ADR-027).

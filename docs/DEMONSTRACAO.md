@@ -29,6 +29,10 @@ uvicorn main:app --reload
 4. Troque para um **enfermeiro**: o Painel abre na visão *Enfermagem* (pacientes do dia, sinais
    vitais críticos, prescrições ativas) e o "Para você" muda. Troque para um **médico**: agenda do
    dia com "Abrir prontuário" e a área "Médicos disponíveis" com os IDs. Nenhuma troca pede senha.
+5. No **portal** (`/`), com perfil de **enfermeiro**, abre a *Visão Enfermagem*: registre sinais vitais e
+   um curativo para um paciente escolhido pelo nome. Com perfil de **psicólogo**, a *Visão Psicologia*:
+   agende uma teleconsulta (só horários sem conflito para o paciente), registre e assine a evolução da
+   sessão. Tudo aparece no prontuário e na linha do tempo.
 
 ## 2. Jornada clínica (5 min) — Atendimento
 

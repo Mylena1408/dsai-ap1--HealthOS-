@@ -104,7 +104,8 @@ Ao final, as regras de alerta são avaliadas e geram alertas e notificações pa
 Não há login nem senha (ADR-002): o **perfil de demonstração** (canto superior direito) é um setor
 (Recepção, Laboratório, Farmácia, Enfermagem, Coordenação clínica, Administração), um profissional
 (com o tipo: médico, enfermeiro, farmacêutico...) ou um paciente. O perfil escolhe a caixa de
-notificações, a visão inicial do Painel e as sugestões do menu **"Para você"**; os menus
+notificações, a visão inicial do Painel e do portal (Paciente, Médico, Enfermagem ou Psicologia) e as
+sugestões do menu **"Para você"**; os menus
 "Atendimento" e "Gestão" continuam com todas as telas — é orientação, não controle de acesso.
 
 ### Relatórios e busca
@@ -153,7 +154,7 @@ Testes do frontend (Node 18+), em `tests/frontend`:
 cd tests/frontend && npm install
 npm test                                           # componentes de gráfico, sem servidor
 HEALTHOS_URL=http://127.0.0.1:8000 npm run smoke   # todas as páginas contra a API em execução
-HEALTHOS_URL=http://127.0.0.1:8000 npm run flow    # fluxos de interface: evolução, farmácia, portal
+HEALTHOS_URL=http://127.0.0.1:8000 npm run flow    # fluxos de interface: evolução, farmácia, portal, enfermagem e psicologia
 HEALTHOS_URL=http://127.0.0.1:8000 npm run a11y    # navegador real: WCAG 2.2 AA, 6 larguras, perfis, teclado
 ```
 

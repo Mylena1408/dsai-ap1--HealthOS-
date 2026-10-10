@@ -518,3 +518,13 @@ Specs `SPEC/2026-10-10-*.md`; decisões no ADR-002 (adendo) e no ADR-027; integr
 - Portal: paciente por nome/CPF e médico em lista; agenda por `/appointments`; alertas do portal
   aparecem no prontuário e no painel do paciente.
 - Painel › Administração: a receber, vencido, faturas por situação e atalhos (sem dados clínicos).
+
+### Portal: Enfermagem e Psicologia (1.13.0)
+- Visão inicial pelo perfil: enfermeiro ou setor Enfermagem → Enfermagem; psicólogo → Psicologia.
+- Enfermagem: `GET /appointments` (hoje), `/alerts` (`SINAL_VITAL_CRITICO`), `POST /vital-signs` e
+  `POST /procedures` com `professional_id`, `POST /evolutions`, `GET /patients/{id}/medications`.
+- Psicologia: agenda por `GET /appointments?professional_id` com as ações confirm/start/complete
+  permitidas (`allowed_transitions`); agendar por `availability` + `POST /appointments`; evoluções
+  (`/evolutions`, `/sign`); condições (`/conditions`). Aviso didático de sigilo, sem bloqueio (ADR-002).
+- Horários de agendamento filtrados pelas consultas ativas do paciente (o servidor também recusa
+  sobreposição).
