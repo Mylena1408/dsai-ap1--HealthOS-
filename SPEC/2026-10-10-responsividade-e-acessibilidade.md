@@ -40,3 +40,21 @@ Sem rotas novas. O script usa as existentes para preparar os estados: `GET /pati
 
 - Corrigir o que a revisão encontrar (etapa seguinte, com aprovação).
 - Leitura com leitor de tela real (ADR-025).
+
+## Correções da primeira execução (2026-10-10)
+
+A revisão ampliada encontrou 18 falhas, em 7 problemas; todos são corrigidos só no frontend:
+
+- **P1** Esc no seletor de paciente fechava também o modal: o fechamento de modais ignora a tecla
+  já tratada pelo seletor (`event.defaultPrevented`).
+- **P2** rolagem horizontal de 69 px no Painel › Profissional (médico) em 360 px: causa confirmada
+  por medição antes da correção.
+- **P3** medidores do Health Score sem nome acessível: `aria-label` com o valor.
+- **P4** mensagem de lista vazia como `<p>` dentro de `<ul>`: `renderEmpty` usa `<li>` quando o
+  destino é lista.
+- **P5** texto `slate-500` sobre `blue-50` (itens selecionados): passa a `slate-600`.
+- **P6** texto branco sobre `emerald-600`: botões passam a `emerald-700`.
+- **P7** tabelas roláveis sem foco por teclado: contêiner com `tabindex="0"`, `role="region"` e
+  `aria-label`.
+
+Critério: `npm run a11y` sem falhas; `npm test`, `npm run smoke`, `npm run flow` e `pytest` verdes.
