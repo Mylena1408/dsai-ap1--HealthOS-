@@ -43,6 +43,8 @@ Sem rotas novas. Usadas pelo seletor de perfil (já existentes): `GET /professio
 ### Menu móvel
 - A barra completa aparece a partir de `lg` (1024 px); abaixo disso, o botão "Abrir menu" mostra o
   painel. Motivo: com o menu novo, a barra não cabe em 768 px.
+- Entre 1024 e 1279 px o texto do logo e o nome do perfil ficam ocultos (o nome continua no
+  `aria-label` do botão) e o campo de busca usa a largura menor; a partir de 1280 px (`xl`) voltam.
 - O painel mostra "Para você" primeiro e depois os grupos com todas as telas.
 
 ### Seletor de perfil

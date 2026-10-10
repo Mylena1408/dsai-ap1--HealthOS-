@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Testes do frontend: componentes e páginas em DOM simulado (jsdom) e revisão em navegador real (axe). Não fazem parte do deploy.",
   "scripts": {
-    "test": "node --test components.test.mjs",
+    "test": "node --test components.test.mjs navigation.test.mjs",
     "smoke": "node pages.smoke.mjs",
     "a11y": "node a11y.review.mjs"
   },

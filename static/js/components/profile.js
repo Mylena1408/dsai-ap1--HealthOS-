@@ -1,7 +1,9 @@
 // Perfil de demonstração (sem autenticação — ADR-002) e sino de notificações.
-// O perfil escolhe qual caixa de entrada é exibida: paciente, profissional ou setor.
+// O perfil escolhe qual caixa de entrada é exibida (paciente, profissional ou setor) e as
+// sugestões do menu "Para você" (ADR-027). Profissionais guardam também o tipo.
 import { apiCall } from '../core/api.js';
 import { escapeHtml } from '../core/dom.js';
+import { PROFESSIONAL_TYPES } from '../core/labels.js';
 
 const STORAGE_KEY = 'healthos.profile';
 export const SECTORS = {
@@ -53,7 +55,8 @@ function openPicker() {
             <div class="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl relative">
                 <button data-close-profile aria-label="Fechar" class="absolute top-4 right-4 text-slate-500 hover:text-slate-600"><i class="fas fa-times"></i></button>
                 <h3 class="text-xl font-bold text-slate-800 mb-1">Perfil de demonstração</h3>
-                <p class="text-xs text-slate-500 mb-4">Sem senha: escolha de quem é a caixa de notificações exibida.</p>
+                <p class="text-xs text-slate-600 mb-4">Sem senha: o perfil escolhe a caixa de notificações e as
+                    sugestões do menu "Para você". Todas as telas continuam acessíveis.</p>
                 <div class="space-y-4">
                     <div><span class="text-sm font-medium text-slate-700">Setor</span>
                         <div class="flex flex-wrap gap-2 mt-2">${Object.entries(SECTORS).map(([key, label]) =>
@@ -75,11 +78,16 @@ function openPicker() {
         });
         const select = dialog.querySelector('[data-professional]');
         apiCall('/professionals?status=ATIVO&limit=100').then(page => {
-            select.innerHTML = '<option value="">Selecione</option>' + page.items.map(p =>
-                `<option value="${escapeHtml(p.id)}">${escapeHtml(p.full_name)}</option>`).join('');
+            const groups = Object.entries(PROFESSIONAL_TYPES).map(([type, typeLabel]) => {
+                const options = page.items.filter(p => p.professional_type === type).map(p =>
+                    `<option value="${escapeHtml(p.id)}" data-type="${type}">${escapeHtml(p.full_name)}</option>`).join('');
+                return options && `<optgroup label="${escapeHtml(typeLabel)}">${options}</optgroup>`;
+            });
+            select.innerHTML = '<option value="">Selecione</option>' + groups.join('');
         }).catch(() => { select.innerHTML = '<option value="">Indisponível</option>'; });
         select.addEventListener('change', () => select.value && choose({
-            audience: 'PROFISSIONAL', recipient_id: select.value, label: select.selectedOptions[0].textContent }));
+            audience: 'PROFISSIONAL', recipient_id: select.value, label: select.selectedOptions[0].textContent,
+            professional_type: select.selectedOptions[0].dataset.type }));
         let debounce;
         dialog.querySelector('[data-patient-search]').addEventListener('input', event => {
             clearTimeout(debounce);
@@ -104,7 +112,7 @@ export function mountProfileControls(container) {
     wrapper.className = 'flex items-center gap-1 shrink-0';
     wrapper.innerHTML = `
         <button data-profile class="px-2 py-2 rounded-md text-xs sm:text-sm text-slate-600 hover:bg-slate-100 flex items-center gap-1 max-w-[10rem]">
-            <i class="fas fa-user-circle" aria-hidden="true"></i><span class="hidden sm:inline md:hidden lg:inline truncate" data-profile-label></span></button>
+            <i class="fas fa-user-circle" aria-hidden="true"></i><span class="hidden sm:inline md:hidden xl:inline truncate" data-profile-label></span></button>
         <a href="/app/notificacoes" data-bell class="relative px-2 py-2 rounded-md text-slate-600 hover:bg-slate-100">
             <i class="fas fa-bell" aria-hidden="true"></i>
             <span data-unread class="hidden absolute -top-0.5 -right-0.5 bg-red-600 text-white text-[10px] font-bold rounded-full px-1.5 leading-4"></span></a>`;
@@ -113,8 +121,10 @@ export function mountProfileControls(container) {
     const bell = wrapper.querySelector('[data-bell]');
     const button = wrapper.querySelector('[data-profile]');
     const update = () => {
-        label.textContent = getProfile().label;
-        button.setAttribute('aria-label', `Perfil de demonstração: ${getProfile().label} (trocar)`);
+        const profile = getProfile();
+        const type = PROFESSIONAL_TYPES[profile.professional_type];
+        label.textContent = profile.label;
+        button.setAttribute('aria-label', `Perfil de demonstração: ${profile.label}${type ? `, ${type}` : ''} (trocar)`);
         refreshBell(bell);
     };
     button.addEventListener('click', openPicker);

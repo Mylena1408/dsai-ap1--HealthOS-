@@ -71,3 +71,9 @@ body { font-family: 'Inter', sans-serif; }
 .meter-attention { background: #fdeccc; } .meter-attention > span { background: #fab219; }
 .meter-critical { background: #f6d4d4; } .meter-critical > span { background: #d03b3b; }
 .meter-na { background: #f0efec; }
+
+/* Foco visível por teclado em links, botões e elementos focáveis (campos já mudam a borda). */
+a:focus-visible, button:focus-visible, [tabindex]:focus-visible, summary:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
