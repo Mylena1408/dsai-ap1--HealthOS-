@@ -145,3 +145,32 @@ def test_notifications(client, patient_id):
 
     no_recipient = client.post(f"{API}/notifications/send", json={"type": "LEMBRETE_CONSULTA", "title": "x", "message": "y"})
     assert no_recipient.status_code == 400
+
+
+def test_clinical_note_with_professional_id_becomes_evolution(client, patient_id):
+    doctor = client.post(f"{API}/professionals", json={
+        "full_name": "Dra. Ponte (fictícia)", "professional_type": "MEDICO", "registry_number": "CRM-PONTE 1"}).json()
+    note = client.post(f"{API}/clinical/notes", json={
+        "patient_id": patient_id, "doctor_id": doctor["id"], "content": "Evolução fictícia pelo portal."})
+    assert note.status_code == 201, note.text
+    body = note.json()
+    assert body["doctor_id"] == doctor["id"] and body["status"] == "DRAFT" and body["version"] == 1
+    note_id = body["id"]
+
+    assert client.patch(f"{API}/clinical/notes/{note_id}", json={"content": "Evolução fictícia revisada."}).json()["version"] == 2
+    assert client.patch(f"{API}/clinical/notes/{note_id}/finalize").json()["status"] == "FINALIZED"
+    assert client.patch(f"{API}/clinical/notes/{note_id}", json={"content": "Edição proibida aqui."}).status_code == 400
+    assert client.patch(f"{API}/clinical/notes/{note_id}/finalize").status_code == 400
+    assert client.patch(f"{API}/clinical/notes/{uuid.uuid4()}/finalize").status_code == 404
+
+    history = client.get(f"{API}/clinical/patients/{patient_id}/history").json()
+    assert note_id in [n["id"] for n in history]
+    assert [n["timestamp"] for n in history] == sorted((n["timestamp"] for n in history), reverse=True)
+    evolutions = client.get(f"{API}/patients/{patient_id}/evolutions").json()
+    assert {e["id"]: e["status"] for e in evolutions}[note_id] == "ASSINADA"
+
+
+def test_nursing_sector_inbox_is_accepted(client):
+    response = client.get(f"{API}/inbox", params={"audience": "SETOR", "sector": "ENFERMAGEM"})
+    assert response.status_code == 200
+    assert client.get(f"{API}/inbox/counts", params={"audience": "SETOR", "sector": "ENFERMAGEM"}).status_code == 200

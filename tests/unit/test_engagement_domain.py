@@ -102,3 +102,15 @@ async def test_events_without_professional_skip_personal_notification():
     await NotificationPolicy(inbox)(DomainEvent(EventType.EXAM_RELEASED, NOW, "Exame", uuid.uuid4(), "x",
                                                 patient_id=uuid.uuid4(), professional_id=None))
     assert [n.audience for n in inbox.saved] == [Audience.PATIENT]
+
+
+async def test_prescription_notifies_pharmacy_nursing_and_patient():
+    inbox = FakeInbox()
+    patient = uuid.uuid4()
+    await NotificationPolicy(inbox)(DomainEvent(EventType.PRESCRIPTION_ISSUED, NOW, "Prescricao", uuid.uuid4(),
+                                                "Prescrição emitida", patient_id=patient))
+    assert [(n.audience, n.recipient_id or n.sector) for n in inbox.saved] == [
+        (Audience.SECTOR, Sector.PHARMACY), (Audience.SECTOR, Sector.NURSING), (Audience.PATIENT, patient)]
+    nursing = inbox.saved[1]
+    assert nursing.title == "Nova prescrição para acompanhamento"
+    assert nursing.link == f"/app/prontuario?patient={patient}"

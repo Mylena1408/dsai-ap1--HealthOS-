@@ -1,4 +1,4 @@
-"""Prontuário eletrônico didático: perfil clínico, alergias, condições, diagnósticos e procedimentos.
+"""Prontuário eletrônico didático: perfil clínico, alergias, condições, diagnósticos, procedimentos e evoluções.
 
 Todas as informações são fictícias e servem apenas para demonstrar regras de
 negócio; nada aqui representa orientação ou diagnóstico médico real.
@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Optional
 import uuid
 
-from app.domain.exceptions.common import BusinessRuleViolation, InvalidTransitionError
+from app.domain.exceptions.common import BusinessRuleViolation, ConflictError, InvalidTransitionError
 
 MAX_EMERGENCY_CONTACTS = 3
 
@@ -241,3 +241,52 @@ class Procedure:
     def validate_date(self, now: datetime) -> None:
         if self.performed_at > now:
             raise BusinessRuleViolation("Um procedimento realizado não pode ter data futura.")
+
+
+# ---------------------------------------------------------------- evoluções
+
+EVOLUTION_MIN_LENGTH = 10
+EVOLUTION_MAX_LENGTH = 10000
+
+
+class EvolutionStatus(Enum):
+    DRAFT = "RASCUNHO"
+    SIGNED = "ASSINADA"
+
+
+@dataclass
+class ClinicalEvolution:
+    """Evolução clínica: editável enquanto rascunho; depois de assinada, imutável."""
+    patient_id: uuid.UUID
+    professional_id: uuid.UUID
+    content: str
+    created_at: datetime
+    appointment_id: Optional[uuid.UUID] = None
+    status: EvolutionStatus = EvolutionStatus.DRAFT
+    version: int = 1
+    updated_at: Optional[datetime] = None
+    signed_at: Optional[datetime] = None
+    id: Optional[uuid.UUID] = None
+
+    def __post_init__(self):
+        self.content = self._valid_content(self.content)
+
+    @staticmethod
+    def _valid_content(content: str) -> str:
+        text = _require_text(content, "O texto da evolução", EVOLUTION_MIN_LENGTH)
+        if len(text) > EVOLUTION_MAX_LENGTH:
+            raise BusinessRuleViolation(f"O texto da evolução deve ter no máximo {EVOLUTION_MAX_LENGTH} caracteres.")
+        return text
+
+    def update_content(self, content: str, now: datetime) -> None:
+        if self.status == EvolutionStatus.SIGNED:
+            raise ConflictError("Evolução assinada não pode ser alterada.")
+        self.content = self._valid_content(content)
+        self.version += 1
+        self.updated_at = now
+
+    def sign(self, now: datetime) -> None:
+        if self.status == EvolutionStatus.SIGNED:
+            raise InvalidTransitionError("Evolução", self.status.value, EvolutionStatus.SIGNED.value)
+        self.status = EvolutionStatus.SIGNED
+        self.signed_at = now

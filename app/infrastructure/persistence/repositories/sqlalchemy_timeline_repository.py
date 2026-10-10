@@ -24,7 +24,7 @@ from app.infrastructure.persistence.models.clinical_monitoring_model import (
     ExamRequestModel, ExamTypeModel, VitalSignsModel,
 )
 from app.infrastructure.persistence.models.medical_record_model import (
-    AllergyModel, ConditionModel, DiagnosisModel, ProcedureModel,
+    AllergyModel, ClinicalEvolutionModel, ConditionModel, DiagnosisModel, ProcedureModel,
 )
 from app.infrastructure.persistence.models.medication_model import MedicationModel
 from app.infrastructure.persistence.models.patient_model import PatientModel
@@ -55,7 +55,7 @@ class SQLAlchemyTimelineRepository(TimelineRepository):
             T.REGISTRATION: self._registration, T.APPOINTMENT: self._appointments,
             T.CLINICAL_NOTE: self._notes, T.ALERT: self._alerts, T.TRIAGE: self._triages,
             T.ALLERGY: self._allergies, T.CONDITION: self._conditions,
-            T.DIAGNOSIS: self._diagnoses, T.PROCEDURE: self._procedures,
+            T.DIAGNOSIS: self._diagnoses, T.PROCEDURE: self._procedures, T.EVOLUTION: self._evolutions,
             T.VITAL_SIGNS: self._vital_signs, T.EXAM: self._exams,
             T.PRESCRIPTION: self._prescriptions, T.DISPENSATION: self._dispensations,
         }
@@ -137,6 +137,15 @@ class SQLAlchemyTimelineRepository(TimelineRepository):
     async def _procedures(self, patient_id):
         return [TimelineEvent(p.performed_at, T.PROCEDURE, f"Procedimento: {p.name}", p.id, description=p.notes)
                 for p in await self._rows(ProcedureModel, patient_id)]
+
+    async def _evolutions(self, patient_id):
+        rows = await self.session.execute(
+            select(ClinicalEvolutionModel, ProfessionalModel.full_name)
+            .join(ProfessionalModel, ProfessionalModel.id == ClinicalEvolutionModel.professional_id)
+            .where(ClinicalEvolutionModel.patient_id == patient_id))
+        return [TimelineEvent(e.signed_at or e.created_at, T.EVOLUTION, f"Evolução clínica — {professional}", e.id,
+                              description=_preview(e.content), status=e.status)
+                for e, professional in rows.all()]
 
     async def _vital_signs(self, patient_id):
         events = []

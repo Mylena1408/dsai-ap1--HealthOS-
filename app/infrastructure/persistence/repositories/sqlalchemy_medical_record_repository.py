@@ -9,12 +9,14 @@ from app.application.interfaces.medical_record_repository import (
     MedicalRecordRepository, PatientDirectoryRepository, PatientSearch,
 )
 from app.domain.entities.medical_record import (
-    Allergy, AllergyCategory, AllergySeverity, AllergyStatus, BloodType, Condition, ConditionStatus, Diagnosis,
-    DiagnosisCertainty, DiagnosisType, EmergencyContact, PatientProfile, Procedure,
+    Allergy, AllergyCategory, AllergySeverity, AllergyStatus, BloodType, ClinicalEvolution, Condition,
+    ConditionStatus, Diagnosis, DiagnosisCertainty, DiagnosisType, EmergencyContact, EvolutionStatus, PatientProfile,
+    Procedure,
 )
 from app.domain.entities.patient import Patient
 from app.infrastructure.persistence.models.medical_record_model import (
-    AllergyModel, ConditionModel, DiagnosisModel, EmergencyContactModel, PatientProfileModel, ProcedureModel,
+    AllergyModel, ClinicalEvolutionModel, ConditionModel, DiagnosisModel, EmergencyContactModel, PatientProfileModel,
+    ProcedureModel,
 )
 from app.infrastructure.persistence.models.patient_model import PatientModel
 from app.infrastructure.persistence.repositories.sqlalchemy_patient_repository import SQLAlchemyPatientRepository
@@ -30,6 +32,8 @@ _DIAGNOSIS = (["patient_id", "professional_id", "appointment_id", "description",
                "certainty", "notes", "diagnosed_at"],
               {"diagnosis_type": DiagnosisType, "certainty": DiagnosisCertainty})
 _PROCEDURE = (["patient_id", "professional_id", "appointment_id", "name", "performed_at", "notes"], {})
+_EVOLUTION = (["patient_id", "professional_id", "appointment_id", "content", "status", "version", "created_at",
+               "updated_at", "signed_at"], {"status": EvolutionStatus})
 
 
 class SQLAlchemyPatientDirectoryRepository(PatientDirectoryRepository):
@@ -134,6 +138,16 @@ class SQLAlchemyMedicalRecordRepository(MedicalRecordRepository):
 
     async def save_procedure(self, procedure):
         return await self._upsert(ProcedureModel, procedure, _PROCEDURE)
+
+    async def list_evolutions(self, patient_id):
+        return await self._list(ClinicalEvolutionModel, ClinicalEvolution, _EVOLUTION, patient_id,
+                                desc(ClinicalEvolutionModel.created_at))
+
+    async def get_evolution(self, evolution_id):
+        return await self._get(ClinicalEvolutionModel, ClinicalEvolution, _EVOLUTION, evolution_id)
+
+    async def save_evolution(self, evolution):
+        return await self._upsert(ClinicalEvolutionModel, evolution, _EVOLUTION)
 
     # ------------------------------------------------------- mapeamento genérico
 

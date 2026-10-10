@@ -8,7 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.application.dtos.common import Page
 from app.application.dtos.medical_record_dto import (
     AllergyCreateDTO, AllergyDTO, ConditionCreateDTO, ConditionDTO, ConditionStatusDTO, DiagnosisCreateDTO,
-    DiagnosisDTO, EmergencyContactCreateDTO, MedicalRecordDTO, PatientListItemDTO, ProcedureCreateDTO, ProcedureDTO,
+    DiagnosisDTO, EmergencyContactCreateDTO, EvolutionCreateDTO, EvolutionDTO, EvolutionUpdateDTO, MedicalRecordDTO,
+    PatientListItemDTO, ProcedureCreateDTO, ProcedureDTO,
     ProfileDTO, ProfileUpdateDTO, TimelineEventDTO,
 )
 from app.application.interfaces.medical_record_repository import PatientSearch, TimelineQuery
@@ -156,3 +157,27 @@ async def list_procedures(patient_id: uuid.UUID, use_case: MedicalRecordUseCase 
 @router.post("/{patient_id}/procedures", response_model=ProcedureDTO, status_code=status.HTTP_201_CREATED)
 async def add_procedure(patient_id: uuid.UUID, request: ProcedureCreateDTO, use_case: MedicalRecordUseCase = UseCase):
     return await use_case.add_procedure(patient_id, request)
+
+
+@router.get("/{patient_id}/evolutions", response_model=list[EvolutionDTO], summary="Evoluções clínicas do paciente")
+async def list_evolutions(patient_id: uuid.UUID, use_case: MedicalRecordUseCase = UseCase):
+    return await use_case.list_evolutions(patient_id)
+
+
+@router.post("/{patient_id}/evolutions", response_model=EvolutionDTO, status_code=status.HTTP_201_CREATED,
+             summary="Cria uma evolução em rascunho")
+async def add_evolution(patient_id: uuid.UUID, request: EvolutionCreateDTO, use_case: MedicalRecordUseCase = UseCase):
+    return await use_case.add_evolution(patient_id, request)
+
+
+@router.patch("/{patient_id}/evolutions/{evolution_id}", response_model=EvolutionDTO,
+              summary="Edita o texto de uma evolução em rascunho")
+async def update_evolution(patient_id: uuid.UUID, evolution_id: uuid.UUID, request: EvolutionUpdateDTO,
+                           use_case: MedicalRecordUseCase = UseCase):
+    return await use_case.update_evolution(patient_id, evolution_id, request)
+
+
+@router.post("/{patient_id}/evolutions/{evolution_id}/sign", response_model=EvolutionDTO,
+             summary="Assina a evolução (depois disso, ela não pode ser alterada)")
+async def sign_evolution(patient_id: uuid.UUID, evolution_id: uuid.UUID, use_case: MedicalRecordUseCase = UseCase):
+    return await use_case.sign_evolution(patient_id, evolution_id)

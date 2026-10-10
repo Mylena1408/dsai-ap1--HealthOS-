@@ -7,8 +7,8 @@ from pydantic import BaseModel, Field
 from app.application.dtos.appointment_dto import AppointmentResponseDTO
 from app.application.dtos.patient_dto import PatientResponseDTO
 from app.domain.entities.medical_record import (
-    AllergyCategory, AllergySeverity, AllergyStatus, BloodType, ConditionStatus,
-    DiagnosisCertainty, DiagnosisType,
+    EVOLUTION_MAX_LENGTH, EVOLUTION_MIN_LENGTH, AllergyCategory, AllergySeverity, AllergyStatus, BloodType,
+    ConditionStatus, DiagnosisCertainty, DiagnosisType, EvolutionStatus,
 )
 from app.domain.entities.timeline import TimelineEventType
 
@@ -118,6 +118,33 @@ class ProcedureCreateDTO(BaseModel):
 class ProcedureDTO(ProcedureCreateDTO):
     id: uuid.UUID
     professional_name: Optional[str]
+
+
+# --------------------------------------------------------------- evoluções
+
+class EvolutionCreateDTO(BaseModel):
+    professional_id: uuid.UUID
+    content: str = Field(..., min_length=EVOLUTION_MIN_LENGTH, max_length=EVOLUTION_MAX_LENGTH)
+    appointment_id: Optional[uuid.UUID] = None
+
+
+class EvolutionUpdateDTO(BaseModel):
+    content: str = Field(..., min_length=EVOLUTION_MIN_LENGTH, max_length=EVOLUTION_MAX_LENGTH)
+
+
+class EvolutionDTO(BaseModel):
+    id: uuid.UUID
+    patient_id: uuid.UUID
+    professional_id: uuid.UUID
+    professional_name: Optional[str]
+    professional_type: Optional[str]
+    appointment_id: Optional[uuid.UUID]
+    content: str
+    status: EvolutionStatus
+    version: int
+    created_at: datetime
+    updated_at: Optional[datetime]
+    signed_at: Optional[datetime]
 
 
 # ------------------------------------------------------- visão consolidada

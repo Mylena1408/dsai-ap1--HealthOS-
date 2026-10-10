@@ -1,7 +1,8 @@
 // Aba "Medicamentos" do prontuário: medicamentos em uso/suspensos e nova prescrição.
 import { apiCall } from '../core/api.js';
 import { escapeHtml, formatDate, formatDateTime, toast } from '../core/dom.js';
-import { ITEM_STATUS, PRESCRIPTION_STATUS, ROUTES, badge, fillSelect } from '../core/labels.js';
+import { ITEM_STATUS, PRESCRIPTION_STATUS, PROFESSIONAL_TYPES, ROUTES, badge, fillSelect } from '../core/labels.js';
+import { getProfile } from '../components/profile.js';
 
 const $ = id => document.getElementById(id);
 const card = (title, body) => `<div class="glass-card rounded-2xl p-5"><h3 class="font-bold text-slate-800 mb-3">${title}</h3>${body}</div>`;
@@ -16,6 +17,15 @@ function itemRow(index, medications) {
         <label class="text-xs text-slate-600">Dias<input data-field="duration_days" type="number" min="1" max="365" required value="7" class="w-full p-2 border rounded-lg mt-1"></label>
         <label class="text-xs text-slate-600">Quantidade<input data-field="quantity" type="number" min="1" step="any" required value="21" class="w-full p-2 border rounded-lg mt-1"></label>
     </div>`;
+}
+
+// Só médicos prescrevem (regra do servidor); o aviso evita a recusa para perfis de outro tipo.
+function prescriberNotice() {
+    const profile = getProfile();
+    if (profile.audience !== 'PROFISSIONAL' || !profile.professional_type || profile.professional_type === 'MEDICO') return '';
+    return `<p class="text-sm text-amber-800 bg-amber-50 rounded-lg p-2" role="note"><i class="fas fa-circle-info" aria-hidden="true"></i>
+        Seu perfil de demonstração é ${escapeHtml(PROFESSIONAL_TYPES[profile.professional_type] || profile.professional_type)}.
+        Apenas médicos(as) prescrevem: escolha o(a) prescritor(a) abaixo ou troque o perfil.</p>`;
 }
 
 export async function renderMedicationsTab(container, { patientId, onChange }) {
@@ -57,6 +67,7 @@ export async function renderMedicationsTab(container, { patientId, onChange }) {
             </li>`).join('')}</ul>` : '<p class="text-sm text-slate-500">Nenhuma prescrição.</p>')}
         ${card('Nova prescrição', `
             <form id="form-rx" class="space-y-3">
+                ${prescriberNotice()}
                 <label class="text-sm text-slate-600 block">Médico(a) prescritor(a)<select id="rx-doctor" required class="w-full p-2 border rounded-lg mt-1"></select></label>
                 <div id="rx-items" class="space-y-2">${itemRow(0, medicationOptions)}</div>
                 <button type="button" id="rx-add" class="text-sm text-blue-700 font-semibold"><i class="fas fa-plus"></i> Adicionar item</button>
@@ -68,6 +79,10 @@ export async function renderMedicationsTab(container, { patientId, onChange }) {
             </form>`)}`;
 
     fillSelect($('rx-doctor'), Object.fromEntries(doctors.items.map(d => [d.id, d.full_name])), 'Selecione');
+    const profile = getProfile();
+    if (profile.audience === 'PROFISSIONAL' && doctors.items.some(d => d.id === profile.recipient_id)) {
+        $('rx-doctor').value = profile.recipient_id;
+    }
     let rows = 1;
     $('rx-add').addEventListener('click', () => $('rx-items').insertAdjacentHTML('beforeend', itemRow(rows++, medicationOptions)));
 

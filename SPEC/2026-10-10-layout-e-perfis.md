@@ -69,7 +69,7 @@ Sem rotas novas. Usadas pelo seletor de perfil (já existentes): `GET /professio
 
 ## Fora do escopo
 
-- Setor "Enfermagem" na caixa de notificações: `Sector` (back-end) aceita só cinco setores e
-  nenhuma regra envia avisos para enfermagem. Exige alterar a API; fica para decisão futura.
+- Setor "Enfermagem" na caixa de notificações: `Sector` (back-end) aceitava só cinco setores.
+  Incluído depois, na Fase 3 (`2026-10-10-medico-e-evolucao.md`).
 - Visões novas no Painel (Fases 3, 4 e 6).
 - Alterar os 14 HTML de `static/pages` e o `index.html`.

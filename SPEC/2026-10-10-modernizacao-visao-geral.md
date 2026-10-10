@@ -44,7 +44,7 @@ autorização própria. Branch: `feature/modernizacao-interface`.
 | Perfil | Telas em "Para você" |
 |---|---|
 | Médico | Painel, Prontuário, Consultas, Laboratório, Alertas, Assistente |
-| Enfermeiro | Painel, Prontuário, Consultas, Alertas, Laboratório |
+| Enfermeiro e setor Enfermagem (Fase 3) | Painel, Prontuário, Consultas, Alertas, Laboratório |
 | Psicólogo, nutricionista, fisioterapeuta, outro ou tipo desconhecido | Painel, Prontuário, Consultas, Alertas |
 | Farmacêutico e setor Farmácia | Painel, Farmácia, Prontuário, Alertas |
 | Setor Laboratório | Laboratório, Painel, Alertas |

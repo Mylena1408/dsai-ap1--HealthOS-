@@ -16,6 +16,7 @@ installDom();
 const { pagesForProfile } = await import("../../static/js/core/role-nav.js");
 const { renderNav } = await import("../../static/js/core/layout.js");
 const { setProfile } = await import("../../static/js/components/profile.js");
+const { fillAuthorSelect } = await import("../../static/js/components/author-select.js");
 
 const doctor = { audience: "PROFISSIONAL", recipient_id: "1", label: "Ana Lima", professional_type: "MEDICO" };
 const nurse = { audience: "PROFISSIONAL", recipient_id: "2", label: "Rui Costa", professional_type: "ENFERMEIRO" };
@@ -33,6 +34,7 @@ test("sugestões por perfil cobrem todos os tipos, setores e o paciente", () => 
     }
     const sector = key => pagesForProfile({ audience: "SETOR", sector: key });
     assert.deepEqual(sector("FARMACIA"), ["painel", "farmacia", "prontuario", "alertas"]);
+    assert.deepEqual(sector("ENFERMAGEM"), pagesForProfile(nurse));
     assert.deepEqual(sector("LABORATORIO"), ["laboratorio", "painel", "alertas"]);
     assert.deepEqual(sector("RECEPCAO"), ["consultas", "busca", "profissionais"]);
     assert.deepEqual(sector("COORDENACAO_CLINICA"), ["painel", "alertas", "profissionais", "relatorios", "auditoria"]);
@@ -84,4 +86,22 @@ test("rótulo do perfil é escapado e perfis antigos sem tipo recebem a sugestã
     assert.equal(env.document.querySelectorAll("#app-nav img").length, 0);
     assert.match(env.document.querySelector("[data-for-you-label]").textContent, /<img src=x/);
     assert.deepEqual(forYouHrefs(0), ["/app/painel", "/app/prontuario", "/app/consultas", "/app/alertas"]);
+});
+
+test("autor do registro é sugerido pelo perfil profissional e agrupado por tipo", () => {
+    const professionals = [
+        { id: "1", full_name: "Ana Lima", professional_type: "MEDICO" },
+        { id: "2", full_name: "Rui Costa", professional_type: "ENFERMEIRO" },
+    ];
+    const select = () => env.document.body.appendChild(env.document.createElement("select"));
+    save(nurse);
+    const forNurse = select();
+    fillAuthorSelect(forNurse, professionals);
+    assert.equal(forNurse.value, "2");
+    assert.deepEqual([...forNurse.querySelectorAll("optgroup")].map(g => g.label), ["Médico(a)", "Enfermeiro(a)"]);
+    save(patient);
+    const forPatient = select();
+    fillAuthorSelect(forPatient, professionals, { placeholder: "Selecione" });
+    assert.equal(forPatient.value, "");
+    assert.equal(forPatient.options[0].textContent, "Selecione");
 });

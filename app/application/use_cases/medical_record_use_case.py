@@ -1,11 +1,12 @@
 from datetime import date, datetime
-from typing import Callable
+from typing import Callable, Optional
 import uuid
 
 from app.application.dtos.common import Page
 from app.application.dtos.medical_record_dto import (
     AllergyCreateDTO, AllergyDTO, ConditionCreateDTO, ConditionDTO, DiagnosisCreateDTO, DiagnosisDTO,
-    EmergencyContactCreateDTO, EmergencyContactDTO, MedicalRecordDTO, PatientListItemDTO, ProcedureCreateDTO,
+    EmergencyContactCreateDTO, EmergencyContactDTO, EvolutionCreateDTO, EvolutionDTO, EvolutionUpdateDTO,
+    MedicalRecordDTO, PatientListItemDTO, ProcedureCreateDTO,
     ProcedureDTO, ProfileDTO, ProfileUpdateDTO, TimelineEventDTO,
 )
 from app.application.dtos.patient_dto import PatientResponseDTO
@@ -18,7 +19,8 @@ from app.application.services.clinical_links import resolve_professional
 from app.application.use_cases.appointment_use_case import AppointmentUseCase
 from app.domain.entities.appointment import ACTIVE_STATUSES, AppointmentStatus
 from app.domain.entities.medical_record import (
-    Allergy, AllergyStatus, Condition, ConditionStatus, Diagnosis, EmergencyContact, PatientProfile, Procedure,
+    Allergy, AllergyStatus, ClinicalEvolution, Condition, ConditionStatus, Diagnosis, EmergencyContact, PatientProfile,
+    Procedure,
 )
 from app.domain.entities.patient import Patient
 from app.application.services.events import EventPublisher, NullPublisher
@@ -192,6 +194,39 @@ class MedicalRecordUseCase:
         procedure.validate_date(self.clock())
         return (await self._procedure_dtos([await self.records.save_procedure(procedure)]))[0]
 
+    # --------------------------------------------------------------- evoluções
+
+    async def list_evolutions(self, patient_id: uuid.UUID) -> list[EvolutionDTO]:
+        await self._patient(patient_id)
+        return await self._evolution_dtos(await self.records.list_evolutions(patient_id))
+
+    async def add_evolution(self, patient_id: uuid.UUID, dto: EvolutionCreateDTO) -> EvolutionDTO:
+        await self._patient(patient_id)
+        professional_id = await self._resolve_professional(patient_id, dto.professional_id, dto.appointment_id)
+        evolution = ClinicalEvolution(patient_id=patient_id, professional_id=professional_id, content=dto.content,
+                                      appointment_id=dto.appointment_id, created_at=self.clock())
+        return (await self._evolution_dtos([await self.records.save_evolution(evolution)]))[0]
+
+    async def update_evolution(self, patient_id: uuid.UUID, evolution_id: uuid.UUID,
+                               dto: EvolutionUpdateDTO) -> EvolutionDTO:
+        evolution = await self._evolution(patient_id, evolution_id)
+        evolution.update_content(dto.content, self.clock())
+        return (await self._evolution_dtos([await self.records.save_evolution(evolution)]))[0]
+
+    async def sign_evolution(self, patient_id: uuid.UUID, evolution_id: uuid.UUID) -> EvolutionDTO:
+        evolution = await self._evolution(patient_id, evolution_id)
+        evolution.sign(self.clock())
+        await self.records.save_evolution(evolution)
+        await self.events.publish(DomainEvent(
+            event_type=EventType.EVOLUTION_SIGNED, occurred_at=evolution.signed_at, entity_type="Evolucao",
+            entity_id=evolution.id, patient_id=patient_id, professional_id=evolution.professional_id,
+            summary=f"Evolução clínica assinada (versão {evolution.version})."))
+        return (await self._evolution_dtos([evolution]))[0]
+
+    async def find_evolution(self, evolution_id: uuid.UUID) -> Optional[ClinicalEvolution]:
+        """Busca sem paciente: usada pela compatibilidade de /clinical/notes."""
+        return await self.records.get_evolution(evolution_id)
+
     # ---------------------------------------------------------- linha do tempo
 
     async def timeline(self, query: TimelineQuery, newest_first: bool = True,
@@ -222,6 +257,24 @@ class MedicalRecordUseCase:
     async def _resolve_professional(self, patient_id, professional_id, appointment_id):
         return await resolve_professional(self.appointment_repo, self.professional_repo,
                                           patient_id, professional_id, appointment_id)
+
+    async def _evolution(self, patient_id: uuid.UUID, evolution_id: uuid.UUID) -> ClinicalEvolution:
+        evolution = await self.records.get_evolution(evolution_id)
+        if not evolution or evolution.patient_id != patient_id:
+            raise EntityNotFoundError("Evolução", evolution_id)
+        return evolution
+
+    async def _evolution_dtos(self, evolutions: list[ClinicalEvolution]) -> list[EvolutionDTO]:
+        professionals = {pid: await self.professional_repo.get_by_id(pid)
+                         for pid in {e.professional_id for e in evolutions}}
+        return [EvolutionDTO(
+            id=e.id, patient_id=e.patient_id, professional_id=e.professional_id,
+            professional_name=professionals[e.professional_id].full_name if professionals[e.professional_id] else None,
+            professional_type=(professionals[e.professional_id].professional_type.value
+                               if professionals[e.professional_id] else None),
+            appointment_id=e.appointment_id, content=e.content, status=e.status, version=e.version,
+            created_at=e.created_at, updated_at=e.updated_at, signed_at=e.signed_at,
+        ) for e in evolutions]
 
     async def _update_diagnosis(self, patient_id, diagnosis_id, action) -> DiagnosisDTO:
         diagnosis = await self.records.get_diagnosis(diagnosis_id)

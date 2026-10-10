@@ -76,6 +76,7 @@ export const TIMELINE_TYPES = {
     CONDICAO: { label: 'Condição', icon: 'fa-notes-medical', color: 'bg-purple-500' },
     DIAGNOSTICO: { label: 'Diagnóstico', icon: 'fa-magnifying-glass', color: 'bg-indigo-500' },
     PROCEDIMENTO: { label: 'Procedimento', icon: 'fa-syringe', color: 'bg-teal-500' },
+    EVOLUCAO: { label: 'Evolução', icon: 'fa-file-signature', color: 'bg-sky-600' },
     SINAIS_VITAIS: { label: 'Sinais vitais', icon: 'fa-heart-pulse', color: 'bg-rose-500' },
     EXAME: { label: 'Exame', icon: 'fa-vial', color: 'bg-cyan-600' },
     PRESCRICAO: { label: 'Prescrição', icon: 'fa-prescription', color: 'bg-violet-600' },
@@ -159,3 +160,8 @@ export const INVOICE_STATUS = {
 
 export const PAYMENT_METHODS = { PIX: 'Pix', CARTAO: 'Cartão', DINHEIRO: 'Dinheiro', CONVENIO: 'Repasse do convênio',
                                  NAO_INFORMADO: 'Não informado' };
+
+export const EVOLUTION_STATUS = {
+    RASCUNHO: { label: 'Rascunho', color: 'bg-amber-100 text-amber-800' },
+    ASSINADA: { label: 'Assinada', color: 'bg-emerald-100 text-emerald-700' },
+};

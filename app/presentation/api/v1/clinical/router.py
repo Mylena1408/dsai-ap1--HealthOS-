@@ -17,6 +17,10 @@ from app.infrastructure.persistence.repositories.sqlalchemy_schedule_repository 
 from app.infrastructure.persistence.models.schedule_model import ScheduleModel
 from app.domain.entities.schedule import ScheduleStatus
 from app.domain.exceptions.clinical_exceptions import NoteImmutableError, NoteNotFoundError
+from app.domain.exceptions.common import ConflictError
+from app.application.use_cases.clinical_notes_bridge_use_case import ClinicalNotesBridgeUseCase
+from app.application.use_cases.medical_record_use_case import MedicalRecordUseCase
+from app.presentation.api.v1.medical_records.router import get_use_case as get_record_use_case
 
 class AppointmentBookingDTO(BaseModel):
     slot_id: uuid.UUID
@@ -40,6 +44,11 @@ router = APIRouter(prefix="/clinical", tags=["Prontuário Clínico"])
 
 async def get_clinical_repo(session: AsyncSession = Depends(get_db)):
     return SQLAlchemyClinicalRepository(session)
+
+async def get_notes_bridge(repo: SQLAlchemyClinicalRepository = Depends(get_clinical_repo),
+                           records: MedicalRecordUseCase = Depends(get_record_use_case)):
+    # ID de profissional vira evolução clínica; ID de usuário segue o fluxo legado.
+    return ClinicalNotesBridgeUseCase(ClinicalEvolutionUseCase(repo), records)
 
 @router.get("/availability", response_model=List[ScheduleResponseDTO])
 async def list_available_slots(session: AsyncSession = Depends(get_db)):
@@ -70,19 +79,17 @@ async def create_available_slot(request: AvailabilityCreateDTO, session: AsyncSe
               dependencies=[Depends(PermissionChecker(["clinical:write"]))])
 async def create_note(
     request: ClinicalNoteCreateDTO,
-    repo: SQLAlchemyClinicalRepository = Depends(get_clinical_repo)
+    bridge: ClinicalNotesBridgeUseCase = Depends(get_notes_bridge)
 ):
-    use_case = ClinicalEvolutionUseCase(repo)
-    return await use_case.create_note(request)
+    return await bridge.create(request)
 
 @router.get("/patients/{patient_id}/history", response_model=List[ClinicalNoteResponseDTO],
              dependencies=[Depends(PermissionChecker(["clinical:read"]))])
 async def get_history(
     patient_id: uuid.UUID,
-    repo: SQLAlchemyClinicalRepository = Depends(get_clinical_repo)
+    bridge: ClinicalNotesBridgeUseCase = Depends(get_notes_bridge)
 ):
-    use_case = ClinicalEvolutionUseCase(repo)
-    return await use_case.get_patient_history(patient_id)
+    return await bridge.history(patient_id)
 
 @router.get("/patients/{patient_id}/appointments", response_model=List[ScheduleResponseDTO])
 async def get_patient_appointments(
@@ -112,12 +119,11 @@ async def book_appointment(request: AppointmentBookingDTO, session: AsyncSession
               dependencies=[Depends(PermissionChecker(["clinical:write"]))])
 async def finalize_note(
     note_id: uuid.UUID,
-    repo: SQLAlchemyClinicalRepository = Depends(get_clinical_repo)
+    bridge: ClinicalNotesBridgeUseCase = Depends(get_notes_bridge)
 ):
     try:
-        use_case = ClinicalEvolutionUseCase(repo)
-        return await use_case.finalize_note(note_id)
-    except NoteImmutableError as e:
+        return await bridge.finalize(note_id)
+    except (NoteImmutableError, ConflictError) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except NoteNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nota não encontrada")
@@ -127,12 +133,11 @@ async def finalize_note(
 async def update_note(
     note_id: uuid.UUID,
     request: ClinicalNoteUpdateDTO,
-    repo: SQLAlchemyClinicalRepository = Depends(get_clinical_repo)
+    bridge: ClinicalNotesBridgeUseCase = Depends(get_notes_bridge)
 ):
     try:
-        use_case = ClinicalEvolutionUseCase(repo)
-        return await use_case.update_draft(note_id, request)
-    except NoteImmutableError as e:
+        return await bridge.update(note_id, request)
+    except (NoteImmutableError, ConflictError) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except NoteNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nota não encontrada")

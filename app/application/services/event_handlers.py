@@ -58,6 +58,8 @@ class NotificationPolicy:
                      f"/app/prontuario?patient={event.patient_id}", priority)]
         if event.event_type == E.PRESCRIPTION_ISSUED:
             return [(S, Sector.PHARMACY, C.MEDICATION, "Nova prescrição para dispensar", "/app/farmacia", normal),
+                    (S, Sector.NURSING, C.MEDICATION, "Nova prescrição para acompanhamento",
+                     f"/app/prontuario?patient={event.patient_id}", normal),
                     (P, event.patient_id, C.MEDICATION, "Nova prescrição emitida", None, normal)]
         if event.event_type == E.MEDICATION_DISPENSED:
             return [(P, event.patient_id, C.MEDICATION, "Medicamentos dispensados", None, normal)]

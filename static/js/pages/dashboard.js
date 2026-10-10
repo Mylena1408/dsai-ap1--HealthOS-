@@ -16,7 +16,7 @@ const BANDS = {
     INSUFICIENTE: { label: 'Acompanhamento insuficiente', icon: 'fa-triangle-exclamation', meter: 'meter-critical' },
     SEM_DADOS: { label: 'Sem dados', icon: 'fa-circle-question', meter: 'meter-na' },
 };
-const state = { view: null, patientId: null, professionalId: null };
+const state = { view: null, patientId: null, professionalId: null, professionals: [] };
 const fmt = value => Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 const card = (title, body, extra = '') => `<div class="glass-card rounded-2xl p-5 ${extra}"><h3 class="font-bold text-slate-800 mb-3">${title}</h3>${body}</div>`;
 const tile = (label, value, hint = '') => `<div class="glass-card rounded-2xl p-4">
@@ -103,7 +103,9 @@ const RENDER = {
                 ${tile('Comparecimento (30 dias)', rate, 'finalizadas ÷ (finalizadas + faltas)')}
             </div>
             ${card(`Agenda de hoje — ${escapeHtml(d.professional_name)}`, d.today.length ? `<ul class="divide-y">${d.today.map(a => `
-                <li class="py-2 flex justify-between gap-2 text-sm"><span>${new Date(a.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · ${escapeHtml(a.patient_name || '')}</span>${statusBadge(a.status)}</li>`).join('')}</ul>`
+                <li class="py-2 flex flex-wrap justify-between items-center gap-2 text-sm"><span>${new Date(a.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · ${escapeHtml(a.patient_name || '')}</span>
+                    <span class="flex items-center gap-2">${statusBadge(a.status)}
+                        <a href="/app/prontuario?patient=${encodeURIComponent(a.patient_id)}" class="text-xs font-semibold text-blue-700 hover:underline">Abrir prontuário<span class="sr-only"> de ${escapeHtml(a.patient_name || 'paciente')}</span></a></span></li>`).join('')}</ul>`
                 : '<p class="text-sm text-slate-500">Nenhuma consulta hoje.</p>')}
             ${dailyCard('Consultas por dia (últimos 30 dias)', d.daily_30d)}
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -113,6 +115,8 @@ const RENDER = {
                         <div class="flex flex-wrap gap-2 mt-1">${e.results.filter(r => r.flag !== 'NORMAL').map(r => `<span>${escapeHtml(r.analyte_name)} ${fmt(r.value)} ${flagBadge(r.flag)}</span>`).join('')}</div></li>`).join('')}</ul>`
                     : '<p class="text-sm text-slate-500">Nenhum.</p>')}
             </div>`;
+        const subject = state.professionals.find(p => p.id === state.professionalId);
+        if (subject?.professional_type === 'MEDICO') board.insertAdjacentHTML('beforeend', doctorsCard(state.professionals));
         renderDaily(d.daily_30d);
         renderBarChart($('chart-exams'), toItems(d.exams_requested).map(i => ({ ...i, label: labelOf(EXAM_STATUS, i.label) })),
                        { ariaLabel: 'Exames solicitados por situação' });
@@ -173,6 +177,36 @@ const RENDER = {
 // rótulos visíveis ou tabela; ver validação de paleta no ADR-019).
 const DAILY_SERIES = [['FINALIZADA', 'var(--series-1)'], ['CANCELADA', 'var(--series-2)'], ['NAO_COMPARECEU', 'var(--series-3)']];
 
+/** Área do médico: médicos ativos com o ID (para formulários que pedem o médico, como o portal). */
+function doctorsCard(professionals) {
+    const doctors = professionals.filter(p => p.professional_type === 'MEDICO');
+    return card(`Médicos disponíveis <span class="text-sm font-normal text-slate-500">(${doctors.length} ativos)</span>`, `
+        <p class="text-xs text-slate-600 mb-3">IDs para formulários que pedem o médico, como a evolução do portal. Dados fictícios.</p>
+        <div class="overflow-x-auto"><table class="w-full text-sm">
+            <thead><tr class="text-left text-slate-500 border-b">
+                <th class="py-2 pr-3 font-medium">Médico(a)</th><th class="py-2 pr-3 font-medium">Especialidade</th>
+                <th class="py-2 pr-3 font-medium">Registro</th><th class="py-2 pr-3 font-medium">ID</th>
+                <th class="py-2 font-medium"><span class="sr-only">Ações</span></th></tr></thead>
+            <tbody>${doctors.map(doctor => `<tr class="border-b last:border-0 align-top">
+                <td class="py-2 pr-3">${escapeHtml(doctor.full_name)}</td>
+                <td class="py-2 pr-3">${escapeHtml(doctor.specialty_name || '—')}</td>
+                <td class="py-2 pr-3 whitespace-nowrap">${escapeHtml(doctor.registry_number)}</td>
+                <td class="py-2 pr-3"><code class="text-xs break-all">${escapeHtml(doctor.id)}</code></td>
+                <td class="py-2"><button type="button" data-copy-id="${escapeHtml(doctor.id)}"
+                    aria-label="Copiar ID de ${escapeHtml(doctor.full_name)}"
+                    class="px-2 py-1 rounded-lg border text-xs font-semibold hover:bg-slate-100 whitespace-nowrap">Copiar ID</button></td>
+            </tr>`).join('')}</tbody></table></div>`);
+}
+
+async function copyText(text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 function dailyCard(title, points) {
     const rows = points.filter(p => Object.values(p.values).some(v => v > 0)).map(p => `<tr class="border-b last:border-0">
         <td class="py-1 pr-3">${formatDate(`${p.day}T12:00`)}</td>${DAILY_SERIES.map(([key]) => `<td class="py-1 pr-3 text-right tabular-nums">${p.values[key] || 0}</td>`).join('')}</tr>`).join('');
@@ -199,6 +233,7 @@ async function renderSubject() {
         createPatientPicker($('subject-patient'), { onSelect: p => { state.patientId = p.id; render(); } });
     } else if (state.view === 'professional') {
         const page = await apiCall('/professionals?status=ATIVO&limit=100');
+        state.professionals = page.items;
         subject.innerHTML = `<label class="text-sm text-slate-600 block">Profissional<select id="subject-professional" class="w-full p-2 border rounded-lg mt-1">
             <option value="">Selecione</option>${page.items.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.full_name)}</option>`).join('')}</select></label>`;
         $('subject-professional').value = state.professionalId || '';
@@ -237,9 +272,14 @@ function viewFromProfile() {
 
 renderNav('painel');
 renderDemoBanner();
-document.addEventListener('click', event => {
+document.addEventListener('click', async event => {
     const view = event.target.closest('[data-view]');
     if (view) switchView(view.dataset.view);
+    const copy = event.target.closest('[data-copy-id]');
+    if (copy) {
+        const ok = await copyText(copy.dataset.copyId);
+        toast(ok ? 'ID copiado.' : 'Não foi possível copiar. Selecione o ID na tabela.', ok ? 'success' : 'error');
+    }
 });
 window.addEventListener('healthos:profile', () => switchView(viewFromProfile()));
 switchView(viewFromProfile()).catch(err => toast(err.message, 'error'));

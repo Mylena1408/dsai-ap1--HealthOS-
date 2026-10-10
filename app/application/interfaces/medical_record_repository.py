@@ -5,7 +5,7 @@ from typing import Optional
 import uuid
 
 from app.domain.entities.medical_record import (
-    Allergy, Condition, Diagnosis, PatientProfile, Procedure,
+    Allergy, ClinicalEvolution, Condition, Diagnosis, PatientProfile, Procedure,
 )
 from app.domain.entities.patient import Patient
 from app.domain.entities.timeline import TimelineEvent, TimelineEventType
@@ -70,6 +70,15 @@ class MedicalRecordRepository(ABC):
 
     @abstractmethod
     async def save_procedure(self, procedure: Procedure) -> Procedure: ...
+
+    @abstractmethod
+    async def list_evolutions(self, patient_id: uuid.UUID) -> list[ClinicalEvolution]: ...
+
+    @abstractmethod
+    async def get_evolution(self, evolution_id: uuid.UUID) -> Optional[ClinicalEvolution]: ...
+
+    @abstractmethod
+    async def save_evolution(self, evolution: ClinicalEvolution) -> ClinicalEvolution: ...
 
 
 @dataclass

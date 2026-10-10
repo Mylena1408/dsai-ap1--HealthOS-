@@ -4,10 +4,11 @@ import uuid
 import pytest
 
 from app.domain.entities.medical_record import (
-    Allergy, AllergyCategory, AllergySeverity, AllergyStatus, Condition, ConditionStatus as CS, Diagnosis,
-    DiagnosisCertainty, EmergencyContact, PatientProfile, Procedure,
+    Allergy, AllergyCategory, AllergySeverity, AllergyStatus, ClinicalEvolution, Condition, ConditionStatus as CS,
+    Diagnosis,
+    DiagnosisCertainty, EmergencyContact, EvolutionStatus, PatientProfile, Procedure,
 )
-from app.domain.exceptions.common import BusinessRuleViolation, InvalidTransitionError
+from app.domain.exceptions.common import BusinessRuleViolation, ConflictError, InvalidTransitionError
 
 TODAY = date(2026, 10, 6)
 PID = uuid.uuid4()
@@ -86,3 +87,29 @@ def test_procedure_cannot_be_in_the_future():
     procedure = Procedure(patient_id=PID, name="Curativo simples", performed_at=datetime(2026, 10, 7))
     with pytest.raises(BusinessRuleViolation):
         procedure.validate_date(datetime(2026, 10, 6))
+
+
+def test_evolution_is_editable_only_while_draft():
+    created = datetime(2026, 10, 6, 9)
+    evolution = ClinicalEvolution(patient_id=PID, professional_id=uuid.uuid4(),
+                                  content="  Paciente fictício estável, sem queixas.  ", created_at=created)
+    assert evolution.content == "Paciente fictício estável, sem queixas."
+    assert evolution.status == EvolutionStatus.DRAFT and evolution.version == 1
+
+    evolution.update_content("Paciente fictício estável; orientado retorno.", datetime(2026, 10, 6, 10))
+    assert evolution.version == 2 and evolution.updated_at == datetime(2026, 10, 6, 10)
+
+    evolution.sign(datetime(2026, 10, 6, 11))
+    assert evolution.status == EvolutionStatus.SIGNED and evolution.signed_at == datetime(2026, 10, 6, 11)
+    with pytest.raises(ConflictError):
+        evolution.update_content("Tentativa de alterar depois de assinada.", datetime(2026, 10, 6, 12))
+    with pytest.raises(InvalidTransitionError):
+        evolution.sign(datetime(2026, 10, 6, 12))
+    assert evolution.version == 2
+
+
+@pytest.mark.parametrize("content", ["curto", "   " + "x" * 5 + "   ", "x" * 10001])
+def test_evolution_text_limits(content):
+    with pytest.raises(BusinessRuleViolation):
+        ClinicalEvolution(patient_id=PID, professional_id=uuid.uuid4(), content=content,
+                          created_at=datetime(2026, 10, 6))

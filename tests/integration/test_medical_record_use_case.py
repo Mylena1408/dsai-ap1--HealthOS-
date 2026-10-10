@@ -4,7 +4,8 @@ import pytest
 
 from app.application.dtos.appointment_dto import AppointmentCreateDTO
 from app.application.dtos.medical_record_dto import (
-    AllergyCreateDTO, ConditionCreateDTO, DiagnosisCreateDTO, EmergencyContactCreateDTO, ProcedureCreateDTO,
+    AllergyCreateDTO, ConditionCreateDTO, DiagnosisCreateDTO, EmergencyContactCreateDTO, EvolutionCreateDTO,
+    EvolutionUpdateDTO, ProcedureCreateDTO,
     ProfileUpdateDTO,
 )
 from app.application.dtos.patient_dto import PatientCreateDTO
@@ -15,10 +16,11 @@ from app.application.use_cases.manage_patient_use_case import ManagePatientUseCa
 from app.application.use_cases.medical_record_use_case import MedicalRecordUseCase
 from app.application.use_cases.professional_use_case import ProfessionalUseCase
 from app.domain.entities.medical_record import (
-    AllergyCategory, AllergySeverity, BloodType, ConditionStatus, DiagnosisCertainty,
+    AllergyCategory, AllergySeverity, BloodType, ConditionStatus, DiagnosisCertainty, EvolutionStatus,
 )
 from app.domain.entities.professional import ProfessionalType
 from app.domain.entities.timeline import TimelineEventType as T
+from app.domain.events import EventType
 from app.domain.exceptions.common import BusinessRuleViolation, ConflictError, EntityNotFoundError
 from app.infrastructure.persistence.repositories.sqlalchemy_appointment_repository import SQLAlchemyAppointmentRepository
 from app.infrastructure.persistence.repositories.sqlalchemy_medical_record_repository import (
@@ -156,3 +158,47 @@ async def test_timeline_merges_sources_in_order_and_filters(ctx):
 
     with pytest.raises(BusinessRuleViolation):
         await uc.timeline(TimelineQuery(patient_id=maria.id, date_from=datetime(2026, 2, 1), date_to=datetime(2026, 1, 1)))
+
+
+class RecordingPublisher:
+    def __init__(self):
+        self.events = []
+
+    async def publish(self, event):
+        self.events.append(event)
+
+
+async def test_evolution_draft_edit_sign_and_timeline(ctx):
+    uc, maria, jose, doctor = ctx["records"], ctx["maria"], ctx["jose"], ctx["doctor"]
+    uc.events = published = RecordingPublisher()
+
+    draft = await uc.add_evolution(maria.id, EvolutionCreateDTO(
+        professional_id=doctor.id, content="Paciente fictícia refere melhora da tosse."))
+    assert draft.status == EvolutionStatus.DRAFT and draft.version == 1
+    assert draft.professional_name == "Dr. João (fictício)" and draft.professional_type == "MEDICO"
+
+    edited = await uc.update_evolution(maria.id, draft.id, EvolutionUpdateDTO(
+        content="Paciente fictícia refere melhora da tosse; sem febre."))
+    assert edited.version == 2 and edited.updated_at == NOW
+
+    signed = await uc.sign_evolution(maria.id, draft.id)
+    assert signed.status == EvolutionStatus.SIGNED and signed.signed_at == NOW
+    assert [e.event_type for e in published.events] == [EventType.EVOLUTION_SIGNED]
+    assert published.events[0].patient_id == maria.id and published.events[0].professional_id == doctor.id
+
+    with pytest.raises(ConflictError):
+        await uc.update_evolution(maria.id, draft.id, EvolutionUpdateDTO(content="Alteração depois de assinada."))
+    with pytest.raises(EntityNotFoundError):
+        await uc.sign_evolution(jose.id, draft.id)  # evolução de outro paciente
+    with pytest.raises(EntityNotFoundError):
+        await uc.add_evolution(maria.id, EvolutionCreateDTO(
+            professional_id=maria.id, content="Profissional inexistente no cadastro."))
+
+    assert [e.id for e in await uc.list_evolutions(maria.id)] == [draft.id]
+    assert await uc.list_evolutions(jose.id) == []
+
+    timeline = await uc.timeline(TimelineQuery(patient_id=maria.id, types={T.EVOLUTION}))
+    assert len(timeline.items) == 1
+    event = timeline.items[0]
+    assert event.title == "Evolução clínica — Dr. João (fictício)"
+    assert event.status == "ASSINADA" and event.occurred_at == NOW and "sem febre" in event.description

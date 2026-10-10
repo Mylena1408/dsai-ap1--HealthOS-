@@ -8,7 +8,7 @@ import { PROFESSIONAL_TYPES } from '../core/labels.js';
 const STORAGE_KEY = 'healthos.profile';
 export const SECTORS = {
     RECEPCAO: 'Recepção', LABORATORIO: 'Laboratório', FARMACIA: 'Farmácia',
-    COORDENACAO_CLINICA: 'Coordenação clínica', ADMINISTRACAO: 'Administração',
+    ENFERMAGEM: 'Enfermagem', COORDENACAO_CLINICA: 'Coordenação clínica', ADMINISTRACAO: 'Administração',
 };
 const DEFAULT_PROFILE = { audience: 'SETOR', sector: 'ADMINISTRACAO', label: 'Administração' };
 

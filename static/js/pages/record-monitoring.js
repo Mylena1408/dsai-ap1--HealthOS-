@@ -5,6 +5,7 @@ import {
     BMI_CATEGORIES, EXAM_PRIORITY, EXAM_STATUS, RESULT_FLAGS, badge, fillSelect, flagBadge,
 } from '../core/labels.js';
 import { aiResponseCard } from '../components/ai-response.js';
+import { activeProfessionals, fillAuthorSelect, whileBusy } from '../components/author-select.js';
 import { renderLineChart } from '../components/line-chart.js';
 
 const $ = id => document.getElementById(id);
@@ -32,9 +33,10 @@ const SERIES_COLORS = ['var(--series-1)', 'var(--series-2)'];
 // ------------------------------------------------------------------ sinais vitais
 
 export async function renderVitalsTab(container, { patientId, onChange }) {
-    const [summary, page] = await Promise.all([
+    const [summary, page, professionals] = await Promise.all([
         apiCall(`/patients/${patientId}/vital-signs/summary`),
         apiCall(`/patients/${patientId}/vital-signs?limit=20`),
+        activeProfessionals(),
     ]);
     const metrics = Object.fromEntries(summary.metrics.map(m => [m.metric, m]));
     const tiles = summary.metrics.filter(m => m.metric !== 'height_cm').map(m => `
@@ -72,6 +74,8 @@ export async function renderVitalsTab(container, { patientId, onChange }) {
                    ['v-height', 'Altura (cm)', '0.1'], ['v-glucose', 'Glicemia (mg/dL)']].map(([id, label, step]) => `
                     <label class="text-xs text-slate-600">${label}
                         <input id="${id}" type="number" ${step ? `step="${step}"` : ''} class="w-full p-2 border rounded-lg mt-1"></label>`).join('')}
+                <label class="text-xs text-slate-600 col-span-2">Registrado por
+                    <select id="v-author" class="w-full p-2 border rounded-lg mt-1"></select></label>
                 <div class="col-span-2 sm:col-span-4"><button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700">Registrar</button></div>
             </form>`)}
         ${card(`Histórico <span class="text-sm font-normal text-slate-500">(${page.total} registros)</span>`, page.items.length ? `
@@ -97,19 +101,23 @@ export async function renderVitalsTab(container, { patientId, onChange }) {
         });
     });
 
+    fillAuthorSelect($('v-author'), professionals);
     $('form-vitals').addEventListener('submit', async event => {
         event.preventDefault();
         const number = id => ($(id).value === '' ? null : Number($(id).value));
-        try {
-            await apiCall(`/patients/${patientId}/vital-signs`, 'POST', {
-                systolic: number('v-sys'), diastolic: number('v-dia'), heart_rate: number('v-hr'),
-                respiratory_rate: number('v-rr'), temperature: number('v-temp'), oxygen_saturation: number('v-spo2'),
-                weight_kg: number('v-weight'), height_cm: number('v-height'), glucose_mg_dl: number('v-glucose'),
-            });
-            await onChange('Medição registrada.');
-        } catch (err) {
-            toast(err.message, 'error');
-        }
+        await whileBusy(event.target.querySelector('[type="submit"]'), async () => {
+            try {
+                await apiCall(`/patients/${patientId}/vital-signs`, 'POST', {
+                    systolic: number('v-sys'), diastolic: number('v-dia'), heart_rate: number('v-hr'),
+                    respiratory_rate: number('v-rr'), temperature: number('v-temp'), oxygen_saturation: number('v-spo2'),
+                    weight_kg: number('v-weight'), height_cm: number('v-height'), glucose_mg_dl: number('v-glucose'),
+                    professional_id: $('v-author').value || null,
+                });
+                await onChange('Medição registrada.');
+            } catch (err) {
+                toast(err.message, 'error');
+            }
+        });
     });
 }
 
@@ -129,9 +137,10 @@ function resultsTable(exam) {
 }
 
 export async function renderExamsTab(container, { patientId, onChange }) {
-    const [page, examTypes] = await Promise.all([
+    const [page, examTypes, professionals] = await Promise.all([
         apiCall(`/exam-requests?patient_id=${patientId}&limit=50`),
         apiCall('/exam-types'),
+        activeProfessionals(),
     ]);
     const items = page.items.map(e => `
         <li class="py-3">
@@ -156,23 +165,28 @@ export async function renderExamsTab(container, { patientId, onChange }) {
             <form id="form-exam" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <select id="e-type" required class="p-2 border rounded-lg"></select>
                 <select id="e-priority" class="p-2 border rounded-lg"></select>
-                <input id="e-indication" maxlength="500" placeholder="Indicação clínica (opcional)" class="p-2 border rounded-lg">
+                <input id="e-indication" maxlength="500" placeholder="Indicação clínica (opcional)" aria-label="Indicação clínica (opcional)" class="p-2 border rounded-lg">
+                <label class="text-xs text-slate-600 sm:col-span-2">Solicitado por
+                    <select id="e-author" class="w-full p-2 border rounded-lg mt-1"></select></label>
                 <div><button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700">Solicitar</button></div>
             </form>`)}`;
 
     fillSelect($('e-type'), Object.fromEntries(examTypes.map(t => [t.id, t.name])), 'Tipo de exame');
     fillSelect($('e-priority'), EXAM_PRIORITY);
+    fillAuthorSelect($('e-author'), professionals);
     $('form-exam').addEventListener('submit', async event => {
         event.preventDefault();
-        try {
-            await apiCall('/exam-requests', 'POST', {
-                patient_id: patientId, exam_type_id: $('e-type').value, priority: $('e-priority').value,
-                clinical_indication: $('e-indication').value || null,
-            });
-            await onChange('Exame solicitado. Acompanhe o andamento em Laboratório.');
-        } catch (err) {
-            toast(err.message, 'error');
-        }
+        await whileBusy(event.target.querySelector('[type="submit"]'), async () => {
+            try {
+                await apiCall('/exam-requests', 'POST', {
+                    patient_id: patientId, exam_type_id: $('e-type').value, priority: $('e-priority').value,
+                    clinical_indication: $('e-indication').value || null, requested_by: $('e-author').value || null,
+                });
+                await onChange('Exame solicitado. Acompanhe o andamento em Laboratório.');
+            } catch (err) {
+                toast(err.message, 'error');
+            }
+        });
     });
 
     container.querySelectorAll('[data-explain]').forEach(button => button.addEventListener('click', async () => {

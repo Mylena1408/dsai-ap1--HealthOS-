@@ -4,6 +4,7 @@ import { escapeHtml, formatDate, formatDateTime, renderEmpty, renderLoading, toa
 import { renderNav, renderDemoBanner } from '../core/layout.js';
 import { renderExamsTab, renderVitalsTab } from './record-monitoring.js';
 import { renderMedicationsTab } from './record-medications.js';
+import { renderEvolutionTab } from './record-evolution.js';
 import {
     ALLERGY_CATEGORIES, ALLERGY_SEVERITY, APPOINTMENT_TYPES, BLOOD_TYPES, CONDITION_STATUS, DIAGNOSIS_CERTAINTY,
     TIMELINE_TYPES, badge, fillSelect, statusBadge,
@@ -14,7 +15,7 @@ const $ = id => document.getElementById(id);
 const state = { offset: 0, patientId: null, record: null, tab: 'resumo', timelineTypes: new Set() };
 
 const TAB_LABELS = {
-    resumo: 'Resumo', timeline: 'Linha do tempo', sinais: 'Sinais vitais', exames: 'Exames',
+    resumo: 'Resumo', timeline: 'Linha do tempo', evolucao: 'Evolução', sinais: 'Sinais vitais', exames: 'Exames',
     medicamentos: 'Medicamentos',
     alergias: 'Alergias', condicoes: 'Condições',
     diagnosticos: 'Diagnósticos', procedimentos: 'Procedimentos', perfil: 'Perfil e contatos',
@@ -180,6 +181,8 @@ const TABS = {
             <div class="flex flex-wrap gap-2 mb-4">${filters}</div>
             ${items ? `<ol class="border-l-2 border-slate-100 ml-3 pl-0">${items}</ol>` : empty('Nenhum evento para os filtros escolhidos.')}`);
     },
+
+    evolucao: container => renderEvolutionTab(container, { patientId: state.patientId, onChange: refresh }),
 
     sinais: container => renderVitalsTab(container, { patientId: state.patientId, onChange: refresh }),
 

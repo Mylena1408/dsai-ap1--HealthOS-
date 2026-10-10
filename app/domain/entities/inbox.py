@@ -24,6 +24,7 @@ class Sector(Enum):
     PHARMACY = "FARMACIA"
     CLINICAL_COORDINATION = "COORDENACAO_CLINICA"
     ADMINISTRATION = "ADMINISTRACAO"
+    NURSING = "ENFERMAGEM"
 
 
 class NotificationCategory(Enum):

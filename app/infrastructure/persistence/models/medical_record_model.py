@@ -3,7 +3,7 @@ from datetime import date, datetime
 from typing import List, Optional
 import uuid
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, String, Text
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.persistence.models.user_model import Base
@@ -88,3 +88,19 @@ class ProcedureModel(Base):
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     performed_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+class ClinicalEvolutionModel(Base):
+    """Evolução clínica ligada a profissionais (as notas legadas ficam em 'clinical_notes')."""
+    __tablename__ = "clinical_evolutions"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    patient_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("patients.id"), nullable=False, index=True)
+    professional_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("professionals.id"), nullable=False)
+    appointment_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("appointments.id"), nullable=True)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    signed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)

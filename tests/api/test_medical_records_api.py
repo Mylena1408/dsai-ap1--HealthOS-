@@ -80,5 +80,39 @@ def test_timeline_over_http(client, patient):
 
 def test_unknown_patient_returns_404(client):
     missing = uuid.uuid4()
-    for path in ("record", "timeline", "allergies", "conditions", "diagnoses", "procedures"):
+    for path in ("record", "timeline", "allergies", "conditions", "diagnoses", "procedures", "evolutions"):
         assert client.get(f"{API}/patients/{missing}/{path}").status_code == 404, path
+
+
+def test_evolutions_over_http(client, patient):
+    pid = patient["id"]
+    nurse = client.post(f"{API}/professionals", json={
+        "full_name": "Enf. Evolução (fictícia)", "professional_type": "ENFERMEIRO", "registry_number": "COREN-EV 1"}).json()
+    created = client.post(f"{API}/patients/{pid}/evolutions", json={
+        "professional_id": nurse["id"], "content": "Curativo realizado, ferida limpa (fictício)."})
+    assert created.status_code == 201, created.text
+    evolution = created.json()
+    assert evolution["status"] == "RASCUNHO" and evolution["professional_type"] == "ENFERMEIRO"
+    eid = evolution["id"]
+
+    assert client.post(f"{API}/patients/{pid}/evolutions", json={
+        "professional_id": nurse["id"], "content": "curto"}).status_code == 422
+    assert client.post(f"{API}/patients/{pid}/evolutions", json={
+        "professional_id": str(uuid.uuid4()), "content": "Profissional que não existe."}).status_code == 404
+
+    edited = client.patch(f"{API}/patients/{pid}/evolutions/{eid}", json={
+        "content": "Curativo realizado, ferida limpa e seca (fictício)."}).json()
+    assert edited["version"] == 2
+    signed = client.post(f"{API}/patients/{pid}/evolutions/{eid}/sign").json()
+    assert signed["status"] == "ASSINADA" and signed["signed_at"]
+    assert client.patch(f"{API}/patients/{pid}/evolutions/{eid}", json={
+        "content": "Tentativa de alterar a evolução."}).status_code == 409
+    assert client.post(f"{API}/patients/{pid}/evolutions/{eid}/sign").status_code == 409
+    assert client.post(f"{API}/patients/{pid}/evolutions/{uuid.uuid4()}/sign").status_code == 404
+
+    assert [e["id"] for e in client.get(f"{API}/patients/{pid}/evolutions").json()] == [eid]
+    timeline = client.get(f"{API}/patients/{pid}/timeline", params={"types": "EVOLUCAO"}).json()
+    assert [e["source_id"] for e in timeline["items"]] == [eid]
+    assert timeline["items"][0]["title"] == "Evolução clínica — Enf. Evolução (fictícia)"
+    audit = client.get(f"{API}/audit-events", params={"patient_id": pid}).json()
+    assert "EVOLUCAO_ASSINADA" in {e["event_type"] for e in audit["items"]}
