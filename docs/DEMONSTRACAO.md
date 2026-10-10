@@ -20,17 +20,22 @@ uvicorn main:app --reload
 
 ## 1. Visão geral (2 min) — Painel
 
-1. **Painel** → visão *Administração*: totais, consultas por dia, exames por situação e a
-   distribuição do Health Score.
+1. **Painel** → visão *Administração*: pacientes, consultas, valores a receber e vencidos, atalhos
+   e gráficos operacionais (sem dados clínicos).
 2. Troque o perfil para um **paciente** (no topo): o painel muda para o Health Score explicado por
    componente. Reforce que é um *indicador de acompanhamento*, não de saúde.
-3. Mostre a navegação: Painel, **Atendimento** e **Gestão**; a tecla `/` leva à busca.
+3. Mostre a navegação: Painel, **Para você** (sugestões do perfil), **Atendimento** e **Gestão**;
+   a tecla `/` leva à busca.
+4. Troque para um **enfermeiro**: o Painel abre na visão *Enfermagem* (pacientes do dia, sinais
+   vitais críticos, prescrições ativas) e o "Para você" muda. Troque para um **médico**: agenda do
+   dia com "Abrir prontuário" e a área "Médicos disponíveis" com os IDs. Nenhuma troca pede senha.
 
 ## 2. Jornada clínica (5 min) — Atendimento
 
 1. **Gestão → Alertas**: filtre a categoria *Laboratorial* e abra um alerta "Exame fora da
    referência". Ele aponta o paciente.
-2. **Atendimento → Prontuário** desse paciente:
+2. **Atendimento → Prontuário** desse paciente (aba **Evolução**: escreva um rascunho, edite e
+   assine — depois de assinada ela não muda e aparece na linha do tempo e na auditoria):
    - *Linha do tempo*: consultas, exames, prescrições e sinais vitais em ordem;
    - *Exames*: valores com classificação (ícone + texto), clique no analito para o gráfico de
      evolução e use **Explicar resultado (IA)** — a explicação é educacional e traz o aviso.
@@ -39,7 +44,10 @@ uvicorn main:app --reload
    peito" — a resposta orienta procurar urgência (SAMU 192) e não diagnostica.
 4. **Laboratório**: o fluxo do exame (solicitado → coletado → … → liberado); cada exame mostra só as
    ações permitidas na situação atual (a API recusa as demais com 409).
-5. **Farmácia**: fila de prescrições ativas, dispensação por lote (vence primeiro, sai primeiro).
+5. **Farmácia** (perfil farmacêutico): fila de prescrições ativas, dispensação por lote (vence
+   primeiro, sai primeiro) com confirmação; depois do sucesso o formulário trava (sem duplicar).
+6. **Portal** (`/`): escolha o paciente pelo nome, agende com um médico da lista e veja a consulta em
+   "Minhas consultas" e no Painel; nenhum campo pede ID.
 
 ## 3. Gestão (5 min)
 

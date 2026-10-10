@@ -481,3 +481,40 @@ liberado tem o botão "Explicar resultado (IA)".
 ## Observabilidade
 
 `/health`, `/status` e `/metrics` — ver README.
+
+---
+
+## Modernização da interface (1.12.0)
+
+Specs `SPEC/2026-10-10-*.md`; decisões no ADR-002 (adendo) e no ADR-027; integrações em
+`docs/INTEGRACOES.md`.
+
+### Navegação e perfis
+- Perfil de demonstração sem senha: setor (inclui **ENFERMAGEM**), profissional (guarda
+  `professional_type`) ou paciente. Define a caixa de notificações, a visão inicial do Painel
+  (`dashboardViewFor`) e o menu **"Para você"** (`static/js/core/role-nav.js`).
+- "Atendimento" e "Gestão" mostram todas as telas para qualquer perfil; nenhuma URL é bloqueada.
+
+### Evolução clínica (`clinical_evolutions`)
+| Endpoint (prefixo `/api/v1`) | Regra |
+|---|---|
+| `GET/POST /patients/{id}/evolutions` | Profissional existente; texto de 10 a 10.000 caracteres; consulta opcional do mesmo paciente |
+| `PATCH /patients/{id}/evolutions/{eid}` | Só rascunho; cada edição soma 1 à versão; assinada → 409 |
+| `POST /patients/{id}/evolutions/{eid}/sign` | Rascunho → `ASSINADA` (imutável); evento `EVOLUCAO_ASSINADA` |
+
+- Linha do tempo: tipo `EVOLUCAO` ("Evolução clínica — profissional").
+- `/clinical/notes` (legado): com ID de profissional grava evolução e responde no formato antigo
+  (`DRAFT`/`FINALIZED`); com ID de usuário, fluxo legado. Histórico legado junta os dois.
+
+### Enfermagem
+- Setor `ENFERMAGEM` recebe "Nova prescrição para acompanhamento" a cada prescrição emitida.
+- Painel › Enfermagem: consultas do dia, alertas `SINAL_VITAL_CRITICO` em aberto, prescrições
+  ativas (só consulta) e avisos do setor, com links para o prontuário. Só rotas existentes.
+
+### Médico, farmácia, portal e administração
+- Painel › Profissional (médico): "Médicos disponíveis" com IDs e "Copiar ID"; "Abrir prontuário".
+- Autor sugerido pelo perfil em sinais vitais, exames, evolução e prescrição.
+- Farmácia: dispensa com confirmação e envio único; descarte de lote confirmado.
+- Portal: paciente por nome/CPF e médico em lista; agenda por `/appointments`; alertas do portal
+  aparecem no prontuário e no painel do paciente.
+- Painel › Administração: a receber, vencido, faturas por situação e atalhos (sem dados clínicos).

@@ -101,8 +101,11 @@ O gerador é determinístico e idempotente: rodar de novo não duplica registros
 Para popular automaticamente no startup, defina `SEED_DEMO_DATA=True` no `.env`.
 Ao final, as regras de alerta são avaliadas e geram alertas e notificações para os setores.
 
-Não há login: o **perfil de demonstração** (canto superior direito) escolhe se a caixa de
-notificações exibida é de um paciente, de um profissional ou de um setor.
+Não há login nem senha (ADR-002): o **perfil de demonstração** (canto superior direito) é um setor
+(Recepção, Laboratório, Farmácia, Enfermagem, Coordenação clínica, Administração), um profissional
+(com o tipo: médico, enfermeiro, farmacêutico...) ou um paciente. O perfil escolhe a caixa de
+notificações, a visão inicial do Painel e as sugestões do menu **"Para você"**; os menus
+"Atendimento" e "Gestão" continuam com todas as telas — é orientação, não controle de acesso.
 
 ### Relatórios e busca
 
@@ -150,8 +153,13 @@ Testes do frontend (Node 18+), em `tests/frontend`:
 cd tests/frontend && npm install
 npm test                                           # componentes de gráfico, sem servidor
 HEALTHOS_URL=http://127.0.0.1:8000 npm run smoke   # todas as páginas contra a API em execução
-HEALTHOS_URL=http://127.0.0.1:8000 npm run a11y    # navegador real: acessibilidade, 4 larguras, teclado
+HEALTHOS_URL=http://127.0.0.1:8000 npm run flow    # fluxos de interface: evolução, farmácia, portal
+HEALTHOS_URL=http://127.0.0.1:8000 npm run a11y    # navegador real: WCAG 2.2 AA, 6 larguras, perfis, teclado
 ```
+
+`npm run flow` e `npm run a11y` **gravam dados** (evolução, dispensação, agendamento, alerta): rode-os
+com o servidor apontando para um banco descartável, por exemplo
+`DATABASE_URL=sqlite:///./teste.db SEED_DEMO_DATA=True uvicorn main:app`.
 
 No PowerShell, defina a variável antes: `$env:HEALTHOS_URL="http://127.0.0.1:8000"; npm run smoke`.
 O `npm run a11y` usa o Edge ou o Chrome instalado (ou o caminho em `BROWSER_PATH`).

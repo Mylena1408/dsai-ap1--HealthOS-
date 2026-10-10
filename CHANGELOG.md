@@ -4,6 +4,34 @@ Expansão incremental do HealthOS, um ciclo por branch (cada branch parte da ant
 Detalhes de cada módulo em [`docs/MODULOS.md`](docs/MODULOS.md); decisões em [`docs/DECISOES.md`](docs/DECISOES.md).
 Em todas as versões: dados fictícios, sem autenticação real e sem diagnóstico médico.
 
+## 1.12.0 — Modernização da interface por perfil (`feature/modernizacao-interface`)
+Trabalho em fases com aprovação a cada etapa; specs `SPEC/2026-10-10-*.md`. Sem senha nem login
+(ADR-002 reafirmado; ADR-027).
+- **Navegação por perfil:** menu "Para você" com as telas típicas de cada perfil de demonstração;
+  "Atendimento" e "Gestão" continuam com todas as telas. O perfil de profissional guarda o tipo
+  (médico, enfermeiro...). Barra completa a partir de 1024 px.
+- **Evolução clínica:** tabela nova `clinical_evolutions` ligada a profissionais, com rascunho,
+  edição, assinatura imutável e auditoria; aba "Evolução" no prontuário e na linha do tempo.
+  `/clinical/notes` aceita o ID de um profissional (grava como evolução) sem mudar o contrato e
+  deixa de responder 500 para nota inexistente.
+- **Setor Enfermagem** na caixa de notificações (recebe as prescrições emitidas) e **visão
+  Enfermagem** no Painel (pacientes do dia, sinais vitais críticos, prescrições ativas).
+- **Médico:** área "Médicos disponíveis" com IDs e "Copiar ID"; "Abrir prontuário" na agenda do
+  dia; autor dos registros sugerido pelo perfil; aviso de que só médicos prescrevem.
+- **Farmácia:** dispensa com confirmação, envio único (duplo clique não duplica) e formulário
+  bloqueado após o sucesso; descarte de lote confirmado.
+- **Portal:** sem IDs digitados (paciente por nome ou CPF, médico em lista), sem `alert()`, agenda
+  pelas consultas novas, reservas antigas só para consulta; o card de medicação leva ao prontuário e
+  à Farmácia (a dispensa sem receita saiu da tela).
+- **Administração:** visão operacional e financeira (a receber, vencido, atalhos); Health Score e
+  exames saem dela.
+- **Integração entre módulos** documentada em `docs/INTEGRACOES.md`; alertas do portal visíveis no
+  prontuário e no painel; rotas legadas identificadas no Swagger.
+- **Acessibilidade:** revisão em navegador real ampliada para 6 larguras (até 360 px), WCAG 2.2 AA e
+  estados por perfil; 7 problemas corrigidos (Esc em modal, rolagem em 360 px, contraste, medidores,
+  listas e tabelas roláveis).
+- Testes: fluxos de interface `npm run flow` (evolução, farmácia, portal).
+
 ## 1.11.1 — Correções guiadas pelas specs
 - Assistente: sinais de alerta recebem a orientação de urgência (SAMU 192) em qualquer provedor,
   sem chamar a IA (spec `2026-10-06-assistente-ia.md`, revisão).
