@@ -31,6 +31,16 @@ como estava, para não quebrar compatibilidade, mas não é usado pelo portal.
 **Consequências.** Nenhum dado real deve ser cadastrado; todos os geradores
 usam dados fictícios (CPFs sintéticos, e-mails `@example.com`).
 
+**Adendo (2026-10-10, modernização da interface).** A decisão foi reafirmada: a
+modernização não cria senha, chave, token nem login. O perfil de demonstração
+(setor, profissional com seu tipo, ou paciente) faz o papel de "usuário
+identificado", é escolhido livremente e pode ser trocado a qualquer momento. O
+que o perfil muda na interface é sugestão, não controle de acesso: qualquer
+pessoa pode abrir qualquer tela e qualquer prontuário. `PermissionChecker`,
+`POST /api/v1/auth/login` e `/api/v1/admin/users` continuam como estão e sem
+tela. O navegador guarda só o perfil (id, nome, tipo), nunca dados clínicos.
+Ver ADR-027.
+
 ---
 
 ## ADR-003 — Somente tabelas novas (sem migrações destrutivas)
@@ -401,3 +411,22 @@ indicam a codificação.
 **Verificação.** Esta máquina não tem Docker nem WSL; a compatibilidade foi conferida pelos pacotes
 Linux e pela execução em Windows com as mesmas versões. O deploy de 06/10/2026 no Render (Linux,
 Python 3.13.4, PostgreSQL) subiu a versão 1.10.1 sem erros. A imagem Docker não foi testada.
+
+---
+
+## ADR-027 — Navegação orientada por perfil, sem bloqueio
+
+**Contexto.** O menu era igual para todos e o perfil de demonstração só escolhia a caixa de
+notificações. Médicos, enfermagem, farmácia e administração precisavam procurar suas telas entre
+quinze páginas. O ADR-002 proíbe senha e controle de acesso.
+
+**Decisão.**
+- Um menu "Para você" sugere as telas típicas do perfil escolhido (tabela em
+  `SPEC/2026-10-10-modernizacao-visao-geral.md`). Os menus "Atendimento" e "Gestão" continuam com
+  todas as telas, para qualquer perfil; nenhuma URL é bloqueada.
+- O perfil de profissional passa a guardar o tipo (`professional_type`), que define as sugestões.
+- A barra completa aparece a partir de 1024 px; abaixo disso, o menu móvel mostra "Para você"
+  primeiro.
+
+**Consequências.** As sugestões são orientação de uso, não segurança: o próprio menu informa isso.
+Um setor "Enfermagem" na caixa de notificações exigiria alterar `Sector` no back-end e ficou fora.
