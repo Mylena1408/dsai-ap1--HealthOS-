@@ -52,6 +52,12 @@ Sem tabelas e sem rotas novas. Frontend: `static/js/pages/portal-care.js` (visõ
 - Histórico do paciente: evoluções e condições.
 - Registrar queixa ou condição.
 
+### Horários sem conflito para o paciente (D14 = a)
+- Em "Agendar sessão" (Psicologia) e em "Agendar Consulta" (visão Paciente), os horários livres do
+  profissional que coincidem com uma consulta ativa do paciente escolhido (agendada, confirmada ou
+  em andamento) não são oferecidos; a lista é refeita quando o paciente muda. Sem paciente escolhido,
+  todos os horários livres do profissional aparecem. O servidor continua recusando sobreposição.
+
 ### Integração
 - O que for gravado aparece no prontuário, na linha do tempo, no Painel e na auditoria pelas regras
   já existentes; sessão finalizada aparece em "não faturado".
