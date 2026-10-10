@@ -173,6 +173,7 @@ if (patient) {
     const profiles = [
         ["paciente", { audience: "PACIENTE", recipient_id: patient.id, label: patient.full_name }],
         ...(doctor ? [["profissional", { audience: "PROFISSIONAL", recipient_id: doctor.id, label: doctor.full_name }]] : []),
+        ["enfermagem", { audience: "SETOR", sector: "ENFERMAGEM", label: "Enfermagem" }],
         ["farmácia", { audience: "SETOR", sector: "FARMACIA", label: "Farmácia" }],
         ["administração", { audience: "SETOR", sector: "ADMINISTRACAO", label: "Administração" }],
     ];

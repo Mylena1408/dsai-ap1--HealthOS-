@@ -1,6 +1,6 @@
-// Fluxo de interface da Fase 3 em DOM simulado contra a API real: cria, edita e assina uma
+// Fluxos de interface das Fases 3 e 4 em DOM simulado contra a API real: cria, edita e assina uma
 // evolução pela aba "Evolução", confere a linha do tempo, a área "Médicos disponíveis" do
-// Painel e o aviso de prescrição para quem não é médico.
+// Painel, o aviso de prescrição para quem não é médico e a visão "Enfermagem" do Painel.
 //
 // Pré-requisitos: servidor com dados de demonstração em banco descartável (o teste grava uma
 // evolução), por exemplo SEED_DEMO_DATA=True e DATABASE_URL apontando para um arquivo temporário.
@@ -132,7 +132,16 @@ check("painel (médico) › sem erros de execução", !board.errors.length, boar
 // --------------------------------------- perfil de enfermagem (não é médico)
 const nurseBoard = await openPage("static/pages/painel.html", "/app/painel", asProfile(nurse));
 await nurseBoard.load("pages/dashboard.js");
-await waitFor(() => nurseBoard.text().includes("Agenda de hoje"));
+const nursingView = await waitFor(() => nurseBoard.text().includes("Pacientes do dia"));
+const selectedTab = nurseBoard.document.querySelector('[data-view="nursing"]')?.getAttribute("aria-selected");
+check("painel (enfermagem) › abre na visão Enfermagem", Boolean(nursingView) && selectedTab === "true");
+const tiles = ["Consultas hoje", "Sinais vitais críticos", "Prescrições ativas", "Avisos não lidos"];
+check("painel (enfermagem) › quatro indicadores", tiles.every(label => nurseBoard.text().includes(label)));
+const patientIds = new Set((await api("/patients?limit=100")).items.map(p => p.id));
+const links = [...nurseBoard.document.querySelectorAll('#board a[href^="/app/prontuario?patient="]')];
+const linked = links.map(a => new URL(a.href).searchParams.get("patient"));
+check("painel (enfermagem) › links levam a prontuários existentes",
+      links.length > 0 && linked.every(id => patientIds.has(id)), `${links.length} link(s)`);
 check("painel (enfermagem) › sem a área de IDs dos médicos", !nurseBoard.text().includes("Médicos disponíveis"));
 
 const nurseRecord = await openPage("static/pages/prontuario.html", `/app/prontuario?patient=${patient.id}`, asProfile(nurse));

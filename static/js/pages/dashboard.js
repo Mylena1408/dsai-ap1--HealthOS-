@@ -1,4 +1,4 @@
-// Painéis por perfil: paciente, profissional, farmácia e administração.
+// Painéis por perfil: paciente, profissional, enfermagem, farmácia e administração.
 import { apiCall } from '../core/api.js';
 import { escapeHtml, formatDate, formatDateTime, renderEmpty, renderLoading, toast } from '../core/dom.js';
 import { renderNav, renderDemoBanner } from '../core/layout.js';
@@ -7,9 +7,13 @@ import { renderBarChart } from '../components/bar-chart.js';
 import { renderLineChart } from '../components/line-chart.js';
 import { createPatientPicker } from '../components/patient-picker.js';
 import { getProfile } from '../components/profile.js';
+import { dashboardViewFor } from '../core/role-nav.js';
+import { renderNursingBoard } from './dashboard-nursing.js';
 
 const $ = id => document.getElementById(id);
-const VIEWS = { patient: 'Paciente', professional: 'Profissional', pharmacy: 'Farmácia', admin: 'Administração' };
+const VIEWS = {
+    patient: 'Paciente', professional: 'Profissional', nursing: 'Enfermagem', pharmacy: 'Farmácia', admin: 'Administração',
+};
 const BANDS = {
     BOM: { label: 'Bom acompanhamento', icon: 'fa-circle-check', meter: 'meter-good' },
     ATENCAO: { label: 'Atenção', icon: 'fa-circle-exclamation', meter: 'meter-attention' },
@@ -121,6 +125,8 @@ const RENDER = {
         renderBarChart($('chart-exams'), toItems(d.exams_requested).map(i => ({ ...i, label: labelOf(EXAM_STATUS, i.label) })),
                        { ariaLabel: 'Exames solicitados por situação' });
     },
+
+    nursing: board => renderNursingBoard(board, { card, tile }),
 
     async pharmacy(board) {
         const d = await apiCall('/dashboards/pharmacy');
@@ -265,9 +271,9 @@ async function switchView(view) {
 /** A visão inicial acompanha o perfil de demonstração escolhido no topo. */
 function viewFromProfile() {
     const profile = getProfile();
-    if (profile.audience === 'PACIENTE') { state.patientId = profile.recipient_id; return 'patient'; }
-    if (profile.audience === 'PROFISSIONAL') { state.professionalId = profile.recipient_id; return 'professional'; }
-    return profile.sector === 'FARMACIA' ? 'pharmacy' : 'admin';
+    if (profile.audience === 'PACIENTE') state.patientId = profile.recipient_id;
+    if (profile.audience === 'PROFISSIONAL') state.professionalId = profile.recipient_id;
+    return dashboardViewFor(profile);
 }
 
 renderNav('painel');

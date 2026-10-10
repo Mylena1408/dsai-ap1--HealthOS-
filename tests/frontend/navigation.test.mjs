@@ -13,7 +13,7 @@ beforeEach(() => {
 
 // core/api.js lê window.location ao ser importado: o DOM precisa existir antes dos imports.
 installDom();
-const { pagesForProfile } = await import("../../static/js/core/role-nav.js");
+const { dashboardViewFor, pagesForProfile } = await import("../../static/js/core/role-nav.js");
 const { renderNav } = await import("../../static/js/core/layout.js");
 const { setProfile } = await import("../../static/js/components/profile.js");
 const { fillAuthorSelect } = await import("../../static/js/components/author-select.js");
@@ -104,4 +104,17 @@ test("autor do registro é sugerido pelo perfil profissional e agrupado por tipo
     fillAuthorSelect(forPatient, professionals, { placeholder: "Selecione" });
     assert.equal(forPatient.value, "");
     assert.equal(forPatient.options[0].textContent, "Selecione");
+});
+
+test("visão inicial do Painel acompanha o perfil", () => {
+    assert.equal(dashboardViewFor(patient), "patient");
+    assert.equal(dashboardViewFor(doctor), "professional");
+    assert.equal(dashboardViewFor(nurse), "nursing");
+    assert.equal(dashboardViewFor({ ...doctor, professional_type: "PSICOLOGO" }), "professional");
+    assert.equal(dashboardViewFor({ ...doctor, professional_type: undefined }), "professional");
+    const sector = key => dashboardViewFor({ audience: "SETOR", sector: key });
+    assert.equal(sector("ENFERMAGEM"), "nursing");
+    assert.equal(sector("FARMACIA"), "pharmacy");
+    for (const key of ["RECEPCAO", "LABORATORIO", "COORDENACAO_CLINICA", "ADMINISTRACAO"]) assert.equal(sector(key), "admin");
+    assert.equal(dashboardViewFor(null), "admin");
 });

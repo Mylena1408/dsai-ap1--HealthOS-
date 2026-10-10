@@ -26,3 +26,10 @@ export function pagesForProfile(profile) {
     if (profile?.audience === 'PROFISSIONAL') return PROFILE_PAGES[profile.professional_type] || GENERIC_PROFESSIONAL;
     return PROFILE_PAGES[`SETOR:${profile?.sector}`] || PROFILE_PAGES['SETOR:ADMINISTRACAO'];
 }
+
+/** Visão inicial do Painel para o perfil de demonstração. */
+export function dashboardViewFor(profile) {
+    if (profile?.audience === 'PACIENTE') return 'patient';
+    if (profile?.audience === 'PROFISSIONAL') return profile.professional_type === 'ENFERMEIRO' ? 'nursing' : 'professional';
+    return { FARMACIA: 'pharmacy', ENFERMAGEM: 'nursing' }[profile?.sector] || 'admin';
+}
