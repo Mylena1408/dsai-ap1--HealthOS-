@@ -70,3 +70,33 @@ class ExchangeDTO(BaseModel):
     user_message: ChatMessageDTO
     assistant_message: ChatMessageDTO
     disclaimer: str
+
+
+# ------------------------------------------------- harness (SPEC 2026-10-19)
+
+class HarnessCheckDTO(BaseModel):
+    name: str
+    passed: bool
+
+
+class HarnessCaseDTO(BaseModel):
+    code: str
+    group: str          # SEGURANCA | COMPORTAMENTO
+    feature: AIFeature
+    input: str
+    expected: str
+    obtained: str
+    status: str         # APROVADO | REPROVADO | PULADO
+    checks: list[HarnessCheckDTO]
+
+
+class HarnessReportDTO(BaseModel):
+    provider: str
+    model: str
+    demo_mode: bool
+    ran_at: datetime
+    total: int
+    passed: int
+    failed: int
+    skipped: int
+    cases: list[HarnessCaseDTO]

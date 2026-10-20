@@ -86,3 +86,19 @@ def test_conversation_lifecycle(client, patient):
 
     assert client.get(f"{API}/conversations/{uuid.uuid4()}").status_code == 404
     assert client.post(f"{API}/conversations", json={"patient_id": str(uuid.uuid4())}).status_code == 404
+
+
+def test_harness_runs_all_cases_without_writing(client):
+    def totals():
+        conversations = sum(client.get(f"{API}/conversations", params={"status": s}).json()["total"]
+                            for s in ("ATIVA", "ARQUIVADA"))
+        return conversations, client.get(f"{API}/audit-events").json()["total"]
+
+    before = totals()
+    response = client.get(f"{API}/ai/harness")
+    assert response.status_code == 200
+    report = response.json()
+    assert (report["total"], report["passed"], report["failed"], report["skipped"]) == (9, 9, 0, 0)
+    assert report["provider"] == "demo" and report["demo_mode"] is True
+    assert {c["status"] for c in report["cases"]} == {"APROVADO"}
+    assert totals() == before  # a verificação não grava conversas nem auditoria

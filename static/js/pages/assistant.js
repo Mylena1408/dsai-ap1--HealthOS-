@@ -1,12 +1,13 @@
 // Assistente educacional: funções pontuais sobre o prontuário e chat com histórico.
 import { apiCall } from '../core/api.js';
-import { escapeHtml, formatDateTime, renderEmpty, renderLoading, toast } from '../core/dom.js';
+import { escapeHtml, formatDateTime, renderEmpty, renderLoading, toast, whileBusy } from '../core/dom.js';
 import { renderNav, renderDemoBanner } from '../core/layout.js';
 import { renderPagination } from '../components/pagination.js';
 import { createPatientPicker } from '../components/patient-picker.js';
 import {
     aiResponseCard, answerText, factsUsed, providerBadge, urgentNotice,
 } from '../components/ai-response.js';
+import { harnessBadge, harnessReport } from '../components/ai-harness.js';
 
 const PAGE_SIZE = 10;
 const $ = id => document.getElementById(id);
@@ -151,6 +152,20 @@ async function sendMessage(content) {
     }
 }
 
+// --------------------------------------------- verificação (harness)
+
+async function runHarness() {
+    const target = $('harness-result');
+    renderLoading(target, 'Rodando a verificação...');
+    try {
+        const report = await apiCall('/ai/harness');
+        target.innerHTML = harnessReport(report);
+        $('harness-badge').innerHTML = harnessBadge(report);
+    } catch (err) {
+        renderEmpty(target, `Erro: ${err.message}`);
+    }
+}
+
 // ------------------------------------------------------------------ início
 
 renderNav('assistente');
@@ -174,7 +189,8 @@ $('form-symptoms').addEventListener('submit', event => {
     }), { needsPatient: false });
 });
 
-$('btn-new').addEventListener('click', () => { state.conversation = null; renderConversation(); loadConversations(); $('message').focus(); });
+$('btn-harness').addEventListener('click', event => whileBusy(event.currentTarget, runHarness));
+$('btn-new').addEventListener('click',() => { state.conversation = null; renderConversation(); loadConversations(); $('message').focus(); });
 $('conv-status').addEventListener('change', () => { state.convOffset = 0; loadConversations(); });
 $('btn-archive').addEventListener('click', async () => {
     try {

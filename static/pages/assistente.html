@@ -17,7 +17,10 @@
             <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Assistente educacional</h1>
             <p class="text-slate-600">Organiza e explica os registros do prontuário. Não emite diagnósticos nem prescreve.</p>
         </div>
-        <div id="provider" aria-live="polite"></div>
+        <div class="flex flex-wrap items-center gap-2">
+            <div id="provider" aria-live="polite"></div>
+            <div id="harness-badge" aria-live="polite"></div>
+        </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 pb-20 grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -83,6 +86,16 @@
                 </form>
                 <p id="disclaimer" class="text-xs text-amber-700 mt-3"></p>
             </div>
+
+            <section id="harness" class="glass-card rounded-2xl p-5" aria-labelledby="harness-title">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+                    <h2 id="harness-title" class="font-bold text-slate-800">Verificação do assistente</h2>
+                    <button id="btn-harness" class="px-3 py-2 rounded-lg text-sm font-semibold border bg-white hover:bg-slate-100 disabled:opacity-50">
+                        <i class="fas fa-shield-halved" aria-hidden="true"></i> Rodar verificação</button>
+                </div>
+                <p class="text-xs text-slate-500 mb-3">Casos fixos que conferem as regras do assistente: sinais de alerta recebem orientação de urgência sem chamar a IA, toda resposta traz o aviso educacional e nenhum diagnóstico é emitido. A verificação usa um paciente fictício e não grava nada.</p>
+                <div id="harness-result" aria-live="polite"></div>
+            </section>
         </section>
     </main>
 

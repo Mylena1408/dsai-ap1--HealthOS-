@@ -6,11 +6,12 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.dtos.assistant_dto import (
-    AIResponseDTO, AIStatusDTO, ConversationCreateDTO, ConversationDTO, ExchangeDTO, MessageCreateDTO,
-    SymptomsRequestDTO,
+    AIResponseDTO, AIStatusDTO, ConversationCreateDTO, ConversationDTO, ExchangeDTO, HarnessReportDTO,
+    MessageCreateDTO, SymptomsRequestDTO,
 )
 from app.application.dtos.common import Page
 from app.application.services.ai_context import ContextSources, PatientContextBuilder
+from app.application.use_cases.assistant_harness_use_case import AssistantHarness
 from app.application.use_cases.assistant_use_case import AssistantUseCase
 from app.domain.entities.assistant import AI_DISCLAIMER, ConversationStatus
 from app.infrastructure.ai.factory import get_ai_service
@@ -42,6 +43,12 @@ Assistant = Depends(get_assistant)
 @router.get("/ai/status", response_model=AIStatusDTO, summary="Provedor de IA configurado (demo ou real)")
 async def ai_status(ai=Depends(get_ai_service)):
     return AIStatusDTO(provider=ai.provider, model=ai.model, demo_mode=ai.provider == "demo", disclaimer=AI_DISCLAIMER)
+
+
+@router.get("/ai/harness", response_model=HarnessReportDTO,
+            summary="Executa os casos de verificação do assistente (harness); não grava nada")
+async def run_harness(ai=Depends(get_ai_service)):
+    return await AssistantHarness(ai).run()
 
 
 @router.post("/ai/patients/{patient_id}/summary", response_model=AIResponseDTO)
