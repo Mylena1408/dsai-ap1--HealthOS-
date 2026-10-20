@@ -1,0 +1,4 @@
+# Opcional: servidor MCP (app/presentation/mcp/server.py). A API não precisa disto.
+# mcp 2.3.0 exige pydantic>=2.12, acima do pydantic==2.8.2 fixado em requirements.txt:
+# instale num ambiente separado, só para o servidor MCP (ver app/presentation/mcp/README.md).
+mcp==2.3.0

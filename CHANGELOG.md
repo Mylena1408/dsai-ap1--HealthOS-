@@ -15,6 +15,9 @@ Spec `SPEC/2026-10-19-harness-assistente.md`. Sem tabelas novas; sem senha.
 - Rota `GET /api/v1/ai/harness`. Na página do assistente, seção "Verificação do assistente" com o
   botão "Rodar verificação", resumo, tabela por caso e selo no cabeçalho.
 - Testes `tests/unit/test_assistant_harness.py` e novo caso em `tests/api/test_assistant_api.py`.
+- **Deploy:** o servidor MCP (`app/presentation/mcp/`, commit `71857ac`) passa a ter instalação opcional
+  em `requirements-mcp.txt`. O `mcp==2.3.0` exige `pydantic>=2.12` e impedia o build no Render
+  (spec `SPEC/2026-10-19-mcp-opcional.md`).
 
 ## 1.13.0 — Portal com visões de Enfermagem e Psicologia
 Spec `SPEC/2026-10-10-portal-enfermagem-psicologia.md`. Só frontend, com rotas existentes; sem senha.

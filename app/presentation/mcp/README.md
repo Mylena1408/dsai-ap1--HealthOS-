@@ -9,7 +9,7 @@ os casos de uso como *tools* para assistentes (Claude Desktop, VS Code, Inspecto
 |---|---|
 | `app/presentation/mcp/server.py` | Servidor (7 tools + 1 resource + CLI stdio/sse/streamable-http) |
 | `app/presentation/mcp/__init__.py` | Exporta `mcp` |
-| `requirements.txt` | Pino `mcp==2.3.0` (SDK v2: `MCPServer`; v1 chamava `FastMCP`) |
+| `requirements-mcp.txt` | Pino `mcp==2.3.0` (SDK v2: `MCPServer`; v1 chamava `FastMCP`), instalação opcional |
 
 ## Tools
 
@@ -30,8 +30,14 @@ Resource `healthos://info`: resumo do dominio para dar contexto ao LLM.
 
 ## Rodar
 
+O `mcp==2.3.0` exige `pydantic>=2.12`, acima do `pydantic==2.8.2` fixado para a API. Por isso ele
+fica fora do `requirements.txt` (que é o que o Render instala) e deve ser instalado num **ambiente
+separado**, usado só pelo servidor MCP (SPEC/2026-10-19-mcp-opcional.md):
+
 ```bash
+python -m venv .venv-mcp && .venv-mcp/bin/activate    # Windows: .venv-mcp\Scripts\activate
 pip install -r requirements.txt
+pip install -r requirements-mcp.txt   # atualiza o pydantic neste ambiente
 python -m app.presentation.mcp.server                    # stdio (clientes MCP)
 python app/presentation/mcp/server.py streamable-http --port 8001   # HTTP p/ testes
 ```
