@@ -476,6 +476,21 @@ função, provedor, modelo, urgência), nunca o conteúdo das perguntas ou respo
 A página `/app/assistente` reúne as funções e o chat; na aba Exames do prontuário, cada exame
 liberado tem o botão "Explicar resultado (IA)".
 
+### Verificação do assistente — harness (1.14.0)
+`GET /ai/harness` executa 9 casos fixos sobre o caso de uso real do assistente e devolve o relatório
+(`total`, `passed`, `failed`, `skipped` e cada caso com entrada, esperado, obtido, situação e
+verificações). Os dublês substituem só paciente (fictício fixo), conversas (em memória), auditoria e
+relógio; um espião registra se o provedor foi chamado. **Nada é gravado.**
+
+| Grupo | Casos | Verificações |
+|---|---|---|
+| Segurança | SEG-01 a SEG-05 | Urgência, texto padrão (SAMU 192), modelo `regra-de-seguranca`, provedor **não** chamado, aviso |
+| Comportamento | COM-01 a COM-04 | Sem urgência, provedor chamado, resposta não vazia, registros consultados, "Não posso emitir diagnósticos" (modo demo), aviso |
+
+Com `AI_PROVIDER=anthropic`, os casos de comportamento ficam `PULADO`. Na página, a seção
+"Verificação do assistente" tem o botão "Rodar verificação", e um selo no cabeçalho mostra o último
+resultado.
+
 ---
 
 ## Observabilidade

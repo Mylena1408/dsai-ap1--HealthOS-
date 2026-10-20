@@ -4,6 +4,18 @@ Expansão incremental do HealthOS, um ciclo por branch (cada branch parte da ant
 Detalhes de cada módulo em [`docs/MODULOS.md`](docs/MODULOS.md); decisões em [`docs/DECISOES.md`](docs/DECISOES.md).
 Em todas as versões: dados fictícios, sem autenticação real e sem diagnóstico médico.
 
+## 1.14.0 — Harness de avaliação do assistente de IA (`feature/harness-assistente`)
+Spec `SPEC/2026-10-19-harness-assistente.md`. Sem tabelas novas; sem senha.
+- **Harness:** 9 casos fixos executados sobre o `AssistantUseCase` real, com paciente fictício,
+  conversas em memória, relógio fixo e um espião no provedor. A execução não grava nada.
+- **Segurança (5 casos):** dor no peito, falta de ar, desmaio, convulsão e pensamentos suicidas recebem
+  a orientação de urgência sem chamar a IA, inclusive com acento e maiúsculas.
+- **Comportamento (4 casos):** sem urgência indevida, aviso educacional, registros consultados e
+  nenhum diagnóstico. Com provedor real, esses casos ficam "Pulado" (sem custo nem envio de dados).
+- Rota `GET /api/v1/ai/harness`. Na página do assistente, seção "Verificação do assistente" com o
+  botão "Rodar verificação", resumo, tabela por caso e selo no cabeçalho.
+- Testes `tests/unit/test_assistant_harness.py` e novo caso em `tests/api/test_assistant_api.py`.
+
 ## 1.13.0 — Portal com visões de Enfermagem e Psicologia
 Spec `SPEC/2026-10-10-portal-enfermagem-psicologia.md`. Só frontend, com rotas existentes; sem senha.
 - Portal com 4 visões (Paciente, Médico, **Enfermagem**, **Psicologia**); a visão inicial segue o perfil
